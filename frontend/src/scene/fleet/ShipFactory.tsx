@@ -171,11 +171,25 @@ export default function ShipFactory({
   const hullColor = isPreview ? '#22c55e' : '#3b4a5c';
   const deckColor = isPreview ? '#22c55e' : '#4a5568';
 
+  const sinkRef = useRef(0);
+
   useFrame((_, delta) => {
     if (!groupRef.current) return;
     bobTimeRef.current += delta;
-    const bobY = 0.09 + Math.sin(bobTimeRef.current * 0.8) * 0.02;
+
+    const isSunk = damage >= 1;
+    const sinkTarget = isSunk ? 1 : 0;
+    sinkRef.current += (sinkTarget - sinkRef.current) * delta * 0.8;
+    const sink = sinkRef.current;
+
+    const bobAmplitude = 0.02 * (1 - sink);
+    const bobY = 0.09 + Math.sin(bobTimeRef.current * 0.8) * bobAmplitude - sink * 0.12;
     groupRef.current.position.y = bobY;
+
+    const tiltAngle = sink * 0.25 + damage * 0.05;
+    const rollAngle = sink * 0.15;
+    groupRef.current.rotation.x = tiltAngle * (isHorizontal ? 0 : 1);
+    groupRef.current.rotation.z = rollAngle * (isHorizontal ? 1 : 0) + tiltAngle * (isHorizontal ? 1 : 0);
   });
 
   return (
