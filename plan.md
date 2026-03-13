@@ -1,141 +1,133 @@
 # ROLE
 
-You are a principal game UI engineer, graphics engineer, R3F/Three.js architect, and cinematic art-direction specialist.
+You are a principal game graphics engineer, senior technical artist, React Three Fiber architect, and cinematic UI designer.
 
-You are working inside an existing Battleship codebase that is already functional and has recently been refactored for performance and maintainability.
+You are rebuilding an existing Battleship frontend from the scene layer upward.
 
-The project already has:
-- FastAPI backend
+The current implementation is functional but visually unacceptable:
+- fake striped water
+- flat tactical boards
+- weak scene composition
+- ships that read like dark blocks
+- no believable world scale
+- no premium postprocessing glue
+- not enough cinematic depth
+
+We are **not** rewriting the backend or game rules.
+We are rebuilding the **entire frontend scene, presentation, and visual language** so it feels like a proper 3D naval tactics game.
+
+The backend already exists and works:
+- FastAPI
 - Python game engine
-- AI difficulty levels
-- React frontend
-- React Three Fiber / Three.js scene
+- difficulty levels already implemented
+- stable API contract
+
+The frontend already exists and works:
+- React
+- TypeScript
+- React Three Fiber
+- Three.js
 - cleaned hooks
-- no `setState` in `useFrame`
-- fixed Board3D effect spawning
-- targeting reticle / hover improvements
-- improved error handling
+- fixed R3F performance issues
 
-Your job now is to stop treating the scene like “UI panels on an animated plane” and **rebuild it as a proper cinematic 3D naval battlefield**.
+Now the mission is to build the scene **properly from scratch**.
 
-Use the right tools and use them properly:
-- React Three Fiber as the declarative Three.js renderer :contentReference[oaicite:0]{index=0}
-- Three.js Water or an equivalent high-quality reflective water solution as the visual benchmark for the ocean layer :contentReference[oaicite:1]{index=1}
-- react-postprocessing Bloom / Outline / SelectiveBloom to tie emissive tactical elements together visually :contentReference[oaicite:2]{index=2}
-- Theatre.js and/or GSAP for authored cinematic movement and event choreography
-- Tauri-compatible project structure for future desktop wrapping :contentReference[oaicite:3]{index=3}
+Use the right technologies correctly:
+- React Three Fiber as the Three.js renderer
+- Three.js `Water` or a water implementation of similar quality as the primary benchmark for the ocean layer
+- react-postprocessing for Bloom / Outline / Selection / SelectiveBloom style effects
+- Drei helpers where useful
+- GSAP and/or Theatre.js for cinematic choreography
+- browser-first architecture that remains compatible with future Tauri wrapping
 
-Do not deliver generic polish.
-Do a **full scene redesign**.
+Important facts to respect:
+- Three.js provides a `Water` object as a reflective animated flat water effect and it is a valid baseline for premium water presentation.
+- react-postprocessing is the proper wrapper for postprocessing in R3F and can provide Bloom, DepthOfField, Outline, etc.
+- React Three Fiber performance guidance explicitly warns against `setState` in `useFrame`, against excessive mounting, and encourages mutation/refs, shared geometries/materials, and instancing.
+- Tauri compatibility should be preserved by keeping the frontend as a standard web app.
+
+References for implementation choices:
+- R3F intro: https://r3f.docs.pmnd.rs/getting-started/introduction
+- Three.js Water: https://threejs.org/docs/pages/Water.html
+- react-postprocessing intro: https://react-postprocessing.docs.pmnd.rs/introduction
+- R3F performance pitfalls: https://r3f.docs.pmnd.rs/advanced/pitfalls
 
 ---
 
 # PRIMARY GOAL
 
-Transform the current game from:
+Create a **real 3D naval battlefield presentation**.
 
-- two flat tactical boards
-- sitting on fake scrolling water
-- with weak lighting and no atmosphere
+The new scene must feel like:
+- ocean
+- world scale
+- atmosphere
+- physical tactical surfaces
+- readable ships
+- cinematic camera composition
+- premium glow and FX
+- game-quality presentation
 
-into:
-
-- a believable ocean world
-- with physical tactical boards embedded into that world
-- with cinematic camera composition
-- proper visual depth
-- better ship presence
-- premium postprocessing
-- stronger tactical readability
-- cleaner premium HUD composition
-
-The result must feel like:
-- a polished indie naval tactics game
-- cinematic and atmospheric
-- readable and demo-worthy
-- high quality enough for interview presentation
-- still compatible with future Tauri packaging
+It must **not** feel like:
+- UI on an animated sheet
+- shader experiment
+- debug dashboard
+- transparent grids floating in space
 
 ---
 
-# HARD TRUTH TO FIX
-
-The current scene feels like:
-- “dashboard on fabric”
-- “shader experiment”
-- “2D boards on a sheet”
-
-It must instead feel like:
-- “naval battlefield”
-- “physical command simulation”
-- “dramatic ocean combat scene”
-
-That means the redesign must address:
-
-1. Water realism
-2. World composition
-3. Physical board presentation
-4. Ship readability
-5. Lighting and atmosphere
-6. Postprocessing
-7. Camera composition
-8. HUD integration
-
----
-
-# WHAT MUST CHANGE
+# HARD VISUAL REQUIREMENTS
 
 ## 1. OCEAN
-The current water look is not acceptable.
-It looks like a scrolling striped material, not an ocean.
+Replace the current fake water completely.
 
-Replace it with a proper ocean solution using either:
-- Three.js `Water`
-- or a custom shader inspired by that level of quality
-- or a hybrid shader setup that produces believable reflective animated water
-
-The target quality bar is the Three.js Water-style look:
-- reflective
-- animated
-- depth-aware
-- smooth and premium :contentReference[oaicite:4]{index=4}
+Implement a proper ocean solution:
+- preferably based on Three.js `Water`
+- or a custom shader at that quality level
+- reflective or pseudo-reflective
+- believable swell
+- fresnel-ish edge response
+- calm but premium motion
+- horizon-friendly
+- suitable for cinematic camera angles
 
 Requirements:
-- directional swell
-- reflective or pseudo-reflective highlights
-- fresnel-like edge tint
-- deeper color in distance
-- calmer believable motion
-- no cheap vertical stripe effect
-- optional subtle impact ripples if feasible
+- no striped scrolling texture look
+- no cheap UV-only animation feel
+- no “fabric” appearance
+- support fog and scene lighting
+- optional local disturbance / ripple near impacts if feasible
 
-Create:
+Deliver:
 - `scene/environment/OceanSurface.tsx`
-- `scene/materials/oceanMaterial.ts`
+- `scene/materials/oceanConfig.ts`
+- any normal-map or helper setup needed
 
-If you choose Three.js Water, integrate it cleanly.
-If you choose custom shader, make it premium and efficient.
+Use a big water plane that extends past the boards so the world feels large.
 
 ---
 
 ## 2. WORLD COMPOSITION
-The scene must stop being “two centered panels.”
+Rebuild the entire scene composition.
 
-Recompose the world so it has:
-- horizon line
+The boards should no longer just sit centered on-screen.
+
+Target composition:
+- player board foreground-left
+- enemy board midground-right
+- visible ocean extending around and beyond both
+- clear horizon line
 - atmospheric depth
-- foreground / midground / background
-- asymmetrical framing
-- strong sense of scale
+- asymmetry
+- dramatic but readable angle
 
-Desired composition:
-- player board in foreground-left
-- enemy board in midground-right
-- visible ocean extending beyond both
-- camera angle with depth, not flat top-down
-- distant fog / horizon separation
+Add:
+- sky dome / gradient sky / fog
+- distant atmosphere
+- horizon separation
+- slight camera perspective that sells scale
 
-Create:
+Deliver:
 - `scene/SceneRoot.tsx`
 - `scene/environment/SkyBackdrop.tsx`
 - `scene/environment/Atmosphere.tsx`
@@ -144,59 +136,60 @@ Create:
 ---
 
 ## 3. PHYSICAL BOARDS
-The boards must stop feeling like transparent UI rectangles.
+The tactical boards must become physical objects.
 
-Make them feel like real objects:
-- framed
-- thick
-- slightly elevated or embedded
+Each board should have:
+- real frame geometry
+- thickness
+- bevel or edge treatment
 - emissive trim
-- corner lights / anchor bolts / tactical nodes
-- reflective / glassy tactical top surface if appropriate
-- proper lighting response
-- shadow / depth presence
+- tactical-glass / polished-surface feel
+- correct light response
+- clear faction identity
 
-Create:
+Player board:
+- cool cyan identity
+
+Enemy board:
+- restrained red identity
+
+Do not make them look like HTML panels.
+Make them look like military tactical surfaces placed into the world.
+
+Deliver:
 - `scene/boards/PlayerBoard3D.tsx`
 - `scene/boards/EnemyBoard3D.tsx`
 - `scene/boards/GridPlane.tsx`
 - `scene/boards/BoardFrame.tsx`
 - `scene/boards/BoardMarkers.tsx`
-
-Requirements:
-- player board = cool cyan identity
-- enemy board = restrained red identity
-- hover states elegant
-- previously fired cells readable
-- active board emphasis
-- targetable cells visually confident
-- not noisy
+- `scene/materials/boardGlowMaterial.ts`
 
 ---
 
 ## 4. SHIPS
-The ships currently read like dark anonymous blocks.
+The ships must become proper readable 3D pieces.
 
-Fix this by creating a real ship presentation system.
+Current dark rectangular blocks are not acceptable.
 
 Preferred path:
-- load GLTF assets if available
+- use GLTF ship models if available
 
 Fallback path:
-- generate clean low-poly ship silhouettes procedurally
+- build elegant low-poly ship meshes procedurally
 
 Requirements:
-- distinct silhouettes by ship type/size
-- readable deck / hull structure
-- proper materials catching light
+- distinct silhouettes by ship class / length
+- readable hull + deck structure
+- proper materials that catch light
 - subtle bobbing
-- optional wake / disturbance
-- visible damaged state
-- sunk state treatment
+- optional wake
+- visible damage state for hit
+- stronger sunk-state treatment
 
-Use the normal R3F / Drei loading path for GLTF if assets are provided. If not, build elegant fallback geometry. :contentReference[oaicite:5]{index=5}
+Use the standard R3F / Drei asset loading approach if assets exist.
+If not, generate attractive fallback geometry.
 
-Create:
+Deliver:
 - `scene/fleet/ShipFactory.tsx`
 - `scene/fleet/PlayerFleet.tsx`
 - `scene/fleet/EnemyFleet.tsx`
@@ -206,120 +199,126 @@ Create:
 ---
 
 ## 5. LIGHTING
-The current scene lacks cinematic lighting hierarchy.
+Build a proper lighting rig.
 
-Build a proper lighting rig:
+Requirements:
 - ambient fill
-- cold directional key light
-- subtle rim light
-- emissive tactical contribution
-- optional contact shadows / fake shadowing where helpful
-- stronger separation between boards and water
-
-Create:
-- `scene/environment/LightingRig.tsx`
+- cool directional key light
+- subtle rim light for ships and frames
+- emissive contribution from tactical elements
+- stronger local contrast
+- believable separation of water / boards / ships
 
 Mood:
 - cool
-- naval
+- deep
 - premium
-- not overexposed
-- not muddy
+- naval
+- cinematic
+
+Avoid:
+- washed out look
+- muddy darkness
+- flat lighting
+
+Deliver:
+- `scene/environment/LightingRig.tsx`
 
 ---
 
 ## 6. POSTPROCESSING
-This scene needs postprocessing glue.
+The scene must be glued together with proper postprocessing.
 
-Add:
-- Bloom for emissive trims, reticles, select highlights
-- Outline or Selection for hover / focus / target lock states
-- Optional mild vignette or tone pass
-- Optional subtle depth of field only during cinematics, not during active gameplay
-
-Use react-postprocessing appropriately. Bloom is selective when emissive values are pushed beyond the normal 0–1 range and `toneMapped={false}` is used on glow-driving materials. :contentReference[oaicite:6]{index=6}
-
-Create:
-- `scene/post/PostStack.tsx`
+Add a post stack using `@react-three/postprocessing`.
 
 Use:
-- selective bloom for board trim, reticles, radar sweep, important UI-linked emissives
-- outline for selected/hovered targets if tasteful
+- Bloom for emissive trims, reticles, tactical highlights
+- Outline or Selection for hover / lock states
+- Optional mild vignette
+- Optional very subtle DOF only in cinematics, not regular gameplay
+- Optional SMAA/MSAA if appropriate
 
-Do not overdo it.
+The goal is premium cohesion, not overblown FX.
+
+Deliver:
+- `scene/post/PostStack.tsx`
+
+Important:
+- use emissive values and tone mapping settings appropriately so bloom actually works
+- keep gameplay readability first
 
 ---
 
 ## 7. CAMERA
-The camera is compositionally dead right now.
+The camera must be completely rethought.
 
-Build a real cinematic camera system.
+The current framing is not acceptable.
 
-Requirements:
+Implement a real camera system with:
 - authored composition
-- asymmetrical framing
-- stronger depth cues
-- battle readability
-- dramatic but controlled movement
+- better angles
+- stronger depth
+- readable boards
+- dynamic event framing
+- responsive framing for different viewport sizes
 
-Implement:
-- intro fly-in
-- deployment settle
-- player targeting angle
-- missile follow shot
-- impact punch-in
-- enemy turn emphasis
-- victory orbit
-- defeat pullback
+Required shots:
+1. intro fly-in over ocean
+2. settle into deployment angle
+3. battle framing
+4. player target focus
+5. missile follow shot
+6. impact punch-in
+7. enemy turn emphasis
+8. victory orbit
+9. defeat pullback
 
-Create:
+Use Theatre.js and/or GSAP for cinematic choreography where appropriate.
+
+Deliver:
 - `scene/cameras/MainCameraRig.tsx`
 - `scene/cameras/CinematicCameraController.tsx`
 - `scene/cameras/CameraShots.ts`
 - `scene/cameras/responsiveFraming.ts`
-
-Use Theatre.js and/or GSAP where appropriate.
-The camera should feel directed, not arbitrary.
-
-Also support responsive framing:
-- wide desktop
-- narrow desktop
-- future Tauri window sizes
+- `scene/theatre/theatreProject.ts`
+- `scene/theatre/theatreSheets.ts`
+- `scene/theatre/sequences.ts`
+- `scene/animation/gsapTimelines.ts`
 
 ---
 
-## 8. RADAR / TACTICAL FX
-The radar should feel premium, not generic.
+## 8. RADAR / TARGETING / TACTICAL FEEL
+The enemy board must feel like a target acquisition surface.
 
-Upgrade:
-- sweep beam
-- lock ring
-- hover confirmation
-- target acquisition pulse
-- subtle sonar energy
+Requirements:
+- radar sweep that feels premium
+- hover confidence
+- target lock reticle
+- board-local pulse
+- clearer active target indication
+- no clutter
 
-Create:
+Deliver:
 - `scene/effects/RadarSweep.tsx`
+- `scene/boards/TargetLock.tsx`
 - `scene/materials/radarMaterial.ts`
 - `scene/materials/reticleMaterial.ts`
-- `scene/boards/TargetLock.tsx`
-
-Keep enemy targeting clear and satisfying.
 
 ---
 
 ## 9. MISSILES / IMPACTS
-The effects are stable now, but need a visual art pass.
+Keep the current stable architecture, but do a visual art pass.
 
-Upgrade:
-- missile trail
-- launch flash
-- impact light
-- miss = blue-white splash + ripple
-- hit = hot flash + smoke + shock feeling
-- sunk = distinct flourish
+Requirements:
+- missile trail looks intentional
+- launch has presence
+- miss = water splash + ripple + cool light
+- hit = hot flash + smoke + impact intensity
+- sunk = stronger flourish
+- camera can react to impact
+- do not reintroduce bad R3F patterns
 
-Create:
+Deliver:
 - `scene/effects/MissileSystem.tsx`
 - `scene/effects/MissileTrail.tsx`
 - `scene/effects/ExplosionSystem.tsx`
@@ -327,22 +326,17 @@ Create:
 - `scene/effects/ShockwaveRing.tsx`
 - `scene/effects/HitFlash.tsx`
 
-Do not reintroduce bad R3F performance patterns.
-
 ---
 
-## 10. HUD REDESIGN
-The HUD must stop feeling like a generic overlay panel.
+## 10. HUD
+The HUD should be redesigned to fit the new world.
 
-Redesign it into a premium command-center HUD.
-
-Goals:
-- cleaner hierarchy
-- premium spacing/typography
-- fewer “debug app” vibes
-- stronger turn messaging
-- better phase communication
-- integrated with the scene’s art direction
+Current HUD should become:
+- cleaner
+- more premium
+- more game-like
+- more integrated
+- less “app panel”
 
 Create:
 - `components/hud/CommandHUD.tsx`
@@ -360,46 +354,43 @@ Create overlays:
 - `components/overlays/LoadingOverlay.tsx`
 - `components/overlays/NetworkErrorOverlay.tsx`
 
-Requirements:
-- still readable
-- premium
-- restrained
-- no overdesigned nonsense
-- should feel like a game, not a form
+Keep it premium and restrained.
 
 ---
 
-## 11. PERFORMANCE
-Do not ruin the cleanup pass.
+## 11. PERFORMANCE RULES
+Do not break the cleaned codebase.
 
-Rules:
+Must follow:
 - no `setState` in `useFrame`
-- avoid recreating materials/geometries
-- use refs / memoization properly
-- use postprocessing carefully
-- keep ocean solution performant
-- support quality presets
+- reuse materials/geometries where possible
+- use refs and mutation in frame loops
+- avoid excessive mount/unmount churn
+- use instancing where appropriate
+- keep ocean and post stack performant
+- support quality modes if helpful
 
-Create:
+Deliver:
 - `utils/quality.ts`
-- optional low/high/cinematic quality modes
+- `utils/sceneTheme.ts`
+- `utils/viewport.ts`
 
 ---
 
 ## 12. TAURI READINESS
-Keep the project browser-first but future desktop-wrap ready.
+Keep the frontend browser-first but easy to wrap with Tauri later.
 
 Provide:
-- `src-tauri/tauri.conf.json`
-- notes for using the current frontend with Tauri later
+- sample `src-tauri/tauri.conf.json`
+- notes for future desktop packaging
 
-Tauri uses configuration files such as `tauri.conf.json`; keep the structure standard and non-invasive. :contentReference[oaicite:7]{index=7}
+Do not introduce hacks that would fight Tauri later.
 
 ---
 
-# REQUIRED FOLDER STRUCTURE
+# REQUIRED FILE STRUCTURE
 
-Refactor or expand toward this:
+Refactor or expand toward:
 
 frontend/
   src/
@@ -444,7 +435,7 @@ frontend/
         RadarSweep.tsx
 
       materials/
-        oceanMaterial.ts
+        oceanConfig.ts
         radarMaterial.ts
         boardGlowMaterial.ts
         reticleMaterial.ts
@@ -459,8 +450,6 @@ frontend/
 
       animation/
         gsapTimelines.ts
-        impactSequences.ts
-        turnTransitions.ts
 
     components/
       hud/
@@ -491,41 +480,45 @@ src-tauri/
 
 # OUTPUT INSTRUCTIONS
 
-When responding, do it in this order:
+When responding, do it in this exact order:
 
 ## 1. Scene redesign overview
-Explain the new visual direction and architecture
+Explain the visual direction and technical architecture
 
 ## 2. Updated folder tree
 
 ## 3. Install commands
-List all needed deps for:
-- R3F / Three
-- postprocessing
-- Theatre.js
-- GSAP
-- any helper libs you choose
+Include all needed packages:
+- three
+- @react-three/fiber
+- @react-three/drei
+- @react-three/postprocessing
+- gsap
+- @theatre/core
+- @theatre/r3f
+- @theatre/studio
+- any utility packages you choose
 
-## 4. Core theme / quality utilities
+## 4. Core utilities
 Show full code for:
 - `utils/sceneTheme.ts`
 - `utils/quality.ts`
 - `utils/viewport.ts`
 
-## 5. Materials / shaders
+## 5. Water / materials
 Show full code for:
-- `materials/oceanMaterial.ts`
-- `materials/radarMaterial.ts`
-- `materials/boardGlowMaterial.ts`
-- `materials/reticleMaterial.ts`
+- `scene/environment/OceanSurface.tsx`
+- `scene/materials/oceanConfig.ts`
+- `scene/materials/radarMaterial.ts`
+- `scene/materials/boardGlowMaterial.ts`
+- `scene/materials/reticleMaterial.ts`
 
 ## 6. Environment
 Show full code for:
-- `OceanSurface.tsx`
 - `SkyBackdrop.tsx`
 - `Atmosphere.tsx`
-- `LightingRig.tsx`
 - `FogController.tsx`
+- `LightingRig.tsx`
 
 ## 7. Boards
 Show full code for:
@@ -544,7 +537,7 @@ Show full code for:
 - `ShipWake.tsx`
 - `ShipDamageFX.tsx`
 
-## 9. Camera system
+## 9. Camera / animation
 Show full code for:
 - `MainCameraRig.tsx`
 - `CinematicCameraController.tsx`
@@ -554,8 +547,6 @@ Show full code for:
 - `theatreSheets.ts`
 - `sequences.ts`
 - `gsapTimelines.ts`
-- `impactSequences.ts`
-- `turnTransitions.ts`
 
 ## 10. Effects
 Show full code for:
@@ -587,22 +578,24 @@ Show full code for:
 - `NetworkErrorOverlay.tsx`
 
 ## 13. Integration notes
-Explain exactly how to wire this into the cleaned codebase
+Explain exactly how to wire the new scene into the current cleaned codebase
 
 ## 14. Tauri config
 Show a sample `src-tauri/tauri.conf.json`
 
 ## 15. Final validation checklist
 Confirm:
-- scene no longer looks like UI on fabric
-- ocean upgraded
+- water no longer looks fake
 - boards feel physical
-- ships more readable
-- camera composition improved
-- postprocessing added
-- gameplay preserved
-- future Tauri wrapping preserved
+- ships are more readable
+- scene has world depth
+- postprocessing is added
+- camera composition is improved
+- gameplay is preserved
+- future Tauri wrapping remains easy
 
-If output gets too long, continue in clearly labeled parts and do not reduce ambition.
+If the output is too long, continue in clearly labeled parts.
+Do not reduce scope.
+Do not give a shallow answer.
 
 Start now.

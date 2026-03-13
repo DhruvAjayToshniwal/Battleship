@@ -1,30 +1,32 @@
+import { useState, useEffect } from 'react';
 import { EffectComposer, Bloom, Vignette } from '@react-three/postprocessing';
 
-interface PostStackProps {
-  enableBloom?: boolean;
-  enableVignette?: boolean;
-}
+export default function PostStack() {
+  const [enabled, setEnabled] = useState(false);
 
-export default function PostStack({
-  enableBloom = true,
-  enableVignette = true,
-}: PostStackProps) {
-  return (
-    <EffectComposer>
-      {enableBloom && (
+  useEffect(() => {
+    const timer = setTimeout(() => setEnabled(true), 500);
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (!enabled) return null;
+
+  try {
+    return (
+      <EffectComposer>
         <Bloom
-          intensity={0.8}
-          luminanceThreshold={0.6}
+          intensity={0.6}
+          luminanceThreshold={0.7}
           luminanceSmoothing={0.3}
           mipmapBlur
         />
-      )}
-      {enableVignette && (
         <Vignette
           offset={0.3}
-          darkness={0.6}
+          darkness={0.5}
         />
-      )}
-    </EffectComposer>
-  );
+      </EffectComposer>
+    );
+  } catch {
+    return null;
+  }
 }

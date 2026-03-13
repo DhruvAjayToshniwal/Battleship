@@ -1,42 +1,68 @@
-import { useMemo } from 'react';
-import * as THREE from 'three';
+import { useRef, useMemo } from 'react'
+import { useFrame } from '@react-three/fiber'
+import * as THREE from 'three'
 
 const vertexShader = `
-varying vec3 vPosition;
+varying vec3 vWorldPosition;
+varying vec3 vNormal;
+varying vec3 vViewDir;
 
 void main() {
-  vPosition = position;
+  vec4 worldPos = modelMatrix * vec4(position, 1.0);
+  vWorldPosition = worldPos.xyz;
+  vNormal = normalize(normalMatrix * normal);
+  vViewDir = normalize(cameraPosition - worldPos.xyz);
   gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
 }
-`;
+`
 
 const fragmentShader = `
-varying vec3 vPosition;
+uniform float uTime;
+varying vec3 vWorldPosition;
+varying vec3 vNormal;
+varying vec3 vViewDir;
 
 void main() {
-  float heightFactor = normalize(vPosition).y;
-  float density = mix(0.06, 0.01, clamp(heightFactor, 0.0, 1.0));
-  vec3 hazeColor = vec3(0.05, 0.1, 0.18);
-  gl_FragColor = vec4(hazeColor, density);
+  float fresnel = 1.0 - abs(dot(vNormal, vViewDir));
+  fresnel = pow(fresnel, 3.0);
+
+  vec3 hazeColor = vec3(0.12, 0.14, 0.22);
+
+  float baseOpacity = 0.03;
+  float fresnelOpacity = fresnel * 0.05;
+  float totalOpacity = baseOpacity + fresnelOpacity;
+
+  totalOpacity = clamp(totalOpacity, 0.0, 0.08);
+
+  gl_FragColor = vec4(hazeColor, totalOpacity);
 }
-`;
+`
 
 export default function Atmosphere() {
-  const material = useMemo(
-    () =>
-      new THREE.ShaderMaterial({
-        vertexShader,
-        fragmentShader,
-        side: THREE.BackSide,
-        transparent: true,
-        depthWrite: false,
-      }),
-    []
-  );
+  const materialRef = useRef<THREE.ShaderMaterial>(null)
+
+  const uniforms = useMemo(() => ({
+    uTime: { value: 0 },
+  }), [])
+
+  useFrame(({ clock }) => {
+    if (materialRef.current) {
+      materialRef.current.uniforms.uTime.value = clock.getElapsedTime()
+    }
+  })
 
   return (
-    <mesh material={material}>
-      <sphereGeometry args={[50, 32, 32]} />
+    <mesh>
+      <sphereGeometry args={[85, 48, 48]} />
+      <shaderMaterial
+        ref={materialRef}
+        vertexShader={vertexShader}
+        fragmentShader={fragmentShader}
+        uniforms={uniforms}
+        side={THREE.BackSide}
+        transparent={true}
+        depthWrite={false}
+      />
     </mesh>
-  );
+  )
 }

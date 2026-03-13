@@ -1,4 +1,4 @@
-import { Environment } from '@react-three/drei';
+import { Suspense } from 'react';
 import OceanSurface from './environment/OceanSurface';
 import SkyBackdrop from './environment/SkyBackdrop';
 import Atmosphere from './environment/Atmosphere';
@@ -53,7 +53,6 @@ export default function SceneRoot({
   return (
     <>
       <LightingRig />
-      <Environment preset="night" />
       <FogController near={20} far={60} />
       <SkyBackdrop />
       <Atmosphere />
@@ -88,7 +87,9 @@ export default function SceneRoot({
         hoverCell={enemyHoverCell}
       />
 
-      <PostStack />
+      <Suspense fallback={null}>
+        <PostStack />
+      </Suspense>
     </>
   );
 }

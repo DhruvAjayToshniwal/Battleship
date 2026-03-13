@@ -4,10 +4,15 @@ import * as THREE from 'three';
 interface GridPlaneProps {
   position?: [number, number, number];
   size?: number;
+  color?: string;
 }
 
-export default function GridPlane({ position = [0, 0, 0], size = 10 }: GridPlaneProps) {
-  const geometry = useMemo(() => {
+export default function GridPlane({
+  position = [0, 0, 0],
+  size = 10,
+  color = '#1e3a5f',
+}: GridPlaneProps) {
+  const gridGeometry = useMemo(() => {
     const points: THREE.Vector3[] = [];
     const half = size / 2;
 
@@ -26,34 +31,54 @@ export default function GridPlane({ position = [0, 0, 0], size = 10 }: GridPlane
     return new THREE.BufferGeometry().setFromPoints(points);
   }, [size]);
 
+  const parsedColor = useMemo(() => new THREE.Color(color), [color]);
+
   return (
     <group position={position}>
-      <lineSegments geometry={geometry}>
+      <mesh position={[0, -0.025, 0]}>
+        <boxGeometry args={[size, 0.05, size]} />
+        <meshStandardMaterial
+          color="#0a1628"
+          emissive={color}
+          emissiveIntensity={0.15}
+          transparent
+          opacity={0.85}
+          metalness={0.4}
+          roughness={0.6}
+        />
+      </mesh>
+
+      <lineSegments geometry={gridGeometry} position={[0, 0.001, 0]}>
         <lineBasicMaterial
-          color="#1e90ff"
+          color={parsedColor}
           transparent
           opacity={0.6}
-          linewidth={1}
+          toneMapped={false}
         />
       </lineSegments>
 
-      <lineSegments geometry={geometry} position={[0, 0.001, 0]}>
+      <lineSegments geometry={gridGeometry} position={[0, 0.003, 0]}>
         <lineBasicMaterial
           color="#38bdf8"
           transparent
-          opacity={0.2}
-          linewidth={1}
+          opacity={0.15}
+          toneMapped={false}
         />
       </lineSegments>
 
-      <mesh position={[0, -0.01, 0]}>
-        <boxGeometry args={[size, 0.02, size]} />
+      <mesh position={[0, 0.002, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <planeGeometry args={[size, size]} />
         <meshStandardMaterial
-          color="#0a1628"
-          emissive="#0a1628"
-          emissiveIntensity={0.5}
+          color={color}
+          emissive={color}
+          emissiveIntensity={0.08}
           transparent
-          opacity={0.6}
+          opacity={0.1}
+          metalness={0.6}
+          roughness={0.3}
+          side={THREE.DoubleSide}
+          depthWrite={false}
+          toneMapped={false}
         />
       </mesh>
     </group>
