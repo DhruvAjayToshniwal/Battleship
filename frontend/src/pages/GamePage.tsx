@@ -14,6 +14,7 @@ import VictoryOverlay from '../components/overlays/VictoryOverlay';
 import DefeatOverlay from '../components/overlays/DefeatOverlay';
 import LoadingOverlay from '../components/overlays/LoadingOverlay';
 import NetworkErrorOverlay from '../components/overlays/NetworkErrorOverlay';
+import CommanderCallout from '../components/hud/CommanderCallout';
 import type { Difficulty } from '../services/api';
 
 export default function GamePage() {
@@ -234,6 +235,8 @@ export default function GamePage() {
         message={message}
         lastResult={lastPlayerResult}
       />
+
+      <CommanderCallout />
 
       <IntroOverlay visible={showIntro} />
 

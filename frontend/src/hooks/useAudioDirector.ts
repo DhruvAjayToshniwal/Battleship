@@ -1,4 +1,5 @@
 import { useRef, useCallback, useEffect } from 'react';
+import { speak } from './useVoiceCommander';
 import {
   playMissileLaunch as rawMissileLaunch,
   playExplosion as rawExplosion,
@@ -52,7 +53,7 @@ export function useAudioDirector() {
     playSplash: () => safeSoundCall(rawSplash),
     playShipPlace: () => safeSoundCall(rawShipPlace),
     playShipSunk: () => safeSoundCall(rawShipSunk),
-    playGameStart: () => safeSoundCall(rawGameStart),
+    playGameStart: () => { safeSoundCall(rawGameStart); speak('gameStart'); },
     playVictory: () => safeSoundCall(rawVictory),
     playDefeat: () => safeSoundCall(rawDefeat),
     playTurnStart: () => safeSoundCall(rawTurnStart),
