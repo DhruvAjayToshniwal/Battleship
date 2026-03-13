@@ -1,7 +1,10 @@
 import axios from 'axios';
 
+const isTauri = !!(window as unknown as Record<string, unknown>).__TAURI_INTERNALS__;
+const baseURL = isTauri ? 'http://localhost:8000/game' : '/game';
+
 const api = axios.create({
-  baseURL: '/game',
+  baseURL,
 });
 
 export interface ShipPlacement {
