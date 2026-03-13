@@ -1,0 +1,13 @@
+# Minimal Ruff config
+# Imports + tabs only
+
+target-version = "py313"
+
+[lint]
+select = ["I"]
+
+[format]
+indent-style = "tab"
+
+[lint.isort]
+combine-as-imports = true
