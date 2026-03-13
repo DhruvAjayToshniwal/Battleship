@@ -49,16 +49,16 @@ export default function CommandHUD({
       )}
 
       {phase !== 'setup' && (
-        <div className="fixed bottom-6 left-0 right-0 z-20 flex justify-center gap-48 pointer-events-none">
+        <div className="fixed bottom-3 left-0 right-0 z-20 flex justify-center pointer-events-none" style={{ gap: '14rem' }}>
           <span
-            className="text-xs font-bold tracking-widest uppercase"
-            style={{ color: 'rgba(34, 211, 238, 0.5)' }}
+            className="text-[10px] font-bold tracking-widest uppercase"
+            style={{ color: 'rgba(34, 211, 238, 0.4)' }}
           >
             YOUR WATERS
           </span>
           <span
-            className="text-xs font-bold tracking-widest uppercase"
-            style={{ color: 'rgba(239, 68, 68, 0.5)' }}
+            className="text-[10px] font-bold tracking-widest uppercase"
+            style={{ color: 'rgba(239, 68, 68, 0.4)' }}
           >
             ENEMY WATERS
           </span>
@@ -68,10 +68,10 @@ export default function CommandHUD({
       {phase === 'playing' && (
         <button
           onClick={() => onRestart()}
-          className="fixed bottom-6 left-1/2 -translate-x-1/2 z-20 px-4 py-2 rounded text-xs font-bold tracking-widest uppercase cursor-pointer transition-all hover:scale-105"
+          className="fixed bottom-3 left-4 z-20 px-3 py-1.5 rounded text-[10px] font-bold tracking-widest uppercase cursor-pointer transition-all hover:scale-105"
           style={{
-            background: 'rgba(239, 68, 68, 0.15)',
-            border: '1px solid rgba(239, 68, 68, 0.4)',
+            background: 'rgba(239, 68, 68, 0.1)',
+            border: '1px solid rgba(239, 68, 68, 0.3)',
             color: '#ef4444',
             backdropFilter: 'blur(8px)',
           }}

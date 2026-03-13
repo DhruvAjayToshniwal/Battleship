@@ -145,6 +145,9 @@ export default function GamePage() {
     return `${letter}${row + 1}`;
   }, [enemyHoverCell]);
 
+  const playerShots = useMemo(() => gameState?.player_shots ?? [], [gameState]);
+  const aiShots = useMemo(() => gameState?.ai_shots ?? [], [gameState]);
+
   const lastFireCoord = lastPlayerResult?.coordinate ?? null;
   const boardSpacing = 7;
 
@@ -220,7 +223,9 @@ export default function GamePage() {
         )}
       </AnimatePresence>
 
-      {phase === 'playing' && <Radar />}
+      {phase === 'playing' && (
+        <Radar playerShots={playerShots} aiShots={aiShots} />
+      )}
 
       <TurnBanner isPlayerTurn={isPlayerTurn} visible={showTurnBanner} />
 
@@ -243,6 +248,7 @@ export default function GamePage() {
       <VictoryOverlay
         visible={phase === 'gameOver' && isPlayerWin}
         difficulty={difficulty}
+        gameState={gameState}
         onRestart={handleRestart}
         onChangeDifficulty={changeDifficulty}
         loading={loading}
@@ -251,6 +257,7 @@ export default function GamePage() {
       <DefeatOverlay
         visible={phase === 'gameOver' && isAiWin}
         difficulty={difficulty}
+        gameState={gameState}
         onRestart={handleRestart}
         onChangeDifficulty={changeDifficulty}
         loading={loading}

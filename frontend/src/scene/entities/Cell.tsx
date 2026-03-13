@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useRef, memo } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 
@@ -12,7 +12,7 @@ interface CellProps {
   isEnemyBoard?: boolean;
 }
 
-export default function Cell({
+export default memo(function Cell({
   position,
   state,
   onClick,
@@ -22,16 +22,17 @@ export default function Cell({
   isEnemyBoard = false,
 }: CellProps) {
   const meshRef = useRef<THREE.Mesh>(null);
-  const [hovered, setHovered] = useState(false);
+  const hoveredRef = useRef(false);
   const glowRef = useRef<THREE.PointLight>(null);
   const reticleRef = useRef<THREE.Mesh>(null);
+  const matRef = useRef<THREE.MeshStandardMaterial>(null);
 
   useFrame(({ clock }) => {
     const t = clock.getElapsedTime();
     if (state === 'hit' && glowRef.current) {
       glowRef.current.intensity = 1.5 + Math.sin(t * 3) * 0.5;
     }
-    if (hovered && isEnemyBoard && reticleRef.current) {
+    if (hoveredRef.current && isEnemyBoard && reticleRef.current) {
       reticleRef.current.rotation.z = t * 2;
       const pulse = 1 + Math.sin(t * 4) * 0.1;
       reticleRef.current.scale.set(pulse, pulse, 1);
@@ -133,13 +134,25 @@ export default function Cell({
           position={[position[0], position[1] + 0.01, position[2]]}
           onPointerEnter={(e) => {
             e.stopPropagation();
-            setHovered(true);
+            hoveredRef.current = true;
             document.body.style.cursor = 'crosshair';
+            if (matRef.current) {
+              matRef.current.opacity = 0.7;
+              matRef.current.emissiveIntensity = 0.4;
+              matRef.current.color.set(isEnemyBoard ? '#1e3a5f' : '#1e3a5f');
+              matRef.current.emissive.set(isEnemyBoard ? '#ef4444' : '#38bdf8');
+            }
           }}
           onPointerLeave={(e) => {
             e.stopPropagation();
-            setHovered(false);
+            hoveredRef.current = false;
             document.body.style.cursor = 'default';
+            if (matRef.current) {
+              matRef.current.opacity = 0.1;
+              matRef.current.emissiveIntensity = 0;
+              matRef.current.color.set('#0a1628');
+              matRef.current.emissive.set('#000000');
+            }
           }}
           onClick={(e) => {
             e.stopPropagation();
@@ -148,20 +161,21 @@ export default function Cell({
         >
           <boxGeometry args={[0.9, 0.02, 0.9]} />
           <meshStandardMaterial
-            color={hovered ? (isEnemyBoard ? '#1e3a5f' : '#1e3a5f') : '#0a1628'}
+            ref={matRef}
+            color="#0a1628"
             transparent
-            opacity={hovered ? 0.7 : 0.1}
-            emissive={hovered ? (isEnemyBoard ? '#ef4444' : '#38bdf8') : '#000000'}
-            emissiveIntensity={hovered ? 0.4 : 0}
+            opacity={0.1}
+            emissive="#000000"
+            emissiveIntensity={0}
           />
         </mesh>
-        {/* Target reticle on enemy board hover */}
-        {hovered && isEnemyBoard && (
+        {isEnemyBoard && (
           <>
             <mesh
               ref={reticleRef}
               position={[position[0], position[1] + 0.06, position[2]]}
               rotation={[-Math.PI / 2, 0, 0]}
+              visible={false}
             >
               <ringGeometry args={[0.3, 0.38, 4]} />
               <meshStandardMaterial
@@ -176,7 +190,7 @@ export default function Cell({
             <pointLight
               position={[position[0], position[1] + 0.3, position[2]]}
               color="#ef4444"
-              intensity={1.5}
+              intensity={0}
               distance={2}
             />
           </>
@@ -186,4 +200,4 @@ export default function Cell({
   }
 
   return null;
-}
+});

@@ -10,7 +10,7 @@ export default function DifficultyBadge({ difficulty }: DifficultyBadgeProps) {
 
   return (
     <div
-      className="fixed top-4 right-4 z-20 px-3 py-1 rounded-full"
+      className="fixed top-4 left-4 z-20 px-3 py-1 rounded-full"
       style={{
         background: 'rgba(2, 6, 23, 0.8)',
         border: `1px solid ${color}60`,
