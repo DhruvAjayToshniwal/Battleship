@@ -58,10 +58,11 @@ export default function GamePage() {
   }, []);
 
   useEffect(() => {
-    if (phase === 'playing' && showIntro) {
-      setShowIntro(false);
+    if (!loading && showIntro && phase === 'setup') {
+      const timer = setTimeout(() => setShowIntro(false), 1200);
+      return () => clearTimeout(timer);
     }
-  }, [phase, showIntro]);
+  }, [loading, showIntro, phase]);
 
   useEffect(() => {
     if (phase !== 'playing') return;
@@ -234,7 +235,7 @@ export default function GamePage() {
         lastResult={lastPlayerResult}
       />
 
-      <IntroOverlay visible={showIntro && !gameState && phase === 'setup'} />
+      <IntroOverlay visible={showIntro} />
 
       <VictoryOverlay
         visible={phase === 'gameOver' && isPlayerWin}
@@ -259,7 +260,7 @@ export default function GamePage() {
       />
 
       <LoadingOverlay
-        visible={!gameState && loading && phase === 'setup'}
+        visible={loading}
         message="Initializing naval command..."
       />
     </div>

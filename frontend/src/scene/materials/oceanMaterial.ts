@@ -1,48 +1,71 @@
 import * as THREE from "three";
 
-const vertexShader = `
+const VERTEX = `
 uniform float uTime;
 
 varying vec2 vUv;
 varying float vElevation;
 varying vec3 vNormal;
 varying vec3 vWorldPosition;
+varying float vFoamMask;
 
-float wave(vec2 pos, float freq, float amp, vec2 dir, float speed, float phase) {
-  return amp * sin(dot(normalize(dir), pos) * freq + uTime * speed + phase);
+vec3 gerstnerWave(vec2 pos, float amplitude, float frequency, float steepness, vec2 direction, float speed, float phase) {
+  vec2 d = normalize(direction);
+  float f = dot(d, pos) * frequency + uTime * speed + phase;
+  float s = sin(f);
+  float c = cos(f);
+  float q = steepness / (frequency * amplitude * 5.0);
+  return vec3(
+    q * amplitude * d.x * c,
+    amplitude * s,
+    q * amplitude * d.y * c
+  );
 }
 
 void main() {
   vUv = uv;
-
   vec3 pos = position;
 
-  float elevation = 0.0;
-  elevation += wave(pos.xz, 1.2, 0.15, vec2(1.0, 0.3), 0.8, 0.0);
-  elevation += wave(pos.xz, 2.5, 0.08, vec2(-0.5, 1.0), 1.2, 1.5);
-  elevation += wave(pos.xz, 4.0, 0.04, vec2(0.7, -0.7), 1.8, 3.0);
-  elevation += wave(pos.xz, 6.5, 0.02, vec2(-1.0, 0.2), 2.5, 0.7);
-  elevation += wave(pos.xz, 10.0, 0.01, vec2(0.3, 1.0), 3.2, 2.1);
+  vec3 w1 = gerstnerWave(pos.xz, 0.18, 0.8, 0.6, vec2(1.0, 0.4), 0.6, 0.0);
+  vec3 w2 = gerstnerWave(pos.xz, 0.12, 1.3, 0.5, vec2(-0.6, 1.0), 0.9, 1.3);
+  vec3 w3 = gerstnerWave(pos.xz, 0.07, 2.2, 0.4, vec2(0.8, -0.5), 1.4, 2.7);
+  vec3 w4 = gerstnerWave(pos.xz, 0.04, 3.8, 0.35, vec2(-0.3, -0.9), 2.0, 4.1);
+  vec3 w5 = gerstnerWave(pos.xz, 0.025, 5.5, 0.3, vec2(0.5, 0.8), 2.8, 0.9);
+  vec3 w6 = gerstnerWave(pos.xz, 0.015, 8.0, 0.25, vec2(-0.9, 0.3), 3.5, 3.3);
+  vec3 w7 = gerstnerWave(pos.xz, 0.008, 12.0, 0.2, vec2(0.2, -1.0), 4.2, 5.5);
 
-  elevation += 0.05 * sin(pos.x * 0.5 + uTime * 0.3) * cos(pos.z * 0.3 + uTime * 0.2);
+  vec3 totalDisplacement = w1 + w2 + w3 + w4 + w5 + w6 + w7;
+  pos.x += totalDisplacement.x;
+  pos.y += totalDisplacement.y;
+  pos.z += totalDisplacement.z;
 
-  pos.y += elevation;
-  vElevation = elevation;
+  vElevation = totalDisplacement.y;
 
-  float delta = 0.01;
-  float ex = 0.0;
-  ex += wave(vec2(pos.x + delta, pos.z), 1.2, 0.15, vec2(1.0, 0.3), 0.8, 0.0);
-  ex += wave(vec2(pos.x + delta, pos.z), 2.5, 0.08, vec2(-0.5, 1.0), 1.2, 1.5);
-  ex += wave(vec2(pos.x + delta, pos.z), 4.0, 0.04, vec2(0.7, -0.7), 1.8, 3.0);
+  float eps = 0.05;
 
-  float ez = 0.0;
-  ez += wave(vec2(pos.x, pos.z + delta), 1.2, 0.15, vec2(1.0, 0.3), 0.8, 0.0);
-  ez += wave(vec2(pos.x, pos.z + delta), 2.5, 0.08, vec2(-0.5, 1.0), 1.2, 1.5);
-  ez += wave(vec2(pos.x, pos.z + delta), 4.0, 0.04, vec2(0.7, -0.7), 1.8, 3.0);
+  vec3 dxW1 = gerstnerWave(vec2(position.x + eps, position.z), 0.18, 0.8, 0.6, vec2(1.0, 0.4), 0.6, 0.0);
+  vec3 dxW2 = gerstnerWave(vec2(position.x + eps, position.z), 0.12, 1.3, 0.5, vec2(-0.6, 1.0), 0.9, 1.3);
+  vec3 dxW3 = gerstnerWave(vec2(position.x + eps, position.z), 0.07, 2.2, 0.4, vec2(0.8, -0.5), 1.4, 2.7);
+  vec3 dxW4 = gerstnerWave(vec2(position.x + eps, position.z), 0.04, 3.8, 0.35, vec2(-0.3, -0.9), 2.0, 4.1);
+  vec3 dxW5 = gerstnerWave(vec2(position.x + eps, position.z), 0.025, 5.5, 0.3, vec2(0.5, 0.8), 2.8, 0.9);
+  vec3 dxTotal = dxW1 + dxW2 + dxW3 + dxW4 + dxW5;
+  float dxHeight = dxTotal.y;
 
-  vec3 tangentX = normalize(vec3(delta, ex - elevation, 0.0));
-  vec3 tangentZ = normalize(vec3(0.0, ez - elevation, delta));
+  vec3 dzW1 = gerstnerWave(vec2(position.x, position.z + eps), 0.18, 0.8, 0.6, vec2(1.0, 0.4), 0.6, 0.0);
+  vec3 dzW2 = gerstnerWave(vec2(position.x, position.z + eps), 0.12, 1.3, 0.5, vec2(-0.6, 1.0), 0.9, 1.3);
+  vec3 dzW3 = gerstnerWave(vec2(position.x, position.z + eps), 0.07, 2.2, 0.4, vec2(0.8, -0.5), 1.4, 2.7);
+  vec3 dzW4 = gerstnerWave(vec2(position.x, position.z + eps), 0.04, 3.8, 0.35, vec2(-0.3, -0.9), 2.0, 4.1);
+  vec3 dzW5 = gerstnerWave(vec2(position.x, position.z + eps), 0.025, 5.5, 0.3, vec2(0.5, 0.8), 2.8, 0.9);
+  vec3 dzTotal = dzW1 + dzW2 + dzW3 + dzW4 + dzW5;
+  float dzHeight = dzTotal.y;
+
+  vec3 tangentX = normalize(vec3(eps, dxHeight - totalDisplacement.y, 0.0));
+  vec3 tangentZ = normalize(vec3(0.0, dzHeight - totalDisplacement.y, eps));
   vNormal = normalize(cross(tangentZ, tangentX));
+
+  float heightDerivative = length(vec2(dxHeight - totalDisplacement.y, dzHeight - totalDisplacement.y)) / eps;
+  vFoamMask = smoothstep(0.4, 1.2, heightDerivative) + smoothstep(0.15, 0.25, vElevation) * 0.5;
+  vFoamMask = clamp(vFoamMask, 0.0, 1.0);
 
   vec4 worldPos = modelMatrix * vec4(pos, 1.0);
   vWorldPosition = worldPos.xyz;
@@ -51,51 +74,92 @@ void main() {
 }
 `;
 
-const fragmentShader = `
+const FRAGMENT = `
 uniform float uTime;
-uniform vec3 uMoonDirection;
+uniform vec3 uSunDirection;
+uniform vec3 uWaterColor;
+uniform vec3 uDeepColor;
+uniform vec3 uFoamColor;
+uniform float uOpacity;
 
 varying vec2 vUv;
 varying float vElevation;
 varying vec3 vNormal;
 varying vec3 vWorldPosition;
+varying float vFoamMask;
+
+float schlickFresnel(float cosTheta) {
+  float f0 = 0.02;
+  return f0 + (1.0 - f0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
+}
+
+float subsurfaceScattering(vec3 viewDir, vec3 lightDir, vec3 normal) {
+  vec3 backLight = normalize(lightDir + normal * 0.6);
+  float sss = pow(clamp(dot(viewDir, -backLight), 0.0, 1.0), 3.0);
+  return sss * 0.35;
+}
+
+vec3 pseudoEnvironment(vec3 reflectDir) {
+  float skyBlend = smoothstep(-0.1, 0.5, reflectDir.y);
+  vec3 skyColor = mix(vec3(0.04, 0.08, 0.16), vec3(0.01, 0.02, 0.06), skyBlend);
+  float moonGlow = pow(max(dot(reflectDir, normalize(vec3(0.3, 0.8, 0.5))), 0.0), 64.0);
+  skyColor += vec3(0.6, 0.65, 0.7) * moonGlow;
+  float horizonGlow = pow(1.0 - abs(reflectDir.y), 8.0);
+  skyColor += vec3(0.03, 0.06, 0.1) * horizonGlow;
+  return skyColor;
+}
 
 void main() {
-  vec3 deepColor = vec3(0.008, 0.04, 0.08);
-  vec3 surfaceColor = vec3(0.04, 0.12, 0.24);
-  vec3 foamColor = vec3(0.5, 0.7, 0.9);
-
-  float blend = smoothstep(-0.1, 0.2, vElevation);
-  vec3 baseColor = mix(deepColor, surfaceColor, blend);
-
-  float foamMask = smoothstep(0.12, 0.2, vElevation);
-  baseColor = mix(baseColor, foamColor, foamMask * 0.3);
-
   vec3 viewDir = normalize(cameraPosition - vWorldPosition);
-  float fresnel = pow(1.0 - max(dot(vNormal, viewDir), 0.0), 3.0);
-  vec3 edgeGlow = vec3(0.22, 0.74, 0.97);
-  baseColor += edgeGlow * fresnel * 0.4;
+  vec3 normal = normalize(vNormal);
+  vec3 lightDir = normalize(uSunDirection);
 
-  vec3 moonDir = normalize(uMoonDirection);
-  vec3 halfDir = normalize(moonDir + viewDir);
-  float spec = pow(max(dot(vNormal, halfDir), 0.0), 64.0);
-  vec3 specColor = vec3(0.7, 0.78, 0.83);
-  baseColor += specColor * spec * 1.2;
+  float depthFactor = smoothstep(-0.15, 0.1, vElevation);
+  vec3 baseColor = mix(uDeepColor, uWaterColor, depthFactor);
 
-  float shimmer = sin(vWorldPosition.x * 8.0 + uTime * 2.0) * sin(vWorldPosition.z * 6.0 + uTime * 1.5);
-  baseColor += vec3(0.1, 0.15, 0.2) * shimmer * 0.05;
+  float cosTheta = max(dot(normal, viewDir), 0.0);
+  float fresnel = schlickFresnel(cosTheta);
 
-  gl_FragColor = vec4(baseColor, 0.9);
+  vec3 reflectDir = reflect(-viewDir, normal);
+  vec3 envColor = pseudoEnvironment(reflectDir);
+  baseColor = mix(baseColor, envColor, fresnel * 0.7);
+
+  vec3 halfDir = normalize(lightDir + viewDir);
+  float specNdotH = max(dot(normal, halfDir), 0.0);
+  float specular = pow(specNdotH, 256.0) * 2.5;
+  float specularBroad = pow(specNdotH, 32.0) * 0.3;
+  vec3 specColor = vec3(0.75, 0.82, 0.88);
+  baseColor += specColor * (specular + specularBroad);
+
+  float sss = subsurfaceScattering(viewDir, lightDir, normal);
+  vec3 sssColor = vec3(0.05, 0.18, 0.22);
+  baseColor += sssColor * sss;
+
+  baseColor = mix(baseColor, uFoamColor, vFoamMask * 0.4);
+
+  float shimmerA = sin(vWorldPosition.x * 12.0 + uTime * 1.8) * cos(vWorldPosition.z * 10.0 + uTime * 1.3);
+  float shimmerB = sin(vWorldPosition.x * 7.0 - uTime * 0.9) * cos(vWorldPosition.z * 5.0 + uTime * 0.7);
+  float shimmer = (shimmerA + shimmerB) * 0.5;
+  baseColor += vec3(0.06, 0.1, 0.14) * shimmer * 0.04 * fresnel;
+
+  float edgeGlow = pow(1.0 - cosTheta, 4.0);
+  baseColor += vec3(0.1, 0.3, 0.4) * edgeGlow * 0.15;
+
+  gl_FragColor = vec4(baseColor, uOpacity);
 }
 `;
 
 export function createOceanMaterial(): THREE.ShaderMaterial {
   return new THREE.ShaderMaterial({
-    vertexShader,
-    fragmentShader,
+    vertexShader: VERTEX,
+    fragmentShader: FRAGMENT,
     uniforms: {
       uTime: { value: 0.0 },
-      uMoonDirection: { value: new THREE.Vector3(0.3, 1.0, 0.5) },
+      uSunDirection: { value: new THREE.Vector3(0.3, 1.0, 0.5) },
+      uWaterColor: { value: new THREE.Color(0.05, 0.2, 0.32) },
+      uDeepColor: { value: new THREE.Color(0.008, 0.03, 0.07) },
+      uFoamColor: { value: new THREE.Color(0.7, 0.85, 0.9) },
+      uOpacity: { value: 0.92 },
     },
     transparent: true,
     side: THREE.DoubleSide,
