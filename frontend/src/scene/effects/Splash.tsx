@@ -1,4 +1,4 @@
-import { useRef, useMemo, useState } from 'react';
+import { useRef, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 
@@ -11,10 +11,14 @@ const PARTICLE_COUNT = 16;
 const DURATION = 1.0;
 
 export default function Splash({ position, onComplete }: SplashProps) {
+  const groupRef = useRef<THREE.Group>(null);
   const meshRef = useRef<THREE.InstancedMesh>(null);
   const ringRef = useRef<THREE.Mesh>(null);
-  const [elapsed, setElapsed] = useState(0);
+  const particleMaterialRef = useRef<THREE.MeshStandardMaterial>(null);
+  const ringMaterialRef = useRef<THREE.MeshStandardMaterial>(null);
+  const elapsedRef = useRef(0);
   const completedRef = useRef(false);
+  const visibleRef = useRef(true);
 
   const particles = useMemo(() => {
     return Array.from({ length: PARTICLE_COUNT }, (_, i) => {
@@ -35,18 +39,18 @@ export default function Splash({ position, onComplete }: SplashProps) {
   const dummy = useMemo(() => new THREE.Object3D(), []);
 
   useFrame((_, delta) => {
-    if (!meshRef.current) return;
+    if (!visibleRef.current || !meshRef.current) return;
 
-    const newElapsed = elapsed + delta;
-    setElapsed(newElapsed);
+    elapsedRef.current += delta;
+    const t = elapsedRef.current;
 
-    if (newElapsed > DURATION && !completedRef.current) {
+    if (t > DURATION && !completedRef.current) {
       completedRef.current = true;
       onComplete?.();
+      visibleRef.current = false;
+      if (groupRef.current) groupRef.current.visible = false;
       return;
     }
-
-    const t = newElapsed;
 
     for (let i = 0; i < PARTICLE_COUNT; i++) {
       const p = particles[i];
@@ -65,33 +69,36 @@ export default function Splash({ position, onComplete }: SplashProps) {
     }
     meshRef.current.instanceMatrix.needsUpdate = true;
 
-    // Expand ring
+    if (particleMaterialRef.current) {
+      particleMaterialRef.current.opacity = Math.max(0, 1 - t / DURATION);
+    }
+
     if (ringRef.current) {
       const ringScale = 1 + t * 2;
       ringRef.current.scale.set(ringScale, ringScale, 1);
-      (ringRef.current.material as THREE.MeshStandardMaterial).opacity =
-        Math.max(0, 0.6 * (1 - t / DURATION));
+    }
+    if (ringMaterialRef.current) {
+      ringMaterialRef.current.opacity = Math.max(0, 0.6 * (1 - t / DURATION));
     }
   });
 
-  if (elapsed > DURATION) return null;
-
   return (
-    <group position={position}>
+    <group ref={groupRef} position={position}>
       <instancedMesh ref={meshRef} args={[undefined, undefined, PARTICLE_COUNT]}>
         <sphereGeometry args={[1, 6, 6]} />
         <meshStandardMaterial
+          ref={particleMaterialRef}
           color="#38bdf8"
           emissive="#38bdf8"
           emissiveIntensity={1}
           transparent
-          opacity={Math.max(0, 1 - elapsed / DURATION)}
+          opacity={1}
         />
       </instancedMesh>
-      {/* Expanding ring */}
       <mesh ref={ringRef} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.05, 0]}>
         <ringGeometry args={[0.15, 0.25, 24]} />
         <meshStandardMaterial
+          ref={ringMaterialRef}
           color="#7dd3fc"
           emissive="#38bdf8"
           emissiveIntensity={0.5}

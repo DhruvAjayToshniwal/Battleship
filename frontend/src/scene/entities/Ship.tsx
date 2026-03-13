@@ -1,15 +1,10 @@
 import { useMemo } from 'react';
 import * as THREE from 'three';
+import { coordToXZ } from '../../utils/coordinates';
 
 interface ShipProps {
   coordinates: string[];
   isPreview?: boolean;
-}
-
-function coordToXZ(coord: string): [number, number] {
-  const col = coord.charCodeAt(0) - 65;
-  const row = parseInt(coord.slice(1), 10) - 1;
-  return [col - 5 + 0.5, row - 5 + 0.5];
 }
 
 function createHullGeometry(length: number, isHorizontal: boolean): THREE.BufferGeometry {
@@ -39,6 +34,7 @@ function createHullGeometry(length: number, isHorizontal: boolean): THREE.Buffer
   const bowZ = isHorizontal ? 0 : hd + bowTaper * 0.3;
   const sternX = isHorizontal ? -hw - bowTaper * 0.1 : 0;
   const sternZ = isHorizontal ? 0 : -hd - bowTaper * 0.1;
+
   if (isHorizontal) {
     addQuad([-hw, h, -hd], [hw, h, -hd], [hw, h, hd], [-hw, h, hd]);
     addQuad([-hw, 0, hd], [hw, 0, hd], [hw, h, hd], [-hw, h, hd]);

@@ -1,6 +1,7 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import type { Phase } from '../hooks/useGame';
+import type { Phase } from '../hooks/useBattleSequence';
 import type { GameStateResponse, Difficulty } from '../services/api';
+import { DIFFICULTY_COLORS } from '../utils/constants';
 
 interface GameHUDProps {
   phase: Phase;
@@ -12,12 +13,6 @@ interface GameHUDProps {
   onChangeDifficulty: (difficulty: Difficulty) => void;
   loading: boolean;
 }
-
-const DIFFICULTY_COLORS: Record<Difficulty, string> = {
-  easy: '#22c55e',
-  medium: '#fbbf24',
-  hard: '#ef4444',
-};
 
 export default function GameHUD({
   phase,

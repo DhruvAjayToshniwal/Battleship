@@ -1,29 +1,3 @@
-"""
-Hard AI — Probability Density Search + Orientation Targeting
-
-The strongest practical Battleship algorithm. Combines two techniques:
-
-1. PROBABILITY DENSITY MAP
-   For every remaining ship, enumerate all valid placements (positions
-   where the ship could legally exist given known misses). Each cell's
-   score = number of valid placements passing through it. The AI fires
-   at the highest-scoring cell.
-
-   Placements that pass through existing (unsunk) hits are weighted
-   heavily, concentrating fire on partially-damaged ships.
-
-2. ORIENTATION TARGETING
-   When multiple unsunk hits form a line, the AI detects the ship's
-   orientation (horizontal/vertical) and only fires along that axis.
-   This eliminates wasted perpendicular shots and typically sinks a
-   ship in 1-2 extra shots after the first hit.
-
-Expected performance: ~40-45 turns on average.
-
-The combination of probability-based hunting and orientation-aware
-targeting makes this extremely difficult to beat.
-"""
-
 import random
 
 from app.engine.ai.ai_base import BattleshipAI
@@ -32,21 +6,7 @@ from app.engine.ai.orientation_target import detect_orientation, generate_target
 
 
 class HardAI(BattleshipAI):
-	"""
-	Probability heatmap hunter with orientation-aware targeting.
-
-	In hunt mode: fires at the cell with the highest probability score.
-	In target mode: uses orientation detection to extend along ship axes,
-	falling back to probability-weighted adjacent selection.
-	"""
-
 	def choose_move(self, board_state: list[list[int]]) -> tuple[int, int]:
-		"""
-		Determine the next shot using probability analysis and orientation targeting.
-
-		If unsunk hits exist, enter target mode. Otherwise, hunt using the
-		probability density map.
-		"""
 		try:
 			unsunk_hits = list(self.hit_cells - self.sunk_coords)
 
@@ -58,14 +18,6 @@ class HardAI(BattleshipAI):
 			return random.choice(available)
 
 	def hunt_mode(self, board_state: list[list[int]]) -> tuple[int, int]:
-		"""
-		Fire at the cell with the highest probability of containing a ship.
-
-		Builds a probability density grid across all remaining ship placements,
-		then selects the maximum-scoring cell. Ties are broken by checkerboard
-		preference (since all ships span >= 2 cells, checkerboard cells are
-		statistically better).
-		"""
 		prob_grid = build_probability_grid(
 			board_state,
 			self.remaining_ships,
@@ -101,13 +53,6 @@ class HardAI(BattleshipAI):
 		board_state: list[list[int]],
 		unsunk_hits: list[tuple[int, int]],
 	) -> tuple[int, int]:
-		"""
-		Focus fire around unsunk hit cells using orientation detection.
-
-		Groups hits by adjacency to identify which belong to the same ship,
-		detects orientation, and extends along the ship's axis. If orientation
-		is unknown (single hit), uses probability-weighted adjacent selection.
-		"""
 		ship_groups = self.group_adjacent_hits(unsunk_hits)
 
 		for group in ship_groups:
@@ -123,9 +68,7 @@ class HardAI(BattleshipAI):
 					self.sunk_coords,
 					self.hit_cells,
 				)
-				targets.sort(
-					key=lambda t: prob_grid[t[0]][t[1]], reverse=True
-				)
+				targets.sort(key=lambda t: prob_grid[t[0]][t[1]], reverse=True)
 				return targets[0]
 
 		return self.hunt_mode(board_state)
@@ -133,12 +76,6 @@ class HardAI(BattleshipAI):
 	def group_adjacent_hits(
 		self, hits: list[tuple[int, int]]
 	) -> list[list[tuple[int, int]]]:
-		"""
-		Group unsunk hits into clusters of adjacent cells (likely same ship).
-
-		Uses union-find logic: two hits are in the same group if they are
-		cardinally adjacent (distance 1 in row or column, not both).
-		"""
 		if not hits:
 			return []
 

@@ -1,13 +1,15 @@
-import { useRef, useState, useCallback, useMemo } from 'react';
-import Ocean from './Ocean';
-import Grid from './Grid';
-import Cell from './Cell';
-import Ship from './Ship';
-import Missile from './Missile';
-import Explosion from './Explosion';
-import Splash from './Splash';
-import SmokeEffect from './SmokeEffect';
-import RadarSweep from './RadarSweep';
+import { useRef, useState, useCallback, useMemo, useEffect } from 'react';
+import Ocean from './environment/Ocean';
+import Grid from './environment/Grid';
+import Cell from './entities/Cell';
+import Ship from './entities/Ship';
+import Missile from './effects/Missile';
+import Explosion from './effects/Explosion';
+import Splash from './effects/Splash';
+import SmokeEffect from './effects/SmokeEffect';
+import RadarSweep from './environment/RadarSweep';
+import { rowColToCoord, coordToPosition } from '../utils/coordinates';
+import { HALF_BOARD } from '../utils/constants';
 import type { ShotResult } from '../services/api';
 
 interface Board3DProps {
@@ -20,17 +22,6 @@ interface Board3DProps {
   shipCoordinates?: string[][];
   previewCoords?: string[] | null;
   latestResult?: ShotResult | null;
-}
-
-function rowColToCoord(row: number, col: number): string {
-  return String.fromCharCode(65 + col) + (row + 1);
-}
-
-function coordToPosition(coord: string): [number, number, number] {
-  const col = coord.charCodeAt(0) - 65;
-  const row = parseInt(coord.slice(1), 10) - 1;
-  const half = 5;
-  return [col - half + 0.5, 0.1, row - half + 0.5];
 }
 
 interface EffectEntry {
@@ -54,31 +45,32 @@ export default function Board3D({
   const [effects, setEffects] = useState<EffectEntry[]>([]);
   const lastResultRef = useRef<string | null>(null);
 
-  const resultKey = latestResult
-    ? `${latestResult.coordinate}-${latestResult.result}`
-    : null;
-  if (resultKey && resultKey !== lastResultRef.current) {
+  useEffect(() => {
+    if (!latestResult) return;
+    const resultKey = `${latestResult.coordinate}-${latestResult.result}`;
+    if (resultKey === lastResultRef.current) return;
     lastResultRef.current = resultKey;
-    const pos = coordToPosition(latestResult!.coordinate);
 
+    const pos = coordToPosition(latestResult.coordinate);
     const newEffect: EffectEntry = {
       id: `${Date.now()}-${Math.random()}`,
       type: 'missile',
       position: pos,
-      resultType: latestResult!.result,
+      resultType: latestResult.result,
     };
     setEffects((prev) => [...prev, newEffect]);
-  }
+  }, [latestResult]);
 
   const handleMissileImpact = useCallback((id: string, resultType: string, pos: [number, number, number]) => {
-    setEffects((prev) => prev.filter((e) => e.id !== id));
-
-    const impactEffect: EffectEntry = {
-      id: `impact-${Date.now()}-${Math.random()}`,
-      type: resultType === 'miss' ? 'splash' : 'explosion',
-      position: pos,
-    };
-    setEffects((prev) => [...prev, impactEffect]);
+    setEffects((prev) => {
+      const without = prev.filter((e) => e.id !== id);
+      const impactEffect: EffectEntry = {
+        id: `impact-${Date.now()}-${Math.random()}`,
+        type: resultType === 'miss' ? 'splash' : 'explosion',
+        position: pos,
+      };
+      return [...without, impactEffect];
+    });
   }, []);
 
   const removeEffect = useCallback((id: string) => {
@@ -92,15 +84,12 @@ export default function Board3D({
     grid.forEach((row, rowIdx) => {
       row.forEach((cellState, colIdx) => {
         if (cellState === 'hit') {
-          const half = 5;
-          positions.push([colIdx - half + 0.5, 0.1, rowIdx - half + 0.5]);
+          positions.push([colIdx - HALF_BOARD + 0.5, 0.1, rowIdx - HALF_BOARD + 0.5]);
         }
       });
     });
     return positions;
   }, [grid]);
-
-  const half = 5;
 
   return (
     <group position={position}>
@@ -115,8 +104,8 @@ export default function Board3D({
       {grid.map((row, rowIdx) =>
         row.map((cellState, colIdx) => {
           const coord = rowColToCoord(rowIdx, colIdx);
-          const x = colIdx - half + 0.5;
-          const z = rowIdx - half + 0.5;
+          const x = colIdx - HALF_BOARD + 0.5;
+          const z = rowIdx - HALF_BOARD + 0.5;
           const isPreview = previewSet.has(coord);
 
           if (isPreview) {
@@ -137,6 +126,7 @@ export default function Board3D({
               state={cellState}
               showShips={showShips}
               isClickable={isClickable && !cellState}
+              isEnemyBoard={isEnemyBoard}
               onClick={() => onCellClick?.(rowIdx, colIdx, coord)}
             />
           );

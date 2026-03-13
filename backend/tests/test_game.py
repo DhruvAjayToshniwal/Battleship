@@ -288,11 +288,13 @@ class TestMediumAI:
 		ai.shots_taken.add((5, 6))
 		ai.record_result(
 			(5, 6),
-			{"result": "sunk", "ship": "Destroyer", "sunk_ship_coords": [(5, 5), (5, 6)]},
+			{
+				"result": "sunk",
+				"ship": "Destroyer",
+				"sunk_ship_coords": [(5, 5), (5, 6)],
+			},
 		)
-		remaining_targets = [
-			t for t in ai.target_queue if t not in {(5, 5), (5, 6)}
-		]
+		remaining_targets = [t for t in ai.target_queue if t not in {(5, 5), (5, 6)}]
 		ai.target_queue = remaining_targets
 		board[5][5] = 1
 		board[5][6] = 1

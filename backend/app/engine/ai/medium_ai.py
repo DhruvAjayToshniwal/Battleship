@@ -1,43 +1,14 @@
-"""
-Medium AI — Hunt + Target with Checkerboard Optimization
-
-Two-mode algorithm:
-
-HUNT MODE (searching for ships):
-    Uses a checkerboard pattern to halve the search space. Since every
-    ship has length >= 2, each ship must occupy at least one cell on
-    the checkerboard. Picks randomly among checkerboard cells first.
-
-        X . X . X . X . X .
-        . X . X . X . X . X
-        X . X . X . X . X .
-        ...
-
-TARGET MODE (sinking a found ship):
-    When a hit is scored, the AI pushes all 4 adjacent cells into a
-    target queue. It fires at queued cells until the ship sinks, then
-    returns to hunt mode.
-
-Expected performance: ~55-65 turns on average.
-"""
-
 import random
 
 from app.engine.ai.ai_base import BattleshipAI
 
 
 class MediumAI(BattleshipAI):
-	"""Hunt + Target strategy with checkerboard-patterned hunting."""
-
 	def __init__(self) -> None:
 		super().__init__()
 		self.target_queue: list[tuple[int, int]] = []
 
 	def choose_move(self, board_state: list[list[int]]) -> tuple[int, int]:
-		"""
-		If targets are queued (we have unsunk hits), fire at the next target.
-		Otherwise, hunt using checkerboard pattern.
-		"""
 		try:
 			if self.target_queue:
 				return self.target_mode(board_state)
@@ -47,13 +18,6 @@ class MediumAI(BattleshipAI):
 			return random.choice(available)
 
 	def hunt_mode(self, board_state: list[list[int]]) -> tuple[int, int]:
-		"""
-		Pick a random unknown cell, preferring checkerboard-patterned cells.
-
-		The checkerboard pattern ensures we find every ship with ~half the
-		shots compared to pure random, since no ship can fit entirely on
-		one color of the checkerboard.
-		"""
 		unknown = [
 			(r, c)
 			for r in range(self.board_size)
@@ -69,12 +33,6 @@ class MediumAI(BattleshipAI):
 		return random.choice(unknown)
 
 	def target_mode(self, board_state: list[list[int]]) -> tuple[int, int]:
-		"""
-		Fire at queued target cells (adjacent to confirmed hits).
-
-		Filters out already-shot cells and cells that are out of bounds.
-		If the queue empties, falls back to hunt mode.
-		"""
 		while self.target_queue:
 			candidate = self.target_queue.pop(0)
 			r, c = candidate
@@ -88,10 +46,6 @@ class MediumAI(BattleshipAI):
 		return self.hunt_mode(board_state)
 
 	def record_result(self, coord: tuple[int, int], result: dict) -> None:
-		"""
-		After recording the result, queue adjacent cells on hits
-		and clean the queue on sinks.
-		"""
 		super().record_result(coord, result)
 
 		try:

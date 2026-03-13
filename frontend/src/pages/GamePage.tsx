@@ -3,12 +3,12 @@ import { Canvas } from '@react-three/fiber';
 import { Environment } from '@react-three/drei';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useGame } from '../hooks/useGame';
-import { useSound } from '../hooks/useSound';
-import Board3D from '../components/Board3D';
+import Board3D from '../scene/Board3D';
 import CameraController from '../components/CameraController';
 import ShipPlacement from '../components/ShipPlacement';
 import GameHUD from '../components/GameHUD';
 import Radar from '../components/Radar';
+import NetworkErrorOverlay from '../components/overlays/NetworkErrorOverlay';
 import type { Difficulty } from '../services/api';
 
 export default function GamePage() {
@@ -31,6 +31,7 @@ export default function GamePage() {
     isFiring,
     message,
     difficulty,
+    clearError,
     changeDifficulty,
     startGame,
     getShipPreview,
@@ -40,8 +41,6 @@ export default function GamePage() {
     confirmPlacement,
     fireShot,
   } = useGame();
-
-  useSound();
 
   const [hoverCoord, setHoverCoord] = useState<[number, number] | null>(null);
 
@@ -211,30 +210,18 @@ export default function GamePage() {
 
       {phase === 'playing' && <Radar />}
 
-      <AnimatePresence>
-        {error && (
-          <motion.div
-            initial={{ y: 50, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: 50, opacity: 0 }}
-            className="fixed bottom-6 left-1/2 -translate-x-1/2 z-30 px-6 py-3 rounded-lg"
-            style={{
-              background: 'rgba(239, 68, 68, 0.2)',
-              border: '1px solid rgba(239, 68, 68, 0.4)',
-              color: '#ef4444',
-            }}
-          >
-            {error}
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <NetworkErrorOverlay
+        error={error}
+        onRetry={() => startGame()}
+        onDismiss={clearError}
+      />
 
       <AnimatePresence>
         {!gameState && loading && phase === 'setup' && (
           <motion.div
             initial={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-40 flex items-center justify-center"
+            className="fixed inset-0 z-50 flex items-center justify-center"
             style={{ background: '#0a0e1a' }}
           >
             <div className="text-center">

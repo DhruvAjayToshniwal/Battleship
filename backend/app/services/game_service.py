@@ -43,7 +43,9 @@ class GameService:
 	async def start_game(self, difficulty: str = "hard") -> StartGameResponse:
 		try:
 			if difficulty not in ("easy", "medium", "hard"):
-				raise ValueError(f"Invalid difficulty: {difficulty}. Must be easy, medium, or hard.")
+				raise ValueError(
+					f"Invalid difficulty: {difficulty}. Must be easy, medium, or hard."
+				)
 			game_id = str(uuid.uuid4())
 			engine = GameEngine(difficulty=difficulty)
 			engine.setup_ai()

@@ -4,11 +4,12 @@ import * as THREE from 'three';
 
 interface CellProps {
   position: [number, number, number];
-  state: string | null; // null, 'ship', 'hit', 'miss'
+  state: string | null;
   onClick?: () => void;
   isPreview?: boolean;
   isClickable?: boolean;
   showShips?: boolean;
+  isEnemyBoard?: boolean;
 }
 
 export default function Cell({
@@ -18,18 +19,22 @@ export default function Cell({
   isPreview = false,
   isClickable = false,
   showShips = true,
+  isEnemyBoard = false,
 }: CellProps) {
   const meshRef = useRef<THREE.Mesh>(null);
   const [hovered, setHovered] = useState(false);
   const glowRef = useRef<THREE.PointLight>(null);
-
+  const reticleRef = useRef<THREE.Mesh>(null);
 
   useFrame(({ clock }) => {
     const t = clock.getElapsedTime();
-    if (meshRef.current) {
-      if (state === 'hit' && glowRef.current) {
-        glowRef.current.intensity = 1.5 + Math.sin(t * 3) * 0.5;
-      }
+    if (state === 'hit' && glowRef.current) {
+      glowRef.current.intensity = 1.5 + Math.sin(t * 3) * 0.5;
+    }
+    if (hovered && isEnemyBoard && reticleRef.current) {
+      reticleRef.current.rotation.z = t * 2;
+      const pulse = 1 + Math.sin(t * 4) * 0.1;
+      reticleRef.current.scale.set(pulse, pulse, 1);
     }
   });
 
@@ -66,7 +71,6 @@ export default function Cell({
           intensity={1.5}
           distance={3}
         />
-        {/* Base marker */}
         <mesh position={[0, 0.02, 0]}>
           <boxGeometry args={[0.9, 0.04, 0.9]} />
           <meshStandardMaterial
@@ -121,35 +125,63 @@ export default function Cell({
     );
   }
 
-  // Empty / clickable cell
   if (isClickable) {
     return (
-      <mesh
-        position={[position[0], position[1] + 0.01, position[2]]}
-        onPointerEnter={(e) => {
-          e.stopPropagation();
-          setHovered(true);
-          document.body.style.cursor = 'crosshair';
-        }}
-        onPointerLeave={(e) => {
-          e.stopPropagation();
-          setHovered(false);
-          document.body.style.cursor = 'default';
-        }}
-        onClick={(e) => {
-          e.stopPropagation();
-          onClick?.();
-        }}
-      >
-        <boxGeometry args={[0.9, 0.02, 0.9]} />
-        <meshStandardMaterial
-          color={hovered ? '#1e3a5f' : '#0a1628'}
-          transparent
-          opacity={hovered ? 0.6 : 0.1}
-          emissive={hovered ? '#38bdf8' : '#000000'}
-          emissiveIntensity={hovered ? 0.2 : 0}
-        />
-      </mesh>
+      <group>
+        <mesh
+          ref={meshRef}
+          position={[position[0], position[1] + 0.01, position[2]]}
+          onPointerEnter={(e) => {
+            e.stopPropagation();
+            setHovered(true);
+            document.body.style.cursor = 'crosshair';
+          }}
+          onPointerLeave={(e) => {
+            e.stopPropagation();
+            setHovered(false);
+            document.body.style.cursor = 'default';
+          }}
+          onClick={(e) => {
+            e.stopPropagation();
+            onClick?.();
+          }}
+        >
+          <boxGeometry args={[0.9, 0.02, 0.9]} />
+          <meshStandardMaterial
+            color={hovered ? (isEnemyBoard ? '#1e3a5f' : '#1e3a5f') : '#0a1628'}
+            transparent
+            opacity={hovered ? 0.7 : 0.1}
+            emissive={hovered ? (isEnemyBoard ? '#ef4444' : '#38bdf8') : '#000000'}
+            emissiveIntensity={hovered ? 0.4 : 0}
+          />
+        </mesh>
+        {/* Target reticle on enemy board hover */}
+        {hovered && isEnemyBoard && (
+          <>
+            <mesh
+              ref={reticleRef}
+              position={[position[0], position[1] + 0.06, position[2]]}
+              rotation={[-Math.PI / 2, 0, 0]}
+            >
+              <ringGeometry args={[0.3, 0.38, 4]} />
+              <meshStandardMaterial
+                color="#ef4444"
+                emissive="#ef4444"
+                emissiveIntensity={1}
+                transparent
+                opacity={0.8}
+                side={THREE.DoubleSide}
+              />
+            </mesh>
+            <pointLight
+              position={[position[0], position[1] + 0.3, position[2]]}
+              color="#ef4444"
+              intensity={1.5}
+              distance={2}
+            />
+          </>
+        )}
+      </group>
     );
   }
 

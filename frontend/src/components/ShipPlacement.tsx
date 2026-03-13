@@ -1,9 +1,10 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import type { Orientation, PlacedShip } from '../hooks/useGame';
+import type { Orientation, PlacedShip } from '../hooks/useShipPlacement';
 import type { Difficulty } from '../services/api';
+import { DIFFICULTY_COLORS } from '../utils/constants';
 
 interface ShipPlacementProps {
-  shipsToPlace: { name: string; size: number }[];
+  shipsToPlace: readonly { readonly name: string; readonly size: number }[];
   currentShipIndex: number;
   placedShips: PlacedShip[];
   allShipsPlaced: boolean;
@@ -15,12 +16,6 @@ interface ShipPlacementProps {
   onUndo: () => void;
   loading: boolean;
 }
-
-const DIFFICULTY_COLORS: Record<Difficulty, string> = {
-  easy: '#22c55e',
-  medium: '#fbbf24',
-  hard: '#ef4444',
-};
 
 export default function ShipPlacement({
   shipsToPlace,

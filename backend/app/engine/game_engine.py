@@ -92,7 +92,6 @@ class GameEngine(BaseGameEngine):
 			raise RuntimeError(f"Ship placement failed: {e}") from e
 
 	def build_board_state(self) -> list[list[int]]:
-		"""Build the board state grid the AI uses to make decisions."""
 		state = [[0] * 10 for _ in range(10)]
 		for coord in self.ai_strategy.hit_cells:
 			r, c = coord

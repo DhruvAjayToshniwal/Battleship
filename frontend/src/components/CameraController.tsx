@@ -1,7 +1,7 @@
 import { useRef, useEffect, useCallback } from 'react';
 import { useThree, useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
-import type { Phase } from '../hooks/useGame';
+import type { Phase } from '../hooks/useBattleSequence';
 
 type CinematicMode = 'intro' | 'idle' | 'playerFire' | 'enemyFire' | 'victory' | 'defeat';
 
@@ -39,7 +39,7 @@ export default function CameraController({
   lastFireCoord,
   boardSpacing,
 }: CameraControllerProps) {
-  const { camera } = useThree();
+  const { camera, size } = useThree();
   const modeRef = useRef<CinematicMode>('intro');
   const timeRef = useRef(0);
   const targetPos = useRef(new THREE.Vector3(0, 35, 30));
@@ -49,11 +49,19 @@ export default function CameraController({
   const victoryAngle = useRef(0);
   const orbitEnabled = useRef(true);
 
+  const aspect = size.width / size.height;
+  const heightBoost = aspect < 1.2 ? 1.3 : aspect < 1.5 ? 1.15 : 1.0;
+  const distBoost = aspect < 1.2 ? 1.25 : aspect < 1.5 ? 1.1 : 1.0;
+
   const setPreset = useCallback((key: keyof typeof CAMERA_PRESETS) => {
     const preset = CAMERA_PRESETS[key];
-    targetPos.current.set(preset.pos[0], preset.pos[1], preset.pos[2]);
+    targetPos.current.set(
+      preset.pos[0],
+      preset.pos[1] * heightBoost,
+      preset.pos[2] * distBoost
+    );
     targetLook.current.set(preset.target[0], preset.target[1], preset.target[2]);
-  }, []);
+  }, [heightBoost, distBoost]);
 
   useEffect(() => {
     if (phase === 'setup') {
@@ -81,7 +89,7 @@ export default function CameraController({
       modeRef.current = 'playerFire';
       timeRef.current = 0;
       const worldPos = coordToWorldPos(lastFireCoord, boardSpacing);
-      targetPos.current.set(worldPos[0] + 3, 8, worldPos[2] + 6);
+      targetPos.current.set(worldPos[0] + 3, 8 * heightBoost, worldPos[2] + 6 * distBoost);
       targetLook.current.set(worldPos[0], worldPos[1], worldPos[2]);
     } else if (!isFiring && !isPlayerTurn) {
       modeRef.current = 'enemyFire';
@@ -91,7 +99,7 @@ export default function CameraController({
       modeRef.current = 'idle';
       setPreset('playing');
     }
-  }, [isFiring, isPlayerTurn, lastFireCoord, phase, boardSpacing, setPreset]);
+  }, [isFiring, isPlayerTurn, lastFireCoord, phase, boardSpacing, setPreset, heightBoost, distBoost]);
 
   useEffect(() => {
     if (phase === 'gameOver') {
@@ -113,8 +121,8 @@ export default function CameraController({
 
       targetPos.current.set(
         startPos[0] + (endPos[0] - startPos[0]) * eased,
-        startPos[1] + (endPos[1] - startPos[1]) * eased,
-        startPos[2] + (endPos[2] - startPos[2]) * eased
+        (startPos[1] + (endPos[1] - startPos[1]) * eased) * heightBoost,
+        (startPos[2] + (endPos[2] - startPos[2]) * eased) * distBoost
       );
       targetLook.current.set(
         CAMERA_PRESETS.setup.target[0],
@@ -130,11 +138,11 @@ export default function CameraController({
 
     if (phase === 'gameOver') {
       victoryAngle.current += delta * 0.3;
-      const radius = 22;
+      const radius = 22 * distBoost;
       const angle = victoryAngle.current;
       targetPos.current.set(
         Math.sin(angle) * radius,
-        12 + Math.sin(angle * 0.5) * 3,
+        (12 + Math.sin(angle * 0.5) * 3) * heightBoost,
         Math.cos(angle) * radius
       );
       targetLook.current.set(0, 0, 0);

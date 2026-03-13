@@ -1,4 +1,4 @@
-import { useRef, useMemo, useState } from 'react';
+import { useRef, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 
@@ -12,11 +12,13 @@ const START_HEIGHT = 12;
 const TRAIL_COUNT = 8;
 
 export default function Missile({ position, onImpact }: MissileProps) {
+  const groupRef = useRef<THREE.Group>(null);
   const missileRef = useRef<THREE.Mesh>(null);
   const trailRef = useRef<THREE.InstancedMesh>(null);
   const lightRef = useRef<THREE.PointLight>(null);
-  const [elapsed, setElapsed] = useState(0);
+  const elapsedRef = useRef(0);
   const impactedRef = useRef(false);
+  const visibleRef = useRef(true);
 
   const dummy = useMemo(() => new THREE.Object3D(), []);
 
@@ -28,10 +30,12 @@ export default function Missile({ position, onImpact }: MissileProps) {
   }, []);
 
   useFrame((_, delta) => {
-    const newElapsed = elapsed + delta;
-    setElapsed(newElapsed);
+    if (!visibleRef.current) return;
 
-    const progress = Math.min(newElapsed / FLIGHT_DURATION, 1);
+    elapsedRef.current += delta;
+    const elapsed = elapsedRef.current;
+
+    const progress = Math.min(elapsed / FLIGHT_DURATION, 1);
     const eased = progress * progress;
     const currentY = START_HEIGHT * (1 - eased);
 
@@ -65,12 +69,15 @@ export default function Missile({ position, onImpact }: MissileProps) {
       impactedRef.current = true;
       onImpact?.();
     }
+
+    if (elapsed > FLIGHT_DURATION + 0.1) {
+      visibleRef.current = false;
+      if (groupRef.current) groupRef.current.visible = false;
+    }
   });
 
-  if (elapsed > FLIGHT_DURATION + 0.1) return null;
-
   return (
-    <group position={position}>
+    <group ref={groupRef} position={position}>
       <mesh ref={missileRef}>
         <cylinderGeometry args={[0.02, 0.04, 0.3, 6]} />
         <meshStandardMaterial

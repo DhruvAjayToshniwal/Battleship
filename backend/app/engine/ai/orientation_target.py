@@ -1,37 +1,7 @@
-"""
-Orientation Detection and Targeted Expansion
-
-When the AI has multiple unsunk hits, this module detects whether they
-form a horizontal or vertical line and generates target cells accordingly.
-
-Orientation Detection:
-    Given hit cells [(5,3), (5,4), (5,5)], all share row 5 with
-    consecutive columns → horizontal orientation detected.
-
-Target Expansion:
-    If orientation is horizontal: extend left and right only.
-    If orientation is vertical: extend up and down only.
-    If unknown (single hit): try all 4 cardinal neighbors.
-
-    This avoids wasting shots perpendicular to a ship's axis, cutting
-    the average moves-to-sink from ~6 down to ~3 per ship.
-"""
-
-
 BOARD_SIZE = 10
 
 
 def detect_orientation(hit_cells: list[tuple[int, int]]) -> str | None:
-	"""
-	Determine the orientation of a group of hit cells.
-
-	Args:
-		hit_cells: List of (row, col) with confirmed hits on the same ship.
-
-	Returns:
-		"horizontal" if hits share a row, "vertical" if they share a column,
-		None if orientation cannot be determined (single hit or ambiguous).
-	"""
 	if len(hit_cells) < 2:
 		return None
 
@@ -50,20 +20,6 @@ def generate_target_cells(
 	hit_cells: list[tuple[int, int]],
 	shots_taken: set[tuple[int, int]],
 ) -> list[tuple[int, int]]:
-	"""
-	Generate candidate cells to fire at based on existing hits.
-
-	Uses orientation detection to focus shots along the ship's axis.
-	Filters out already-shot cells and out-of-bounds positions.
-
-	Args:
-		hit_cells: Unsunk hit positions.
-		shots_taken: All cells already fired at.
-
-	Returns:
-		List of candidate (row, col) to fire at, ordered by priority
-		(extending endpoints of the line first).
-	"""
 	if not hit_cells:
 		return []
 
@@ -104,10 +60,5 @@ def is_valid_target(
 	coord: tuple[int, int],
 	shots_taken: set[tuple[int, int]],
 ) -> bool:
-	"""Check if a coordinate is in bounds and hasn't been shot at."""
 	r, c = coord
-	return (
-		0 <= r < BOARD_SIZE
-		and 0 <= c < BOARD_SIZE
-		and coord not in shots_taken
-	)
+	return 0 <= r < BOARD_SIZE and 0 <= c < BOARD_SIZE and coord not in shots_taken
