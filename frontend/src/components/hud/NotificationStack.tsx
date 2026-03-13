@@ -19,7 +19,7 @@ interface NotificationStackProps {
   lastResult: { result: string; coordinate: string; ship_sunk?: boolean } | null;
 }
 
-export default function NotificationStack({ message, lastResult }: NotificationStackProps) {
+export default function NotificationStack({ lastResult }: NotificationStackProps) {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const lastResultRef = useRef<string | null>(null);
 
