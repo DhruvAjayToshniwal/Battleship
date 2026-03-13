@@ -6,6 +6,8 @@ import Ship from './Ship';
 import Missile from './Missile';
 import Explosion from './Explosion';
 import Splash from './Splash';
+import SmokeEffect from './SmokeEffect';
+import RadarSweep from './RadarSweep';
 import type { ShotResult } from '../services/api';
 
 interface Board3DProps {
@@ -13,6 +15,7 @@ interface Board3DProps {
   grid: (string | null)[][];
   showShips: boolean;
   isClickable: boolean;
+  isEnemyBoard?: boolean;
   onCellClick?: (row: number, col: number, coordinate: string) => void;
   shipCoordinates?: string[][];
   previewCoords?: string[] | null;
@@ -42,6 +45,7 @@ export default function Board3D({
   grid,
   showShips,
   isClickable,
+  isEnemyBoard = false,
   onCellClick,
   shipCoordinates = [],
   previewCoords = null,
@@ -83,6 +87,19 @@ export default function Board3D({
 
   const previewSet = useMemo(() => new Set(previewCoords ?? []), [previewCoords]);
 
+  const hitPositions = useMemo(() => {
+    const positions: [number, number, number][] = [];
+    grid.forEach((row, rowIdx) => {
+      row.forEach((cellState, colIdx) => {
+        if (cellState === 'hit') {
+          const half = 5;
+          positions.push([colIdx - half + 0.5, 0.1, rowIdx - half + 0.5]);
+        }
+      });
+    });
+    return positions;
+  }, [grid]);
+
   const half = 5;
 
   return (
@@ -90,6 +107,10 @@ export default function Board3D({
       <Ocean position={[0, -0.1, 0]} size={[12, 12]} />
 
       <Grid position={[0, 0.02, 0]} />
+
+      {isEnemyBoard && (
+        <RadarSweep position={[0, 0.01, 0]} size={10} active={isClickable} />
+      )}
 
       {grid.map((row, rowIdx) =>
         row.map((cellState, colIdx) => {
@@ -130,6 +151,10 @@ export default function Board3D({
       {previewCoords && previewCoords.length > 0 && (
         <Ship coordinates={previewCoords} isPreview />
       )}
+
+      {hitPositions.map((pos, i) => (
+        <SmokeEffect key={`smoke-${i}`} position={pos} />
+      ))}
 
       {effects.map((effect) => {
         if (effect.type === 'missile') {

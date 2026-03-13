@@ -1,22 +1,32 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import type { Phase } from '../hooks/useGame';
-import type { GameStateResponse } from '../services/api';
+import type { GameStateResponse, Difficulty } from '../services/api';
 
 interface GameHUDProps {
   phase: Phase;
   gameState: GameStateResponse | null;
   isPlayerTurn: boolean;
   message: string;
-  onRestart: () => void;
+  difficulty: Difficulty;
+  onRestart: (difficulty?: Difficulty) => void;
+  onChangeDifficulty: (difficulty: Difficulty) => void;
   loading: boolean;
 }
+
+const DIFFICULTY_COLORS: Record<Difficulty, string> = {
+  easy: '#22c55e',
+  medium: '#fbbf24',
+  hard: '#ef4444',
+};
 
 export default function GameHUD({
   phase,
   gameState,
   isPlayerTurn,
   message,
+  difficulty,
   onRestart,
+  onChangeDifficulty,
   loading,
 }: GameHUDProps) {
   const playerShipsRemaining = gameState?.player_ships_remaining ?? 0;
@@ -139,6 +149,24 @@ export default function GameHUD({
               </div>
             </div>
           </motion.div>
+
+          <motion.div
+            initial={{ y: 50, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.5 }}
+            className="fixed right-4 top-52 z-10 p-3 rounded-lg"
+            style={{
+              background: 'rgba(10, 14, 26, 0.85)',
+              border: `1px solid ${DIFFICULTY_COLORS[difficulty]}33`,
+            }}
+          >
+            <div
+              className="text-[10px] tracking-[0.2em] uppercase font-bold"
+              style={{ color: DIFFICULTY_COLORS[difficulty] }}
+            >
+              {difficulty} AI
+            </div>
+          </motion.div>
         </>
       )}
 
@@ -179,15 +207,35 @@ export default function GameHUD({
                 {gameState.game_status === 'player_wins' ? 'VICTORY' : 'DEFEAT'}
               </motion.div>
               <p
-                className="text-sm mb-8 tracking-wider"
+                className="text-sm mb-6 tracking-wider"
                 style={{ color: '#94a3b8' }}
               >
                 {gameState.game_status === 'player_wins'
                   ? 'All enemy vessels have been destroyed.'
                   : 'Our fleet has been eliminated.'}
               </p>
+
+              <div className="flex gap-2 justify-center mb-6">
+                {(['easy', 'medium', 'hard'] as Difficulty[]).map((d) => (
+                  <button
+                    key={d}
+                    onClick={() => onChangeDifficulty(d)}
+                    className="px-3 py-1.5 rounded text-[10px] tracking-widest uppercase cursor-pointer transition-all"
+                    style={{
+                      background: difficulty === d
+                        ? `${DIFFICULTY_COLORS[d]}30`
+                        : 'rgba(255,255,255,0.05)',
+                      border: `1px solid ${difficulty === d ? DIFFICULTY_COLORS[d] : 'rgba(255,255,255,0.1)'}`,
+                      color: difficulty === d ? DIFFICULTY_COLORS[d] : '#64748b',
+                    }}
+                  >
+                    {d}
+                  </button>
+                ))}
+              </div>
+
               <button
-                onClick={onRestart}
+                onClick={() => onRestart(difficulty)}
                 disabled={loading}
                 className="px-8 py-3 rounded text-sm font-bold tracking-widest cursor-pointer transition-all hover:scale-105"
                 style={{
@@ -208,7 +256,7 @@ export default function GameHUD({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 1 }}
-          onClick={onRestart}
+          onClick={() => onRestart()}
           className="fixed bottom-6 left-6 z-10 px-4 py-2 rounded text-xs tracking-wider cursor-pointer"
           style={{
             background: 'rgba(10, 14, 26, 0.8)',

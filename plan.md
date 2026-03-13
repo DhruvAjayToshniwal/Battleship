@@ -1,393 +1,250 @@
-# PROJECT: Advanced Battleship Web Game
+# PROJECT CONTEXT
 
-You are a senior full-stack engineer and game developer.
+We already have a working Battleship web application.
 
-Generate a **complete full-stack Battleship game** with the following stack:
+Completed systems:
 
-Backend
-- Python
-- FastAPI
-- Clean architecture
-- Pure game engine logic
-- Smart algorithmic opponent (no ML required)
+- FastAPI backend
+- Game engine
+- AI difficulty levels (easy / medium / hard)
+- React frontend
+- basic grid UI
+
+Now we want to upgrade the project into a **cinematic naval battle game**.
+
+The new system must add:
+
+- WebGL 3D ocean environment
+- ship models
+- missile animations
+- explosion effects
+- cinematic camera movements
+- radar scanning effects
+
+The application must still run as a **web app** but should also be compatible
+with **Tauri** so it can be packaged as a desktop game.
+
+---
+
+# TECHNOLOGY STACK
 
 Frontend
-- React
-- TypeScript
-- TailwindCSS
-- React Three Fiber (WebGL / Three.js)
-- Framer Motion animations
 
-The game must look like a **modern polished web game** with smooth animations and excellent UI.
+React
+TypeScript
+React Three Fiber
+Three.js
+GSAP
+Framer Motion
+Theatre.js
+TailwindCSS
 
-The output must include:
+Backend
 
-- complete backend code
-- complete frontend code
-- folder structure
-- setup instructions
-- explanations where useful
-
-The result should feel like a **professional indie web game**, not a basic coding exercise.
+FastAPI (already implemented)
 
 ---
 
-# GAME RULES
+# ARCHITECTURE
 
-Implement the classic Battleship rules:
-
-Board
-- 10x10 grid
-- coordinates A1–J10
-
-Ships
-- Carrier (5)
-- Battleship (4)
-- Cruiser (3)
-- Submarine (3)
-- Destroyer (2)
-
-Ships must:
-- be horizontal or vertical
-- not overlap
-- stay inside grid
-
-Gameplay
-- Player vs computer opponent
-- Players take turns firing coordinates
-- Response can be:
-  - hit
-  - miss
-  - sunk
-- Game ends when all ships sunk
-
----
-
-# PROJECT STRUCTURE
-
-Create a full monorepo.
-
-
-battleship/
-backend/
-app/
-main.py
-api/
-game_routes.py
-engine/
-board.py
-ship.py
-game_engine.py
-ai_strategy.py
-models/
-schemas.py
-services/
-game_service.py
-tests/
+Create the following system.
 
 frontend/
+
 src/
-components/
-Board3D.tsx
+
+scene/
+GameScene.tsx
 Ocean.tsx
-Grid.tsx
-Cell.tsx
-Ship.tsx
-Explosion.tsx
-Radar.tsx
-GameHUD.tsx
+PlayerFleet.tsx
+EnemyFleet.tsx
+MissileSystem.tsx
+ExplosionSystem.tsx
+RadarSweep.tsx
+CameraController.tsx
 
-pages/
-  GamePage.tsx
+animation/
+cinematicTimeline.ts
+missileAnimations.ts
+explosionAnimations.ts
 
-hooks/
-  useGame.ts
+components/
+HUD.tsx
+GameControls.tsx
+TurnIndicator.tsx
 
-services/
-  api.ts
+systems/
+TargetingSystem.ts
+ShipPlacementSystem.ts
 
-styles/
-  globals.css
+---
 
-BACKEND REQUIREMENTS
+# 3D SCENE
 
-Use FastAPI.
+Create a full WebGL naval scene.
 
-Important rule:
-
-Game logic must be pure Python and separated from the API.
-
-Game Engine responsibilities:
-
-GameEngine
-
-start_game()
-
-place_ships()
-
-fire_shot()
-
-check_hit()
-
-check_sunk()
-
-check_win()
-
-ai_turn()
-
-Board class
-
-maintain grid
-
-track ships
-
-validate placement
-
-Ship class
-fields:
-
-name
-size
-coordinates
-hits
-
-GameState
-stores:
-
-player_board
-ai_board
-player_shots
-ai_shots
-turn
-game_status
-SMART OPPONENT (NO ML)
-
-Implement a Hunt + Target strategy
-
-Hunt Mode
-
-fire shots in checkerboard pattern
-
-Example:
-
-X . X . X
-. X . X .
-X . X . X
-
-Target Mode
-
-when hit detected
-
-search adjacent cells
-
-Optional advanced strategy
-
-Probability heatmap:
-
-generate possible ship placements
-
-eliminate impossible ones
-
-score grid cells
-
-shoot highest probability
-
-API ENDPOINTS
-
-POST /game/start
-
-Returns new game.
-
-POST /game/place-ships
-
-POST /game/fire
-
-Example request
-
-{
-  "coordinate": "B7"
-}
-
-Response
-
-{
-  "result": "hit",
-  "ship": "cruiser",
-  "game_over": false
-}
-
-GET /game/state
-
-FRONTEND REQUIREMENTS
-
-Create a beautiful animated UI.
-
-Use:
-
-React + TypeScript
-TailwindCSS
-React Three Fiber (WebGL)
-Framer Motion
-
-VISUAL DESIGN
-
-Theme: naval command center
-
-Color palette:
-
-Ocean background: #0f172a
-Grid lines: #1e293b
-Miss marker: #38bdf8
-Hit marker: #ef4444
-Ships: #64748b
-WEBGL SCENE
-
-Render a 3D ocean board using React Three Fiber.
-
-Scene contains:
+Scene components:
 
 Ocean surface
-Player ships
-Enemy radar grid
-Missile shots
-Explosion particles
 
-Camera
+Use animated shader waves.
 
-angled view
+Ships
 
-smooth movement
+Load GLTF models.
+
+Position them on the board grid.
 
 Lighting
 
-soft ocean lighting
+Use:
 
-glowing radar grid
+ambient light
+directional sunlight
+environment map
 
-ANIMATIONS
+Fog
 
-Use Framer Motion and R3F.
+Add light atmospheric fog.
 
-Hit animation
+Camera
 
-missile drop
-flash
-explosion particles
+Perspective camera with orbit controls.
 
-Miss animation
+---
 
-missile
+# CINEMATIC CAMERA
+
+Use Theatre.js to create camera choreography.
+
+Scenes:
+
+Game start cinematic
+
+Camera flies over ocean
+Zoom into player fleet
+Rotate toward enemy grid
+
+Missile launch cinematic
+
+Camera zooms toward missile
+Follow missile trajectory
+Explosion zoom
+
+Victory cinematic
+
+Camera circles surviving fleet
+Explosion debris floating
+
+---
+
+# MISSILE SYSTEM
+
+When a player fires:
+
+Create missile mesh.
+
+Animate trajectory using GSAP.
+
+Example
+
+launch point
+arc path
+impact
+
+Add particle trail.
+
+---
+
+# EXPLOSION SYSTEM
+
+Use particle effects for:
+
 water splash
-ripple
+fireball
+smoke
 
-Radar sweep animation
+Explosion animation:
 
-rotating scan beam
+impact flash
+particle burst
+expanding smoke
 
-Ship sinking animation
+---
 
-explosion
-fade ship
-water smoke
-USER INTERACTIONS
+# RADAR EFFECT
 
-Player can:
+Create radar scanning system.
 
-Place ships
+Enemy board receives radar pulse.
 
-drag ship onto grid
+Implement:
 
-rotate ship with "R"
+rotating green sweep
+grid glow
+target lock animation
 
-Fire shots
+---
 
-click enemy grid
+# HUD SYSTEM
 
-Camera controls
+Display overlay UI.
 
-mouse drag = rotate camera
-scroll = zoom
-GAME HUD
+Use Framer Motion animations.
 
-Display:
+Elements:
 
 Turn indicator
 Ships remaining
-Shots fired
-Game status
-Restart button
-REACT STATE MANAGEMENT
+Difficulty level
+Fire confirmation
 
-Create custom hook
+---
 
-useGame()
+# CAMERA CONTROLS
 
-Handles:
+Allow player camera control.
 
-startGame()
-placeShips()
-fireShot()
-getGameState()
+mouse drag = rotate camera
+scroll = zoom
+keyboard = cinematic trigger
 
-Use Axios for API calls.
+---
 
-BACKEND TESTS
+# PERFORMANCE
 
-Include unit tests for:
-
-ship placement
-
-hit detection
-
-win condition
-
-RUNNING THE PROJECT
-
-Backend
-
-pip install fastapi uvicorn
-uvicorn app.main:app --reload
-
-Frontend
-
-npm install
-npm run dev
-CODE QUALITY
+Maintain 60 FPS.
 
 Use:
 
-TypeScript types
+instanced meshes
+lightweight shaders
+optimized particle systems
 
-Python type hints
+---
+
+# TAURI COMPATIBILITY
+
+Ensure frontend can run in Tauri.
+
+Do not use browser APIs incompatible with Tauri.
+
+Provide build instructions.
+
+---
+
+# OUTPUT
+
+Provide:
+
+Full project folder structure
+Key source files
+Example code snippets
+Instructions for running the web version
+Instructions for building with Tauri
+
+Focus on:
 
 clean architecture
-
-modular code
-
-readable naming
-
-Focus on maintainability and clarity.
-
-BONUS FEATURES
-
-If possible include:
-
-sound effects
-
-difficulty levels
-
-animated radar sweep
-
-replay option
-
-scoreboard
-
-GOAL
-
-The result should feel like:
-
-an interactive 3D naval battle game
-
-with clean code and smooth gameplay.
-
-Generate the entire project codebase.
+beautiful animations
+high performance

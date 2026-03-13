@@ -1,5 +1,6 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import type { Orientation, PlacedShip } from '../hooks/useGame';
+import type { Difficulty } from '../services/api';
 
 interface ShipPlacementProps {
   shipsToPlace: { name: string; size: number }[];
@@ -7,11 +8,19 @@ interface ShipPlacementProps {
   placedShips: PlacedShip[];
   allShipsPlaced: boolean;
   orientation: Orientation;
+  difficulty: Difficulty;
+  onChangeDifficulty: (d: Difficulty) => void;
   onAutoPlace: () => void;
   onConfirm: () => void;
   onUndo: () => void;
   loading: boolean;
 }
+
+const DIFFICULTY_COLORS: Record<Difficulty, string> = {
+  easy: '#22c55e',
+  medium: '#fbbf24',
+  hard: '#ef4444',
+};
 
 export default function ShipPlacement({
   shipsToPlace,
@@ -19,6 +28,8 @@ export default function ShipPlacement({
   placedShips,
   allShipsPlaced,
   orientation,
+  difficulty,
+  onChangeDifficulty,
   onAutoPlace,
   onConfirm,
   onUndo,
@@ -48,7 +59,30 @@ export default function ShipPlacement({
           Deploy Fleet
         </h2>
 
-        {/* Ship list */}
+        <div className="mb-4">
+          <div className="text-[10px] tracking-[0.2em] uppercase mb-2" style={{ color: '#64748b' }}>
+            Difficulty
+          </div>
+          <div className="flex gap-1.5">
+            {(['easy', 'medium', 'hard'] as Difficulty[]).map((d) => (
+              <button
+                key={d}
+                onClick={() => onChangeDifficulty(d)}
+                className="flex-1 py-1.5 rounded text-[10px] tracking-widest uppercase cursor-pointer transition-all"
+                style={{
+                  background: difficulty === d
+                    ? `${DIFFICULTY_COLORS[d]}20`
+                    : 'rgba(255,255,255,0.03)',
+                  border: `1px solid ${difficulty === d ? DIFFICULTY_COLORS[d] : 'rgba(255,255,255,0.08)'}`,
+                  color: difficulty === d ? DIFFICULTY_COLORS[d] : '#475569',
+                }}
+              >
+                {d}
+              </button>
+            ))}
+          </div>
+        </div>
+
         <div className="space-y-2 mb-6">
           {shipsToPlace.map((ship, i) => {
             const isPlaced = i < currentShipIndex;
@@ -105,7 +139,6 @@ export default function ShipPlacement({
           })}
         </div>
 
-        {/* Instructions */}
         {!allShipsPlaced && (
           <div className="mb-4 text-xs space-y-1" style={{ color: '#64748b' }}>
             <p>Click on grid to place ship</p>
@@ -118,7 +151,6 @@ export default function ShipPlacement({
           </div>
         )}
 
-        {/* Buttons */}
         <div className="space-y-2">
           {placedShips.length > 0 && !allShipsPlaced && (
             <button

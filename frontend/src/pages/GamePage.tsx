@@ -1,13 +1,15 @@
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import { Canvas } from '@react-three/fiber';
-import { OrbitControls } from '@react-three/drei';
+import { Environment } from '@react-three/drei';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useGame } from '../hooks/useGame';
 import { useSound } from '../hooks/useSound';
 import Board3D from '../components/Board3D';
+import CameraController from '../components/CameraController';
 import ShipPlacement from '../components/ShipPlacement';
 import GameHUD from '../components/GameHUD';
 import Radar from '../components/Radar';
+import type { Difficulty } from '../services/api';
 
 export default function GamePage() {
   const {
@@ -28,6 +30,8 @@ export default function GamePage() {
     isPlayerTurn,
     isFiring,
     message,
+    difficulty,
+    changeDifficulty,
     startGame,
     getShipPreview,
     placeShipAt,
@@ -79,6 +83,13 @@ export default function GamePage() {
     [phase, isPlayerTurn, isFiring, fireShot]
   );
 
+  const handleRestart = useCallback(
+    (diff?: Difficulty) => {
+      startGame(diff);
+    },
+    [startGame]
+  );
+
   const playerShipCoords = placedShips.map((s) => s.coordinates);
 
   const playingPlayerShipCoords = useMemo(() => {
@@ -90,33 +101,59 @@ export default function GamePage() {
     return playerShipCoords;
   }, [phase, gameState, playerShipCoords]);
 
+  const lastFireCoord = lastPlayerResult?.coordinate ?? null;
+
   const boardSpacing = 7;
 
   return (
     <div className="w-full h-full relative" style={{ background: '#0a0e1a' }}>
       <Canvas
         camera={{
-          position: [0, 18, 16],
+          position: [0, 35, 30],
           fov: 50,
           near: 0.1,
           far: 200,
         }}
         style={{ width: '100%', height: '100%' }}
         onPointerMissed={() => setHoverCoord(null)}
+        shadows
       >
-        <ambientLight intensity={0.4} />
+        <ambientLight intensity={0.3} />
         <directionalLight
           position={[10, 20, 10]}
-          intensity={0.6}
-          color="#94a3b8"
+          intensity={0.8}
+          color="#b4c6d4"
+          castShadow
+          shadow-mapSize={[1024, 1024]}
         />
         <directionalLight
-          position={[-5, 10, -5]}
-          intensity={0.2}
+          position={[-8, 15, -8]}
+          intensity={0.15}
           color="#38bdf8"
         />
+        <directionalLight
+          position={[0, 5, -15]}
+          intensity={0.1}
+          color="#fbbf24"
+        />
 
-        <fog attach="fog" args={['#0a0e1a', 30, 60]} />
+        <hemisphereLight
+          color="#1e3a5f"
+          groundColor="#0a0e1a"
+          intensity={0.3}
+        />
+
+        <Environment preset="night" />
+
+        <fog attach="fog" args={['#0a0e1a', 25, 55]} />
+
+        <CameraController
+          phase={phase}
+          isPlayerTurn={isPlayerTurn}
+          isFiring={isFiring}
+          lastFireCoord={lastFireCoord}
+          boardSpacing={boardSpacing}
+        />
 
         <Board3D
           position={[-boardSpacing, 0, 0]}
@@ -136,18 +173,10 @@ export default function GamePage() {
           position={[boardSpacing, 0, 0]}
           grid={aiGrid}
           showShips={false}
+          isEnemyBoard={true}
           isClickable={phase === 'playing' && isPlayerTurn && !isFiring}
           onCellClick={handleAiBoardClick}
           latestResult={lastPlayerResult}
-        />
-
-        <OrbitControls
-          enablePan={false}
-          minDistance={12}
-          maxDistance={40}
-          minPolarAngle={0.3}
-          maxPolarAngle={Math.PI / 2.5}
-          target={[0, 0, 0]}
         />
       </Canvas>
 
@@ -156,7 +185,9 @@ export default function GamePage() {
         gameState={gameState}
         isPlayerTurn={isPlayerTurn}
         message={message}
-        onRestart={startGame}
+        difficulty={difficulty}
+        onRestart={handleRestart}
+        onChangeDifficulty={changeDifficulty}
         loading={loading}
       />
 
@@ -168,6 +199,8 @@ export default function GamePage() {
             placedShips={placedShips}
             allShipsPlaced={allShipsPlaced}
             orientation={orientation}
+            difficulty={difficulty}
+            onChangeDifficulty={changeDifficulty}
             onAutoPlace={autoPlace}
             onConfirm={confirmPlacement}
             onUndo={undoLastShip}
