@@ -1,5 +1,6 @@
 import { useState, useCallback, useRef } from 'react';
 import type { ShotResult, TurnResult } from '../services/api';
+import { speak } from './useVoiceCommander';
 
 export type Phase = 'setup' | 'playing' | 'gameOver';
 
@@ -65,6 +66,7 @@ export function useBattleSequence({
       setIsPlayerTurn(false);
       setMessage('Firing...');
       audio.playMissileLaunch();
+      speak('firing');
 
       try {
         const response = await onFireShot(gameId, coordinate);
@@ -81,13 +83,16 @@ export function useBattleSequence({
           if (playerShot.result === 'sunk') {
             setMessage(`Direct hit! ${shipName} sunk!`);
             audio.playShipSunk();
+            speak('playerSunk');
           } else {
             setMessage(`Hit! ${shipName ? shipName + ' damaged!' : ''}`);
             audio.playExplosion();
+            speak('playerHit');
           }
         } else {
           setMessage('Miss. Splash.');
           audio.playSplash();
+          speak('playerMiss');
         }
 
         await new Promise((r) => setTimeout(r, 1200));
@@ -106,13 +111,16 @@ export function useBattleSequence({
             if (response.ai_shot.result === 'sunk') {
               setMessage(`Enemy sunk our ${response.ai_shot.ship}!`);
               audio.playShipSunk();
+              speak('enemySunk');
             } else {
               setMessage(`Enemy hit our ${response.ai_shot.ship || 'ship'}!`);
               audio.playExplosion();
+              speak('enemyHit');
             }
           } else {
             setMessage('Enemy missed!');
             audio.playSplash();
+            speak('enemyMiss');
           }
         }
 
@@ -125,6 +133,7 @@ export function useBattleSequence({
           setPhase('gameOver');
           setMessage('VICTORY! All enemy ships destroyed!');
           audio.playVictory();
+          speak('victory');
         } else if (
           updatedState?.game_status === 'ai_wins' ||
           response.game_status === 'ai_wins'
@@ -132,11 +141,13 @@ export function useBattleSequence({
           setPhase('gameOver');
           setMessage('DEFEAT. Our fleet has been destroyed.');
           audio.playDefeat();
+          speak('defeat');
         } else {
           await new Promise((r) => setTimeout(r, 800));
           setIsPlayerTurn(true);
           setMessage('Your turn, Commander.');
           audio.playTurnStart();
+          speak('turnStart');
         }
       } catch {
         setIsPlayerTurn(true);
