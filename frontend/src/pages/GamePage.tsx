@@ -1,13 +1,14 @@
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import { Canvas } from '@react-three/fiber';
-import { Environment } from '@react-three/drei';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence } from 'framer-motion';
 import { useGame } from '../hooks/useGame';
-import Board3D from '../scene/Board3D';
-import CameraController from '../components/CameraController';
+import SceneRoot from '../scene/SceneRoot';
 import ShipPlacement from '../components/ShipPlacement';
-import GameHUD from '../components/GameHUD';
+import CommandHUD from '../components/hud/CommandHUD';
 import Radar from '../components/Radar';
+import VictoryOverlay from '../components/overlays/VictoryOverlay';
+import DefeatOverlay from '../components/overlays/DefeatOverlay';
+import LoadingOverlay from '../components/overlays/LoadingOverlay';
 import NetworkErrorOverlay from '../components/overlays/NetworkErrorOverlay';
 import type { Difficulty } from '../services/api';
 
@@ -43,6 +44,7 @@ export default function GamePage() {
   } = useGame();
 
   const [hoverCoord, setHoverCoord] = useState<[number, number] | null>(null);
+  const [enemyHoverCell, setEnemyHoverCell] = useState<[number, number] | null>(null);
 
   useEffect(() => {
     startGame();
@@ -72,7 +74,7 @@ export default function GamePage() {
     [phase]
   );
 
-  const handleAiBoardClick = useCallback(
+  const handleEnemyCellClick = useCallback(
     (...args: [number, number, string]) => {
       const coordinate = args[2];
       if (phase === 'playing' && isPlayerTurn && !isFiring) {
@@ -101,8 +103,10 @@ export default function GamePage() {
   }, [phase, gameState, playerShipCoords]);
 
   const lastFireCoord = lastPlayerResult?.coordinate ?? null;
-
   const boardSpacing = 7;
+
+  const isPlayerWin = gameState?.game_status === 'player_wins';
+  const isAiWin = gameState?.game_status === 'ai_wins';
 
   return (
     <div className="w-full h-full relative" style={{ background: '#0a0e1a' }}>
@@ -114,72 +118,36 @@ export default function GamePage() {
           far: 200,
         }}
         style={{ width: '100%', height: '100%' }}
-        onPointerMissed={() => setHoverCoord(null)}
+        onPointerMissed={() => {
+          setHoverCoord(null);
+          setEnemyHoverCell(null);
+        }}
         shadows
       >
-        <ambientLight intensity={0.3} />
-        <directionalLight
-          position={[10, 20, 10]}
-          intensity={0.8}
-          color="#b4c6d4"
-          castShadow
-          shadow-mapSize={[1024, 1024]}
-        />
-        <directionalLight
-          position={[-8, 15, -8]}
-          intensity={0.15}
-          color="#38bdf8"
-        />
-        <directionalLight
-          position={[0, 5, -15]}
-          intensity={0.1}
-          color="#fbbf24"
-        />
-
-        <hemisphereLight
-          color="#1e3a5f"
-          groundColor="#0a0e1a"
-          intensity={0.3}
-        />
-
-        <Environment preset="night" />
-
-        <fog attach="fog" args={['#0a0e1a', 25, 55]} />
-
-        <CameraController
+        <SceneRoot
           phase={phase}
           isPlayerTurn={isPlayerTurn}
           isFiring={isFiring}
           lastFireCoord={lastFireCoord}
           boardSpacing={boardSpacing}
-        />
-
-        <Board3D
-          position={[-boardSpacing, 0, 0]}
-          grid={localPlayerGrid}
-          showShips={true}
-          isClickable={phase === 'setup'}
-          onCellClick={(row, col) => {
+          playerGrid={localPlayerGrid}
+          aiGrid={aiGrid}
+          playerShipCoordinates={playingPlayerShipCoords}
+          previewCoords={previewCoords}
+          lastPlayerResult={lastPlayerResult}
+          lastAiResult={lastAiResult}
+          isPlayerBoardClickable={phase === 'setup'}
+          isEnemyBoardClickable={phase === 'playing' && isPlayerTurn && !isFiring}
+          onPlayerCellClick={(row, col) => {
             handlePlayerBoardHover(row, col);
             handlePlayerBoardClick(row, col);
           }}
-          shipCoordinates={playingPlayerShipCoords}
-          previewCoords={previewCoords}
-          latestResult={lastAiResult}
-        />
-
-        <Board3D
-          position={[boardSpacing, 0, 0]}
-          grid={aiGrid}
-          showShips={false}
-          isEnemyBoard={true}
-          isClickable={phase === 'playing' && isPlayerTurn && !isFiring}
-          onCellClick={handleAiBoardClick}
-          latestResult={lastPlayerResult}
+          onEnemyCellClick={handleEnemyCellClick}
+          enemyHoverCell={enemyHoverCell}
         />
       </Canvas>
 
-      <GameHUD
+      <CommandHUD
         phase={phase}
         gameState={gameState}
         isPlayerTurn={isPlayerTurn}
@@ -210,39 +178,32 @@ export default function GamePage() {
 
       {phase === 'playing' && <Radar />}
 
+      <VictoryOverlay
+        visible={phase === 'gameOver' && isPlayerWin}
+        difficulty={difficulty}
+        onRestart={handleRestart}
+        onChangeDifficulty={changeDifficulty}
+        loading={loading}
+      />
+
+      <DefeatOverlay
+        visible={phase === 'gameOver' && isAiWin}
+        difficulty={difficulty}
+        onRestart={handleRestart}
+        onChangeDifficulty={changeDifficulty}
+        loading={loading}
+      />
+
       <NetworkErrorOverlay
         error={error}
         onRetry={() => startGame()}
         onDismiss={clearError}
       />
 
-      <AnimatePresence>
-        {!gameState && loading && phase === 'setup' && (
-          <motion.div
-            initial={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center"
-            style={{ background: '#0a0e1a' }}
-          >
-            <div className="text-center">
-              <motion.div
-                className="text-2xl font-bold tracking-[0.5em] uppercase mb-4"
-                style={{ color: '#38bdf8' }}
-                animate={{ opacity: [0.5, 1, 0.5] }}
-                transition={{ repeat: Infinity, duration: 2 }}
-              >
-                BATTLESHIP
-              </motion.div>
-              <div
-                className="text-xs tracking-widest"
-                style={{ color: '#64748b' }}
-              >
-                Initializing naval command...
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <LoadingOverlay
+        visible={!gameState && loading && phase === 'setup'}
+        message="Initializing naval command..."
+      />
     </div>
   );
 }
