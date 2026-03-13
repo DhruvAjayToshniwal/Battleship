@@ -1,7 +1,7 @@
 import { useRef, useMemo } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
-import { createOceanMaterial } from '../materials/oceanMaterial'
+import { createOceanMaterial } from '../materials/oceanConfig'
 
 interface OceanSurfaceProps {
   position?: [number, number, number]
