@@ -8,12 +8,13 @@ import BoardFrame from './BoardFrame';
 import BoardMarkers from './BoardMarkers';
 import TargetLock from './TargetLock';
 import Cell from '../entities/Cell';
-import Ship from '../entities/Ship';
+import EnemyFleet from '../fleet/EnemyFleet';
+import MissileSystem from '../effects/MissileSystem';
+import ExplosionSystem from '../effects/ExplosionSystem';
+import SplashSystem from '../effects/SplashSystem';
+import HitFlash from '../effects/HitFlash';
 import SmokeEffect from '../effects/SmokeEffect';
-import Missile from '../effects/Missile';
-import Explosion from '../effects/Explosion';
-import Splash from '../effects/Splash';
-import RadarSweep from '../environment/RadarSweep';
+import RadarSweep from '../effects/RadarSweep';
 
 interface EnemyBoard3DProps {
   position: [number, number, number];
@@ -21,14 +22,13 @@ interface EnemyBoard3DProps {
   isClickable: boolean;
   onCellClick?: (row: number, col: number, coord: string) => void;
   shipCoordinates?: string[][];
-  previewCoords?: string[] | null;
   latestResult?: ShotResult | null;
   hoverCell?: [number, number] | null;
 }
 
 interface EffectEntry {
   id: string;
-  type: 'missile' | 'explosion' | 'splash';
+  type: 'missile' | 'explosion' | 'splash' | 'hitflash';
   position: [number, number, number];
   resultType?: 'hit' | 'miss' | 'sunk';
 }
@@ -39,7 +39,6 @@ export default function EnemyBoard3D({
   isClickable,
   onCellClick,
   shipCoordinates = [],
-  previewCoords = null,
   latestResult,
   hoverCell = null,
 }: EnemyBoard3DProps) {
@@ -70,15 +69,20 @@ export default function EnemyBoard3D({
         type: resultType === 'miss' ? 'splash' : 'explosion',
         position: pos,
       };
-      return [...without, impactEffect];
+      const flashEffect: EffectEntry = {
+        id: `flash-${Date.now()}-${Math.random()}`,
+        type: 'hitflash',
+        position: pos,
+      };
+      return resultType === 'miss'
+        ? [...without, impactEffect]
+        : [...without, impactEffect, flashEffect];
     });
   }, []);
 
   const removeEffect = useCallback((id: string) => {
     setEffects((prev) => prev.filter((e) => e.id !== id));
   }, []);
-
-  const previewSet = useMemo(() => new Set(previewCoords ?? []), [previewCoords]);
 
   const hitPositions = useMemo(() => {
     const positions: [number, number, number][] = [];
@@ -115,19 +119,6 @@ export default function EnemyBoard3D({
           const coord = rowColToCoord(rowIdx, colIdx);
           const x = colIdx - HALF_BOARD + 0.5;
           const z = rowIdx - HALF_BOARD + 0.5;
-          const isPreview = previewSet.has(coord);
-
-          if (isPreview) {
-            return (
-              <Cell
-                key={coord}
-                position={[x, 0.02, z]}
-                state={null}
-                isPreview
-                isEnemyBoard
-              />
-            );
-          }
 
           return (
             <Cell
@@ -143,13 +134,7 @@ export default function EnemyBoard3D({
         })
       )}
 
-      {shipCoordinates.map((coords, i) => (
-        <Ship key={`ship-${i}`} coordinates={coords} />
-      ))}
-
-      {previewCoords && previewCoords.length > 0 && (
-        <Ship coordinates={previewCoords} isPreview />
-      )}
+      <EnemyFleet shipCoordinates={shipCoordinates} grid={grid} />
 
       {hitPositions.map((pos, i) => (
         <SmokeEffect key={`smoke-${i}`} position={pos} />
@@ -162,7 +147,7 @@ export default function EnemyBoard3D({
       {effects.map((effect) => {
         if (effect.type === 'missile') {
           return (
-            <Missile
+            <MissileSystem
               key={effect.id}
               position={effect.position}
               onImpact={() =>
@@ -173,15 +158,23 @@ export default function EnemyBoard3D({
         }
         if (effect.type === 'explosion') {
           return (
-            <Explosion
+            <ExplosionSystem
               key={effect.id}
               position={effect.position}
               onComplete={() => removeEffect(effect.id)}
             />
           );
         }
+        if (effect.type === 'hitflash') {
+          return (
+            <HitFlash
+              key={effect.id}
+              position={effect.position}
+            />
+          );
+        }
         return (
-          <Splash
+          <SplashSystem
             key={effect.id}
             position={effect.position}
             onComplete={() => removeEffect(effect.id)}

@@ -7,11 +7,12 @@ import GridPlane from './GridPlane';
 import BoardFrame from './BoardFrame';
 import BoardMarkers from './BoardMarkers';
 import Cell from '../entities/Cell';
-import Ship from '../entities/Ship';
+import PlayerFleet from '../fleet/PlayerFleet';
+import MissileSystem from '../effects/MissileSystem';
+import ExplosionSystem from '../effects/ExplosionSystem';
+import SplashSystem from '../effects/SplashSystem';
+import HitFlash from '../effects/HitFlash';
 import SmokeEffect from '../effects/SmokeEffect';
-import Missile from '../effects/Missile';
-import Explosion from '../effects/Explosion';
-import Splash from '../effects/Splash';
 
 interface PlayerBoard3DProps {
   position: [number, number, number];
@@ -26,7 +27,7 @@ interface PlayerBoard3DProps {
 
 interface EffectEntry {
   id: string;
-  type: 'missile' | 'explosion' | 'splash';
+  type: 'missile' | 'explosion' | 'splash' | 'hitflash';
   position: [number, number, number];
   resultType?: 'hit' | 'miss' | 'sunk';
 }
@@ -68,7 +69,14 @@ export default function PlayerBoard3D({
         type: resultType === 'miss' ? 'splash' : 'explosion',
         position: pos,
       };
-      return [...without, impactEffect];
+      const flashEffect: EffectEntry = {
+        id: `flash-${Date.now()}-${Math.random()}`,
+        type: 'hitflash',
+        position: pos,
+      };
+      return resultType === 'miss'
+        ? [...without, impactEffect]
+        : [...without, impactEffect, flashEffect];
     });
   }, []);
 
@@ -131,13 +139,12 @@ export default function PlayerBoard3D({
         })
       )}
 
-      {showShips &&
-        shipCoordinates.map((coords, i) => (
-          <Ship key={`ship-${i}`} coordinates={coords} />
-        ))}
-
-      {previewCoords && previewCoords.length > 0 && (
-        <Ship coordinates={previewCoords} isPreview />
+      {showShips && (
+        <PlayerFleet
+          shipCoordinates={shipCoordinates}
+          previewCoords={previewCoords}
+          grid={grid}
+        />
       )}
 
       {hitPositions.map((pos, i) => (
@@ -147,7 +154,7 @@ export default function PlayerBoard3D({
       {effects.map((effect) => {
         if (effect.type === 'missile') {
           return (
-            <Missile
+            <MissileSystem
               key={effect.id}
               position={effect.position}
               onImpact={() =>
@@ -158,15 +165,23 @@ export default function PlayerBoard3D({
         }
         if (effect.type === 'explosion') {
           return (
-            <Explosion
+            <ExplosionSystem
               key={effect.id}
               position={effect.position}
               onComplete={() => removeEffect(effect.id)}
             />
           );
         }
+        if (effect.type === 'hitflash') {
+          return (
+            <HitFlash
+              key={effect.id}
+              position={effect.position}
+            />
+          );
+        }
         return (
-          <Splash
+          <SplashSystem
             key={effect.id}
             position={effect.position}
             onComplete={() => removeEffect(effect.id)}
