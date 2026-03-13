@@ -21,7 +21,7 @@ export default function FireControlPanel({
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 20 }}
           transition={{ duration: 0.3 }}
-          className="fixed bottom-20 right-6 z-20 flex flex-col items-end gap-2 pointer-events-none"
+          className="fixed bottom-8 right-6 z-20 flex flex-col items-end gap-2 pointer-events-none"
         >
           <div
             className="px-4 py-2 rounded text-xs font-bold tracking-widest uppercase"

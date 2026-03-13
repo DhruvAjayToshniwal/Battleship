@@ -17,7 +17,7 @@ export default function TurnBanner({ isPlayerTurn, visible }: TurnBannerProps) {
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.8 }}
           transition={{ duration: 0.4, ease: 'easeOut' }}
-          className="fixed inset-0 z-30 flex items-center justify-center pointer-events-none"
+          className="fixed inset-0 z-30 flex items-end justify-center pointer-events-none" style={{ paddingBottom: '35vh' }}
         >
           <span
             className="text-6xl font-black tracking-widest uppercase"

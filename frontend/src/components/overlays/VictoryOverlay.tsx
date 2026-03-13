@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import type { Difficulty } from '../../services/api';
+import type { Difficulty, GameStateResponse } from '../../services/api';
 import { DIFFICULTY_COLORS } from '../../utils/constants';
 
 interface VictoryOverlayProps {
@@ -8,11 +8,26 @@ interface VictoryOverlayProps {
   onRestart: (difficulty?: Difficulty) => void;
   onChangeDifficulty: (d: Difficulty) => void;
   loading: boolean;
+  gameState: GameStateResponse | null;
 }
 
 const difficulties: Difficulty[] = ['easy', 'medium', 'hard'];
 
-export default function VictoryOverlay({ visible, difficulty, onRestart, onChangeDifficulty, loading }: VictoryOverlayProps) {
+function computeStats(gameState: GameStateResponse | null) {
+  if (!gameState) return null;
+  const shotsFired = gameState.player_shots.length;
+  const hits = gameState.player_shots.filter(
+    (s) => s.result === 'hit' || s.result === 'sunk'
+  ).length;
+  const accuracy = shotsFired > 0 ? Math.round((hits / shotsFired) * 100) : 0;
+  const enemyShipsSunk = 5 - gameState.ai_ships_remaining;
+  const playerShipsRemaining = gameState.player_ships_remaining;
+  return { shotsFired, hits, accuracy, enemyShipsSunk, playerShipsRemaining };
+}
+
+export default function VictoryOverlay({ visible, difficulty, onRestart, onChangeDifficulty, loading, gameState }: VictoryOverlayProps) {
+  const stats = computeStats(gameState);
+
   return (
     <AnimatePresence>
       {visible && (
@@ -48,11 +63,45 @@ export default function VictoryOverlay({ visible, difficulty, onRestart, onChang
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
-            className="text-sm tracking-wider mb-10"
+            className="text-sm tracking-wider mb-6"
             style={{ color: '#94a3b8' }}
           >
             All enemy vessels have been destroyed.
           </motion.p>
+
+          {stats && (
+            <motion.div
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+              className="grid grid-cols-3 gap-4 mb-8 px-6 py-4 rounded-lg"
+              style={{
+                background: 'rgba(2, 6, 23, 0.6)',
+                border: '1px solid rgba(34, 211, 238, 0.3)',
+              }}
+            >
+              <div className="flex flex-col items-center gap-1">
+                <span className="text-xs font-semibold tracking-wider uppercase" style={{ color: '#22d3ee' }}>Shots Fired</span>
+                <span className="text-lg font-bold" style={{ color: '#e2e8f0' }}>{stats.shotsFired}</span>
+              </div>
+              <div className="flex flex-col items-center gap-1">
+                <span className="text-xs font-semibold tracking-wider uppercase" style={{ color: '#22d3ee' }}>Hits</span>
+                <span className="text-lg font-bold" style={{ color: '#e2e8f0' }}>{stats.hits}</span>
+              </div>
+              <div className="flex flex-col items-center gap-1">
+                <span className="text-xs font-semibold tracking-wider uppercase" style={{ color: '#22d3ee' }}>Accuracy</span>
+                <span className="text-lg font-bold" style={{ color: '#e2e8f0' }}>{stats.accuracy}%</span>
+              </div>
+              <div className="flex flex-col items-center gap-1 col-span-1">
+                <span className="text-xs font-semibold tracking-wider uppercase" style={{ color: '#22d3ee' }}>Enemy Sunk</span>
+                <span className="text-lg font-bold" style={{ color: '#e2e8f0' }}>{stats.enemyShipsSunk}</span>
+              </div>
+              <div className="flex flex-col items-center gap-1 col-span-1 col-start-3">
+                <span className="text-xs font-semibold tracking-wider uppercase" style={{ color: '#22d3ee' }}>Ships Left</span>
+                <span className="text-lg font-bold" style={{ color: '#e2e8f0' }}>{stats.playerShipsRemaining}</span>
+              </div>
+            </motion.div>
+          )}
 
           <motion.div
             initial={{ opacity: 0, y: 20 }}

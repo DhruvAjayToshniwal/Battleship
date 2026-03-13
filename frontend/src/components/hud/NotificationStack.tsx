@@ -47,7 +47,7 @@ export default function NotificationStack({ message, lastResult }: NotificationS
   }, [lastResult, addNotification]);
 
   return (
-    <div className="fixed top-20 right-6 z-20 flex flex-col gap-2 pointer-events-none" style={{ maxWidth: 220 }}>
+    <div className="fixed top-48 right-4 z-20 flex flex-col gap-2 pointer-events-none" style={{ maxWidth: 200 }}>
       <AnimatePresence>
         {notifications.map((n) => (
           <motion.div

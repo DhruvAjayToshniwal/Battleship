@@ -41,7 +41,7 @@ export default function CommanderCallout() {
   const style = callout ? EVENT_STYLES[callout.event] ?? EVENT_STYLES.firing : EVENT_STYLES.firing;
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center pointer-events-none z-30">
+    <div className="fixed top-0 left-0 right-0 flex items-start justify-center pointer-events-none z-40" style={{ paddingTop: '30vh' }}>
       <AnimatePresence mode="wait">
         {callout && (
           <motion.div
