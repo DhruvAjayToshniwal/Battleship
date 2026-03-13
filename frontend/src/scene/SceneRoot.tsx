@@ -7,6 +7,7 @@ import FogController from './environment/FogController';
 import PlayerBoard3D from './boards/PlayerBoard3D';
 import EnemyBoard3D from './boards/EnemyBoard3D';
 import MainCameraRig from './cameras/MainCameraRig';
+import PostStack from './post/PostStack';
 import type { Phase } from '../hooks/useBattleSequence';
 import type { ShotResult } from '../services/api';
 
@@ -19,6 +20,7 @@ interface SceneRootProps {
   playerGrid: (string | null)[][];
   aiGrid: (string | null)[][];
   playerShipCoordinates: string[][];
+  enemyShipCoordinates: string[][];
   previewCoords: string[] | null;
   lastPlayerResult: ShotResult | null;
   lastAiResult: ShotResult | null;
@@ -38,6 +40,7 @@ export default function SceneRoot({
   playerGrid,
   aiGrid,
   playerShipCoordinates,
+  enemyShipCoordinates,
   previewCoords,
   lastPlayerResult,
   lastAiResult,
@@ -80,9 +83,12 @@ export default function SceneRoot({
         grid={aiGrid}
         isClickable={isEnemyBoardClickable}
         onCellClick={onEnemyCellClick}
+        shipCoordinates={enemyShipCoordinates}
         latestResult={lastPlayerResult}
         hoverCell={enemyHoverCell}
       />
+
+      <PostStack />
     </>
   );
 }

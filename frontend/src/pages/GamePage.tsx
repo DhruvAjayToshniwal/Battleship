@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useMemo } from 'react';
+import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { AnimatePresence } from 'framer-motion';
 import { useGame } from '../hooks/useGame';
@@ -6,6 +6,10 @@ import SceneRoot from '../scene/SceneRoot';
 import ShipPlacement from '../components/ShipPlacement';
 import CommandHUD from '../components/hud/CommandHUD';
 import Radar from '../components/Radar';
+import TurnBanner from '../components/hud/TurnBanner';
+import FireControlPanel from '../components/hud/FireControlPanel';
+import NotificationStack from '../components/hud/NotificationStack';
+import IntroOverlay from '../components/overlays/IntroOverlay';
 import VictoryOverlay from '../components/overlays/VictoryOverlay';
 import DefeatOverlay from '../components/overlays/DefeatOverlay';
 import LoadingOverlay from '../components/overlays/LoadingOverlay';
@@ -45,10 +49,29 @@ export default function GamePage() {
 
   const [hoverCoord, setHoverCoord] = useState<[number, number] | null>(null);
   const [enemyHoverCell, setEnemyHoverCell] = useState<[number, number] | null>(null);
+  const [showTurnBanner, setShowTurnBanner] = useState(false);
+  const [showIntro, setShowIntro] = useState(true);
+  const prevTurnRef = useRef(isPlayerTurn);
 
   useEffect(() => {
     startGame();
   }, []);
+
+  useEffect(() => {
+    if (phase === 'playing' && showIntro) {
+      setShowIntro(false);
+    }
+  }, [phase, showIntro]);
+
+  useEffect(() => {
+    if (phase !== 'playing') return;
+    if (prevTurnRef.current !== isPlayerTurn) {
+      prevTurnRef.current = isPlayerTurn;
+      setShowTurnBanner(true);
+      const timer = setTimeout(() => setShowTurnBanner(false), 1200);
+      return () => clearTimeout(timer);
+    }
+  }, [isPlayerTurn, phase]);
 
   const previewCoords = useMemo(() => {
     if (phase !== 'setup' || !hoverCoord || !currentShip) return null;
@@ -76,6 +99,7 @@ export default function GamePage() {
 
   const handleEnemyCellClick = useCallback(
     (...args: [number, number, string]) => {
+      setEnemyHoverCell([args[0], args[1]]);
       const coordinate = args[2];
       if (phase === 'playing' && isPlayerTurn && !isFiring) {
         fireShot(coordinate);
@@ -86,6 +110,7 @@ export default function GamePage() {
 
   const handleRestart = useCallback(
     (diff?: Difficulty) => {
+      setShowIntro(true);
       startGame(diff);
     },
     [startGame]
@@ -101,6 +126,22 @@ export default function GamePage() {
     }
     return playerShipCoords;
   }, [phase, gameState, playerShipCoords]);
+
+  const enemyShipCoords = useMemo(() => {
+    if (gameState?.ai_board?.ships) {
+      return gameState.ai_board.ships
+        .filter((s) => s.coordinates && s.coordinates.length > 0)
+        .map((s) => s.coordinates);
+    }
+    return [];
+  }, [gameState]);
+
+  const targetCoord = useMemo(() => {
+    if (!enemyHoverCell) return null;
+    const [row, col] = enemyHoverCell;
+    const letter = String.fromCharCode(65 + col);
+    return `${letter}${row + 1}`;
+  }, [enemyHoverCell]);
 
   const lastFireCoord = lastPlayerResult?.coordinate ?? null;
   const boardSpacing = 7;
@@ -133,6 +174,7 @@ export default function GamePage() {
           playerGrid={localPlayerGrid}
           aiGrid={aiGrid}
           playerShipCoordinates={playingPlayerShipCoords}
+          enemyShipCoordinates={enemyShipCoords}
           previewCoords={previewCoords}
           lastPlayerResult={lastPlayerResult}
           lastAiResult={lastAiResult}
@@ -177,6 +219,22 @@ export default function GamePage() {
       </AnimatePresence>
 
       {phase === 'playing' && <Radar />}
+
+      <TurnBanner isPlayerTurn={isPlayerTurn} visible={showTurnBanner} />
+
+      <FireControlPanel
+        visible={phase === 'playing'}
+        targetCoord={targetCoord}
+        isPlayerTurn={isPlayerTurn}
+        isFiring={isFiring}
+      />
+
+      <NotificationStack
+        message={message}
+        lastResult={lastPlayerResult}
+      />
+
+      <IntroOverlay visible={showIntro && !gameState && phase === 'setup'} />
 
       <VictoryOverlay
         visible={phase === 'gameOver' && isPlayerWin}
