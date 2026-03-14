@@ -70,6 +70,9 @@ export function useGame(options: UseGameOptions = {}) {
           battle.startBattle();
         } else if (status === 'player_wins' || status === 'ai_wins') {
           battle.receiveGameUpdate(status, false);
+        } else if (status === 'setup') {
+          placement.reset();
+          battle.setPhase('setup');
         }
         return state;
       }
@@ -77,7 +80,7 @@ export function useGame(options: UseGameOptions = {}) {
     } catch (e) {
       return null;
     }
-  }, [apiState, battle]);
+  }, [apiState, battle, placement]);
 
   const confirmPlacement = useCallback(async () => {
     try {

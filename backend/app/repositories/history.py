@@ -93,4 +93,3 @@ class HistoryRepository:
 			return games
 		except Exception as e:
 			raise RuntimeError(f"Failed to get completed games: {e}") from e
-

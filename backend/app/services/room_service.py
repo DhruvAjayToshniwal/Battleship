@@ -160,4 +160,3 @@ class RoomService:
 			raise
 		except Exception as e:
 			raise RuntimeError(f"Failed to reconnect: {e}") from e
-
