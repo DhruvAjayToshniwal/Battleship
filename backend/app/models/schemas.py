@@ -144,6 +144,20 @@ class GameHistoryListResponse(BaseModel):
 	games: list[GameHistorySummary]
 
 
+class MultiplayerGameStateResponse(BaseModel):
+	game_id: str
+	game_status: str
+	player_slot: str
+	your_turn: bool
+	turn_number: int = 0
+	player_board: PlayerBoardState = PlayerBoardState(ships=[], shots_received=[])
+	opponent_board: AIBoardState = AIBoardState(ships=[], hits=[], misses=[])
+	my_shots: list[ShotResult] = []
+	opponent_shots: list[ShotResult] = []
+	my_ships_remaining: int = 0
+	opponent_ships_remaining: int = 0
+
+
 class PlayerStatsResponse(BaseModel):
 	client_id: str
 	display_name: str
