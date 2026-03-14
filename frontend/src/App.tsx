@@ -6,6 +6,7 @@ import LobbyPage from './pages/LobbyPage';
 import GamePage from './pages/GamePage';
 import HistoryPage from './pages/HistoryPage';
 import { clearSession } from './services/session';
+import ReconnectOverlay from './components/overlays/ReconnectOverlay';
 
 type Page = 'menu' | 'lobby' | 'game' | 'history';
 
@@ -80,15 +81,10 @@ function App() {
   if (sessionRestore.loading) {
     return (
       <div
-        className="w-full h-full flex items-center justify-center"
+        className="w-full h-full"
         style={{ background: '#0a0e1a' }}
       >
-        <p
-          className="text-sm tracking-widest uppercase animate-pulse"
-          style={{ color: '#38bdf8' }}
-        >
-          Restoring session...
-        </p>
+        <ReconnectOverlay visible={true} />
       </div>
     );
   }

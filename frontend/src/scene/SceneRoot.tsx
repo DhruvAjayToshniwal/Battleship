@@ -8,6 +8,7 @@ import PlayerBoard3D from './boards/PlayerBoard3D';
 import EnemyBoard3D from './boards/EnemyBoard3D';
 import MainCameraRig from './cameras/MainCameraRig';
 import PostStack from './post/PostStack';
+import { QualityProvider, useQuality } from './QualityProvider';
 import type { Phase } from '../hooks/useBattleSequence';
 import type { ShotResult } from '../services/api';
 
@@ -51,44 +52,75 @@ export default function SceneRoot({
   enemyHoverCell,
 }: SceneRootProps) {
   return (
-    <>
-      <LightingRig />
-      <FogController near={20} far={60} />
-      <SkyBackdrop />
-      <Atmosphere />
-      <OceanSurface position={[0, -0.15, 0]} size={[80, 80]} segments={192} />
-
-      <MainCameraRig
+    <QualityProvider>
+      <SceneContent
         phase={phase}
         isPlayerTurn={isPlayerTurn}
         isFiring={isFiring}
         lastFireCoord={lastFireCoord}
         boardSpacing={boardSpacing}
+        playerGrid={playerGrid}
+        aiGrid={aiGrid}
+        playerShipCoordinates={playerShipCoordinates}
+        enemyShipCoordinates={enemyShipCoordinates}
+        previewCoords={previewCoords}
+        lastPlayerResult={lastPlayerResult}
+        lastAiResult={lastAiResult}
+        isPlayerBoardClickable={isPlayerBoardClickable}
+        isEnemyBoardClickable={isEnemyBoardClickable}
+        onPlayerCellClick={onPlayerCellClick}
+        onEnemyCellClick={onEnemyCellClick}
+        enemyHoverCell={enemyHoverCell}
+      />
+    </QualityProvider>
+  );
+}
+
+function SceneContent(props: SceneRootProps) {
+  const quality = useQuality();
+
+  return (
+    <>
+      <LightingRig shadowMapSize={quality.shadowMapSize} />
+      <FogController near={20} far={60} />
+      <SkyBackdrop />
+      <Atmosphere />
+      <OceanSurface position={[0, -0.15, 0]} size={[80, 80]} segments={quality.oceanSegments} />
+
+      <MainCameraRig
+        phase={props.phase}
+        isPlayerTurn={props.isPlayerTurn}
+        isFiring={props.isFiring}
+        lastFireCoord={props.lastFireCoord}
+        boardSpacing={props.boardSpacing}
       />
 
       <PlayerBoard3D
-        position={[-boardSpacing, 0, 0]}
-        grid={playerGrid}
+        position={[-props.boardSpacing, 0, 0]}
+        grid={props.playerGrid}
         showShips={true}
-        isClickable={isPlayerBoardClickable}
-        onCellClick={onPlayerCellClick}
-        shipCoordinates={playerShipCoordinates}
-        previewCoords={previewCoords}
-        latestResult={lastAiResult}
+        isClickable={props.isPlayerBoardClickable}
+        onCellClick={props.onPlayerCellClick}
+        shipCoordinates={props.playerShipCoordinates}
+        previewCoords={props.previewCoords}
+        latestResult={props.lastAiResult}
       />
 
       <EnemyBoard3D
-        position={[boardSpacing, 0, 0]}
-        grid={aiGrid}
-        isClickable={isEnemyBoardClickable}
-        onCellClick={onEnemyCellClick}
-        shipCoordinates={enemyShipCoordinates}
-        latestResult={lastPlayerResult}
-        hoverCell={enemyHoverCell}
+        position={[props.boardSpacing, 0, 0]}
+        grid={props.aiGrid}
+        isClickable={props.isEnemyBoardClickable}
+        onCellClick={props.onEnemyCellClick}
+        shipCoordinates={props.enemyShipCoordinates}
+        latestResult={props.lastPlayerResult}
+        hoverCell={props.enemyHoverCell}
       />
 
       <Suspense fallback={null}>
-        <PostStack />
+        <PostStack
+          enableBloom={quality.enableBloom}
+          enableVignette={quality.enableVignette}
+        />
       </Suspense>
     </>
   );

@@ -3,6 +3,8 @@ import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { CAMERA_SHOTS } from "./CameraShots";
 import { getResponsiveShot } from "./responsiveFraming";
+import { easeOutCubic } from "../animation/gsapTimelines";
+import { shakeCamera } from "../animation/impactSequences";
 
 type CameraMode =
   | "intro"
@@ -20,7 +22,7 @@ interface CinematicCameraControllerProps {
   boardSpacing: number;
 }
 
-const _fireTargetVec = new THREE.Vector3();
+const fireTargetVec = new THREE.Vector3();
 
 function coordToWorldPosition(
   coord: string,
@@ -30,10 +32,6 @@ function coordToWorldPosition(
   const col = coord.charCodeAt(0) - 65;
   const row = parseInt(coord.slice(1), 10) - 1;
   return out.set(boardSpacing + (col - 4.5) * 1.1, 0, (row - 4.5) * 1.1);
-}
-
-function easeOutCubic(t: number): number {
-  return 1 - Math.pow(1 - t, 3);
 }
 
 export default function CinematicCameraController({
@@ -132,21 +130,29 @@ export default function CinematicCameraController({
       fireTimeRef.current += clampedDelta;
       if (fireTimeRef.current < 2.5) {
         if (lastFireCoord) {
-          coordToWorldPosition(lastFireCoord, boardSpacing, _fireTargetVec);
+          coordToWorldPosition(lastFireCoord, boardSpacing, fireTargetVec);
         } else {
           const shot = CAMERA_SHOTS.enemyFocus;
-          _fireTargetVec.set(...shot.target);
+          fireTargetVec.set(...shot.target);
         }
 
         const missileShot = getResponsiveShot(CAMERA_SHOTS.missileFollow, size.width, size.height);
         targetPosRef.current.set(
-          _fireTargetVec.x + missileShot.position[0],
+          fireTargetVec.x + missileShot.position[0],
           missileShot.position[1],
-          _fireTargetVec.z + missileShot.position[2]
+          fireTargetVec.z + missileShot.position[2]
         );
-        targetLookRef.current.copy(_fireTargetVec);
+        targetLookRef.current.copy(fireTargetVec);
         targetFovRef.current = missileShot.fov;
         lerpSpeedRef.current = 5;
+
+        if (fireTimeRef.current > 0.8 && fireTimeRef.current < 0.85) {
+          try {
+            shakeCamera(camera as THREE.PerspectiveCamera, 0.2, 0.3);
+          } catch {
+            // noop
+          }
+        }
       } else {
         modeRef.current = "idle";
         fireActiveRef.current = false;
