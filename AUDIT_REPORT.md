@@ -29,24 +29,24 @@ Full-stack Battleship game with AI and real-time human multiplayer. FastAPI back
 
 ### What Is Fragile
 - SQLite single-writer constraint means concurrent multiplayer rooms could bottleneck under load (acceptable for submission scope, documented in DEPLOYMENT.md)
-- WebSocket connections are in-memory only — a server restart drops all connections (clients auto-reconnect via REST)
+- WebSocket connections are in-memory only, so a server restart drops all connections (clients auto-reconnect via REST)
 - No rate limiting on fire/placement endpoints
 
 ### Dead Code Found and Removed
-- `app/api/game_routes.py` — legacy monolithic route file, never imported by `main.py`. **Deleted.**
-- `app/services/ai_game_service.py` — unused imports (`TurnResult`, `parse_coordinate`, `format_coordinate`). **Cleaned.**
+- `app/api/game_routes.py`: legacy monolithic route file, never imported by `main.py`. **Deleted.**
+- `app/services/ai_game_service.py`: unused imports (`TurnResult`, `parse_coordinate`, `format_coordinate`). **Cleaned.**
 
 ### Overengineering
 - None identified. The repository/service/adapter separation is justified by the need to support both AI and multiplayer modes through the same engine.
 
 ### Missing Tests
-- WebSocket integration test (connect, receive events) — would require `TestClient` WebSocket support
-- Frontend session restore logic — no frontend test framework configured
+- WebSocket integration test (connect, receive events), would require `TestClient` WebSocket support
+- Frontend session restore logic, no frontend test framework configured
 
 ### Deployment Concerns
 - SQLite file must be writable by the process; container deployments need a persistent volume
 - No health check endpoint (could add `/health`)
-- CORS defaults include `localhost:5173` and `localhost:1420` (Tauri) — production deployments should override via `CORS_ORIGINS`
+- CORS defaults include `localhost:5173`; production deployments should override via `CORS_ORIGINS`
 
 ---
 
@@ -65,15 +65,15 @@ Full-stack Battleship game with AI and real-time human multiplayer. FastAPI back
 - Game history page with move count, duration, winner display
 
 ### Dead Code Found and Removed
-- `src/utils/viewport.ts` — viewport utility file, zero imports anywhere. **Deleted.**
-- `src/scene/theatre/` — 3 Theatre.js stub files (theatreProject.ts, theatreSheets.ts, sequences.ts). Theatre.js not installed. **Deleted in prior PR.**
-- `src/scene/animation/gsapTimelines.ts` — contained unused `INTRO_SEQUENCE`, `FIRE_SEQUENCE`, `lerpCamera`, and constants. **Stripped to only `easeOutCubic` and `easeInOutQuad`.**
-- `src/scene/cameras/responsiveFraming.ts` — contained unused `getViewportScale` function. **Removed.**
-- `src/services/api.ts` — `getRoomInfo()` and `getGameDetail()` functions never imported. **Removed.** Associated unused types `RoomStateResponse` and `GameHistoryDetail` also removed.
-- `src/scene/cameras/CinematicCameraController.tsx` — had duplicate `easeOutCubic` implementation. **Replaced with import from gsapTimelines.**
+- `src/utils/viewport.ts`: viewport utility file, zero imports anywhere. **Deleted.**
+- `src/scene/theatre/`: 3 Theatre.js stub files (theatreProject.ts, theatreSheets.ts, sequences.ts). Theatre.js not installed. **Deleted in prior PR.**
+- `src/scene/animation/gsapTimelines.ts`: contained unused `INTRO_SEQUENCE`, `FIRE_SEQUENCE`, `lerpCamera`, and constants. **Stripped to only `easeOutCubic` and `easeInOutQuad`.**
+- `src/scene/cameras/responsiveFraming.ts`: contained unused `getViewportScale` function. **Removed.**
+- `src/services/api.ts`: `getRoomInfo()` and `getGameDetail()` functions never imported. **Removed.** Associated unused types `RoomStateResponse` and `GameHistoryDetail` also removed.
+- `src/scene/cameras/CinematicCameraController.tsx`: had duplicate `easeOutCubic` implementation. **Replaced with import from gsapTimelines.**
 
 ### Duplicated Components/Utilities
-- Coordinate helpers exist in both `src/utils/coordinates.ts` and `backend/app/engine/utils.py` — expected (frontend/backend separation, different languages)
+- Coordinate helpers exist in both `src/utils/coordinates.ts` and `backend/app/engine/utils.py`, expected given frontend/backend separation and different languages
 - No duplicated React components found
 
 ### Stale Scene Files
@@ -83,8 +83,8 @@ Full-stack Battleship game with AI and real-time human multiplayer. FastAPI back
 - None. All hooks in `src/hooks/` are imported and used.
 
 ### Performance Issues
-- Ocean surface at 192 segments on low-end devices — mitigated by QualityProvider (low preset uses fewer segments)
-- Bloom post-processing can be expensive — gated by quality settings
+- Ocean surface at 192 segments on low-end devices, mitigated by QualityProvider (low preset uses fewer segments)
+- Bloom post-processing can be expensive, gated by quality settings
 - No identified memory leaks in useFrame loops (all use refs, no allocations per frame except scratch vectors which are memoized)
 
 ### UX Weaknesses
@@ -104,7 +104,7 @@ Full-stack Battleship game with AI and real-time human multiplayer. FastAPI back
 - Accurate. Trade-offs table matches actual decisions. AI usage section present.
 
 ### DEPLOYMENT.md
-- Accurate. Covers local dev, env vars, Railway/Render backend, Vercel/Netlify frontend, Tauri desktop.
+- Accurate. Covers local dev, env vars, Railway/Render backend, Vercel/Netlify frontend.
 - `.env.example` files exist for both frontend and backend.
 
 ### README.md
@@ -160,4 +160,4 @@ Full-stack Battleship game with AI and real-time human multiplayer. FastAPI back
 4. Add sound effects system
 5. Add mobile touch support for ship placement
 6. Consider adding rate limiting middleware
-7. Add Zustand state stores (`uiStore`, `gameStore`, `roomStore`) — current prop/hook-based state management works but stores would reduce prop drilling
+7. Add Zustand state stores (`uiStore`, `gameStore`, `roomStore`); current prop/hook-based state management works but stores would reduce prop drilling
