@@ -92,6 +92,7 @@ export interface ReconnectResponse {
   room_code: string;
   player_id: string;
   player_slot: string;
+  client_token: string;
   room_status: string;
   mode: string;
   players: PlayerInfo[];
@@ -166,13 +167,8 @@ export async function joinRoom(
   return response.data;
 }
 
-export async function reconnectRoom(
-  roomId: string,
-  token: string
-): Promise<ReconnectResponse> {
-  const response = await api.post(`/rooms/${roomId}/reconnect`, {
-    client_token: token,
-  });
+export async function reconnectRoom(): Promise<ReconnectResponse> {
+  const response = await api.post('/rooms/reconnect');
   return response.data;
 }
 

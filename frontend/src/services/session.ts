@@ -1,37 +1,10 @@
-const SESSION_KEY = 'battleship_session';
-const SESSION_TTL_MS = 24 * 60 * 60 * 1000;
+const SESSION_KEY = 'battleship_in_game';
 
-export interface StoredSession {
-  roomId: string;
-  playerToken: string;
-  mode: 'ai' | 'human';
-  playerSlot: string;
-  playerId: string;
-  savedAt: number;
-}
-
-export function saveSession(data: Omit<StoredSession, 'savedAt'>): void {
+export function markInGame(): void {
   try {
-    const session: StoredSession = { ...data, savedAt: Date.now() };
-    localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+    localStorage.setItem(SESSION_KEY, '1');
   } catch (e) {
-    throw new Error(`Failed to save session: ${e}`);
-  }
-}
-
-export function loadSession(): StoredSession | null {
-  try {
-    const raw = localStorage.getItem(SESSION_KEY);
-    if (!raw) return null;
-    const session: StoredSession = JSON.parse(raw);
-    if (Date.now() - session.savedAt > SESSION_TTL_MS) {
-      localStorage.removeItem(SESSION_KEY);
-      return null;
-    }
-    return session;
-  } catch (e) {
-    localStorage.removeItem(SESSION_KEY);
-    return null;
+    throw new Error(`Failed to mark in game: ${e}`);
   }
 }
 
@@ -43,6 +16,10 @@ export function clearSession(): void {
   }
 }
 
-export function hasActiveSession(): boolean {
-  return loadSession() !== null;
+export function isInGame(): boolean {
+  try {
+    return localStorage.getItem(SESSION_KEY) === '1';
+  } catch {
+    return false;
+  }
 }

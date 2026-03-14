@@ -54,33 +54,3 @@ async def test_history_after_ai_game(client):
 	assert game["move_count"] > 0
 
 
-@pytest.mark.asyncio
-async def test_history_detail(client):
-	create_resp = await client.post(
-		"/rooms", json={"mode": "ai", "display_name": "Alice", "difficulty": "easy"}
-	)
-	data = create_resp.json()
-	room_id = data["room_id"]
-	token = data["client_token"]
-
-	await client.post(
-		f"/rooms/{room_id}/place-ships",
-		json={"client_token": token, "ships": VALID_SHIPS},
-	)
-
-	await client.post(
-		f"/rooms/{room_id}/fire",
-		json={"client_token": token, "coordinate": "A1"},
-	)
-
-	detail_resp = await client.get(f"/games/history/{room_id}")
-	assert detail_resp.status_code == 200
-	detail = detail_resp.json()
-	assert detail["room_id"] == room_id
-	assert len(detail["moves"]) >= 1
-
-
-@pytest.mark.asyncio
-async def test_history_not_found(client):
-	resp = await client.get("/games/history/nonexistent-id")
-	assert resp.status_code == 404

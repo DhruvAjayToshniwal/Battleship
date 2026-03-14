@@ -24,11 +24,3 @@ class HistoryService:
 		except Exception as e:
 			raise RuntimeError(f"Failed to get completed games: {e}") from e
 
-	async def get_game_detail(self, room_id: str) -> dict | None:
-		try:
-			db = DatabaseManager.get_instance()
-			async with db.get_session() as session:
-				history_repo = HistoryRepository(session)
-				return await history_repo.get_game_detail(room_id)
-		except Exception as e:
-			raise RuntimeError(f"Failed to get game detail: {e}") from e

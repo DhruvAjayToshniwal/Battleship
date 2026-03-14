@@ -26,15 +26,6 @@ class RoomRepository:
 		except Exception as e:
 			raise RuntimeError(f"Failed to get room by id: {e}") from e
 
-	async def get_by_code(self, room_code: str) -> GameRoom | None:
-		try:
-			result = await self.session.execute(
-				select(GameRoom).where(GameRoom.room_code == room_code)
-			)
-			return result.scalar_one_or_none()
-		except Exception as e:
-			raise RuntimeError(f"Failed to get room by code: {e}") from e
-
 	async def get_active_by_code(self, room_code: str) -> GameRoom | None:
 		try:
 			result = await self.session.execute(
@@ -119,3 +110,21 @@ class RoomRepository:
 				await self.session.flush()
 		except Exception as e:
 			raise RuntimeError(f"Failed to update player connection: {e}") from e
+
+	async def get_active_player_by_client_id(
+		self, client_id: str
+	) -> PlayerSession | None:
+		try:
+			result = await self.session.execute(
+				select(PlayerSession)
+				.join(GameRoom, PlayerSession.room_id == GameRoom.id)
+				.where(
+					PlayerSession.client_id == client_id,
+					GameRoom.status.notin_(["finished", "abandoned"]),
+				)
+				.order_by(PlayerSession.created_at.desc())
+				.limit(1)
+			)
+			return result.scalar_one_or_none()
+		except Exception as e:
+			raise RuntimeError(f"Failed to get active player by client_id: {e}") from e

@@ -7,9 +7,7 @@ from app.models.schemas import (
 	ErrorResponse,
 	JoinRoomRequest,
 	JoinRoomResponse,
-	ReconnectRequest,
 	ReconnectResponse,
-	RoomStateResponse,
 	PlayerInfo,
 )
 from app.services.room_service import RoomService
@@ -85,72 +83,32 @@ async def join_room(request: JoinRoomRequest) -> JoinRoomResponse:
 		)
 
 
-@router.get(
-	"/{room_id}",
-	response_model=RoomStateResponse,
-	status_code=status.HTTP_200_OK,
-	responses={
-		401: {"model": ErrorResponse},
-		404: {"model": ErrorResponse},
-	},
-)
-async def get_room(
-	room_id: str, x_client_token: str = Header(alias="X-Client-Token")
-) -> RoomStateResponse:
-	try:
-		service = RoomService.get_instance()
-		result = await service.get_room_state(room_id, x_client_token)
-		return RoomStateResponse(
-			room_id=result["room_id"],
-			room_code=result["room_code"],
-			mode=result["mode"],
-			status=result["status"],
-			players=[PlayerInfo(**p) for p in result["players"]],
-		)
-	except ValueError as e:
-		error_msg = str(e)
-		if "Unauthorized" in error_msg:
-			raise HTTPException(
-				status_code=status.HTTP_401_UNAUTHORIZED, detail=error_msg
-			)
-		raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=error_msg)
-	except Exception as e:
-		raise HTTPException(
-			status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
-		)
-
-
 @router.post(
-	"/{room_id}/reconnect",
+	"/reconnect",
 	response_model=ReconnectResponse,
 	status_code=status.HTTP_200_OK,
 	responses={
-		401: {"model": ErrorResponse},
 		404: {"model": ErrorResponse},
 	},
 )
-async def reconnect(room_id: str, request: ReconnectRequest) -> ReconnectResponse:
+async def reconnect(
+	x_client_id: str = Header(alias="X-Client-Id"),
+) -> ReconnectResponse:
 	try:
 		service = RoomService.get_instance()
-		result = await service.reconnect(request.client_token)
-		if result["room_id"] != room_id:
-			raise ValueError("Token does not match room")
+		result = await service.reconnect(x_client_id)
 		return ReconnectResponse(
 			room_id=result["room_id"],
 			room_code=result["room_code"],
 			player_id=result["player_id"],
 			player_slot=result["player_slot"],
+			client_token=result["client_token"],
 			room_status=result["room_status"],
 			mode=result["mode"],
 			players=[PlayerInfo(**p) for p in result["players"]],
 		)
 	except ValueError as e:
-		error_msg = str(e)
-		if "Invalid" in error_msg or "Unauthorized" in error_msg:
-			raise HTTPException(
-				status_code=status.HTTP_401_UNAUTHORIZED, detail=error_msg
-			)
-		raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=error_msg)
+		raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 	except Exception as e:
 		raise HTTPException(
 			status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)

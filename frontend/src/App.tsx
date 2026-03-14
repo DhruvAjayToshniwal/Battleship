@@ -92,18 +92,17 @@ function App() {
     );
   }
 
-  if (sessionRestore.session && sessionRestore.reconnectData && page === 'menu') {
-    const session = sessionRestore.session;
+  if (sessionRestore.reconnectData && page === 'menu') {
     const reconnect = sessionRestore.reconnectData;
 
     if (reconnect.room_status !== 'finished' && reconnect.room_status !== 'abandoned') {
       return (
         <GamePage
-          mode={session.mode}
-          roomId={session.roomId}
-          playerToken={session.playerToken}
-          playerId={session.playerId}
-          playerSlot={session.playerSlot}
+          mode={reconnect.mode as 'ai' | 'human'}
+          roomId={reconnect.room_id}
+          playerToken={reconnect.client_token}
+          playerId={reconnect.player_id}
+          playerSlot={reconnect.player_slot}
           playerName={playerName}
           onBackToMenu={navigateToMenu}
         />

@@ -6,7 +6,7 @@ import { useAudioDirector } from './useAudioDirector';
 import { coordToRowCol } from '../utils/coordinates';
 import { buildGridFromState } from '../utils/boardState';
 import type { Difficulty } from '../services/api';
-import { saveSession, clearSession } from '../services/session';
+import { markInGame, clearSession } from '../services/session';
 
 export type { Phase } from './useBattleSequence';
 export type { Orientation, PlacedShip } from './useShipPlacement';
@@ -50,13 +50,7 @@ export function useGame(options: UseGameOptions = {}) {
         battle.resetBattle();
         audio.playGameStart();
 
-        saveSession({
-          roomId: result.room_id,
-          playerToken: result.client_token,
-          mode: 'ai',
-          playerSlot: 'player1',
-          playerId: result.player_id,
-        });
+        markInGame();
 
         return result;
       }

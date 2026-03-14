@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import * as api from '../services/api';
-import { saveSession } from '../services/session';
+import { markInGame } from '../services/session';
 import { useRealtimeRoom } from '../hooks/useRealtimeRoom';
 import LobbyOverlay from '../components/overlays/LobbyOverlay';
 import { colors } from '../design/theme';
@@ -66,14 +66,7 @@ export default function LobbyPage({ playerName, onGameReady, onBack }: LobbyPage
       setPlayerId(result.player_id);
       setPlayerSlot('player1');
 
-      saveSession({
-        roomId: result.room_id,
-        playerToken: result.client_token,
-        mode: 'human',
-        playerSlot: 'player1',
-        playerId: result.player_id,
-      });
-
+      markInGame();
       setLobbyState('waiting');
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Failed to create room';
@@ -93,14 +86,7 @@ export default function LobbyPage({ playerName, onGameReady, onBack }: LobbyPage
       setError(null);
       const result = await api.joinRoom(joinCode.toUpperCase(), playerName);
 
-      saveSession({
-        roomId: result.room_id,
-        playerToken: result.client_token,
-        mode: 'human',
-        playerSlot: result.player_slot,
-        playerId: result.player_id,
-      });
-
+      markInGame();
       onGameReady({
         roomId: result.room_id,
         playerToken: result.client_token,

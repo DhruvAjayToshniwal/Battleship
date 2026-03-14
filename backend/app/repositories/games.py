@@ -40,11 +40,3 @@ class GameRepository:
 		except Exception as e:
 			raise RuntimeError(f"Failed to update snapshot: {e}") from e
 
-	async def delete_snapshot(self, room_id: str) -> None:
-		try:
-			snapshot = await self.get_snapshot(room_id)
-			if snapshot:
-				await self.session.delete(snapshot)
-				await self.session.flush()
-		except Exception as e:
-			raise RuntimeError(f"Failed to delete snapshot: {e}") from e

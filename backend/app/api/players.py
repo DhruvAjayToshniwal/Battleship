@@ -35,7 +35,9 @@ async def get_my_stats(
 				total_shots=profile.total_shots,
 				total_hits=profile.total_hits,
 				hit_rate=hit_rate,
-				created_at=profile.created_at.isoformat() if profile.created_at else None,
+				created_at=profile.created_at.isoformat()
+				if profile.created_at
+				else None,
 			)
 	except ValueError as e:
 		raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
