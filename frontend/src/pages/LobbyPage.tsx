@@ -200,7 +200,7 @@ export default function LobbyPage({ playerName, onGameReady, onBack }: LobbyPage
               value={joinCode}
               onChange={(e) => setJoinCode(e.target.value.toUpperCase().slice(0, 6))}
               onKeyDown={(e) => e.key === 'Enter' && handleJoinRoom()}
-              placeholder="ENTER CODE"
+              placeholder="ROOM CODE"
               maxLength={6}
               className="px-6 py-4 text-3xl font-mono font-bold text-center tracking-[0.5em] uppercase rounded w-72 outline-none"
               style={{
