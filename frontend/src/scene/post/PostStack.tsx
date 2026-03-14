@@ -22,14 +22,14 @@ export default function PostStack({ enableBloom = true, enableVignette = true }:
       return (
         <EffectComposer>
           <Bloom
-            intensity={0.4}
-            luminanceThreshold={0.8}
+            intensity={0.3}
+            luminanceThreshold={0.85}
             luminanceSmoothing={0.3}
             mipmapBlur
           />
           <Vignette
-            offset={0.3}
-            darkness={0.5}
+            offset={0.25}
+            darkness={0.7}
           />
         </EffectComposer>
       );
@@ -39,8 +39,8 @@ export default function PostStack({ enableBloom = true, enableVignette = true }:
       return (
         <EffectComposer>
           <Bloom
-            intensity={0.4}
-            luminanceThreshold={0.8}
+            intensity={0.3}
+            luminanceThreshold={0.85}
             luminanceSmoothing={0.3}
             mipmapBlur
           />
@@ -51,8 +51,8 @@ export default function PostStack({ enableBloom = true, enableVignette = true }:
     return (
       <EffectComposer>
         <Vignette
-          offset={0.3}
-          darkness={0.5}
+          offset={0.25}
+          darkness={0.7}
         />
       </EffectComposer>
     );

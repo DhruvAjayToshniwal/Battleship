@@ -1,7 +1,9 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import type { Orientation, PlacedShip } from '../hooks/useShipPlacement';
 import type { Difficulty } from '../services/api';
-import { DIFFICULTY_COLORS } from '../utils/constants';
+import { colors } from '../design/theme';
+import { textStyle } from '../design/typography';
+import { transition } from '../design/motion';
 
 interface ShipPlacementProps {
   shipsToPlace: readonly { readonly name: string; readonly size: number }[];
@@ -34,45 +36,54 @@ export default function ShipPlacement({
 }: ShipPlacementProps) {
   return (
     <motion.div
-      initial={{ x: -300, opacity: 0 }}
-      animate={{ x: 0, opacity: 1 }}
-      exit={{ x: -300, opacity: 0 }}
-      transition={{ type: 'spring', damping: 25 }}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={transition.fadeIn}
       className="fixed left-6 top-1/2 -translate-y-1/2 z-20"
     >
       <div
-        className="p-6 rounded-lg border"
         style={{
-          background: 'rgba(10, 14, 26, 0.9)',
-          borderColor: 'rgba(56, 189, 248, 0.3)',
-          backdropFilter: 'blur(10px)',
-          minWidth: '280px',
+          background: colors.bg.deep,
+          border: `1px solid ${colors.border.hairline}`,
+          padding: '32px 28px',
+          minWidth: '260px',
         }}
       >
         <h2
-          className="text-lg font-bold mb-4 tracking-widest uppercase"
-          style={{ color: '#38bdf8' }}
+          style={{
+            ...textStyle.title,
+            color: colors.text.secondary,
+            marginBottom: '24px',
+          }}
         >
           Deploy Fleet
         </h2>
 
         {!hidesDifficulty && (
-          <div className="mb-4">
-            <div className="text-[10px] tracking-[0.2em] uppercase mb-2" style={{ color: '#64748b' }}>
-              Difficulty
+          <div style={{ marginBottom: '24px' }}>
+            <div
+              style={{
+                ...textStyle.caption,
+                color: colors.text.tertiary,
+                marginBottom: '8px',
+              }}
+            >
+              DIFFICULTY
             </div>
-            <div className="flex gap-1.5">
+            <div className="flex gap-2">
               {(['easy', 'medium', 'hard'] as Difficulty[]).map((d) => (
                 <button
                   key={d}
                   onClick={() => onChangeDifficulty(d)}
-                  className="flex-1 py-1.5 rounded text-[10px] tracking-widest uppercase cursor-pointer transition-all"
+                  className="flex-1 cursor-pointer"
                   style={{
-                    background: difficulty === d
-                      ? `${DIFFICULTY_COLORS[d]}20`
-                      : 'rgba(255,255,255,0.03)',
-                    border: `1px solid ${difficulty === d ? DIFFICULTY_COLORS[d] : 'rgba(255,255,255,0.08)'}`,
-                    color: difficulty === d ? DIFFICULTY_COLORS[d] : '#475569',
+                    ...textStyle.caption,
+                    padding: '6px 0',
+                    background: 'transparent',
+                    border: `1px solid ${difficulty === d ? colors.border.emphasis : colors.border.hairline}`,
+                    color: difficulty === d ? colors.accent.silver : colors.text.tertiary,
+                    transition: 'color 0.6s ease, border-color 0.6s ease',
                   }}
                 >
                   {d}
@@ -82,83 +93,85 @@ export default function ShipPlacement({
           </div>
         )}
 
-        <div className="space-y-2 mb-6">
+        <div className="flex flex-col gap-2" style={{ marginBottom: '28px' }}>
           {shipsToPlace.map((ship, i) => {
             const isPlaced = i < currentShipIndex;
             const isCurrent = i === currentShipIndex;
             return (
-              <motion.div
+              <div
                 key={ship.name}
-                className="flex items-center justify-between p-2 rounded"
                 style={{
-                  background: isCurrent
-                    ? 'rgba(56, 189, 248, 0.15)'
-                    : isPlaced
-                    ? 'rgba(34, 197, 94, 0.1)'
-                    : 'rgba(255,255,255,0.03)',
+                  padding: '8px 10px',
+                  background: isCurrent ? 'rgba(74,158,173,0.06)' : 'transparent',
                   borderLeft: isCurrent
-                    ? '3px solid #38bdf8'
+                    ? `2px solid ${colors.accent.cyan}`
                     : isPlaced
-                    ? '3px solid #22c55e'
-                    : '3px solid transparent',
+                    ? `2px solid ${colors.border.subtle}`
+                    : '2px solid transparent',
                 }}
-                animate={isCurrent ? { scale: [1, 1.02, 1] } : {}}
-                transition={{ repeat: Infinity, duration: 2 }}
               >
-                <div>
+                <div className="flex items-center justify-between">
                   <span
-                    className="text-sm font-bold"
                     style={{
-                      color: isPlaced ? '#22c55e' : isCurrent ? '#38bdf8' : '#64748b',
+                      ...textStyle.body,
+                      color: isPlaced ? colors.text.secondary : isCurrent ? colors.text.primary : colors.text.tertiary,
                     }}
                   >
                     {ship.name}
                   </span>
-                  <div className="flex gap-0.5 mt-1">
-                    {Array.from({ length: ship.size }, (_, j) => (
-                      <div
-                        key={j}
-                        className="w-4 h-2 rounded-sm"
-                        style={{
-                          background: isPlaced
-                            ? '#22c55e'
-                            : isCurrent
-                            ? '#38bdf8'
-                            : '#334155',
-                        }}
-                      />
-                    ))}
-                  </div>
+                  <span
+                    style={{
+                      ...textStyle.caption,
+                      color: colors.text.tertiary,
+                    }}
+                  >
+                    {isPlaced ? 'DEPLOYED' : isCurrent ? 'PLACING' : `Size ${ship.size}`}
+                  </span>
                 </div>
-                <span className="text-xs" style={{ color: '#64748b' }}>
-                  {isPlaced ? 'DEPLOYED' : isCurrent ? 'PLACING' : `Size ${ship.size}`}
-                </span>
-              </motion.div>
+                <div className="flex gap-1 mt-1">
+                  {Array.from({ length: ship.size }, (__, j) => (
+                    <div
+                      key={j}
+                      style={{
+                        width: '16px',
+                        height: '6px',
+                        background: isPlaced
+                          ? colors.border.emphasis
+                          : isCurrent
+                          ? colors.accent.cyan
+                          : colors.border.hairline,
+                      }}
+                    />
+                  ))}
+                </div>
+              </div>
             );
           })}
         </div>
 
         {!allShipsPlaced && (
-          <div className="mb-4 text-xs space-y-1" style={{ color: '#64748b' }}>
-            <p>Click on grid to place ship</p>
-            <p>
-              Press <kbd className="px-1 rounded" style={{ background: '#1e293b', color: '#38bdf8' }}>R</kbd> to rotate
-              <span className="ml-2">
-                ({orientation === 'h' ? 'Horizontal' : 'Vertical'})
-              </span>
+          <div style={{ marginBottom: '16px' }}>
+            <p style={{ ...textStyle.caption, color: colors.text.tertiary }}>
+              Click on grid to place ship
+            </p>
+            <p style={{ ...textStyle.caption, color: colors.text.tertiary, marginTop: '4px' }}>
+              Press <span style={{ ...textStyle.data, color: colors.text.secondary }}>R</span> to rotate ({orientation === 'h' ? 'Horizontal' : 'Vertical'})
             </p>
           </div>
         )}
 
-        <div className="space-y-2">
+        <div className="flex flex-col gap-2">
           {placedShips.length > 0 && !allShipsPlaced && (
             <button
               onClick={onUndo}
-              className="w-full py-2 px-4 rounded text-sm tracking-wider transition-colors cursor-pointer"
+              className="w-full cursor-pointer"
               style={{
-                background: 'rgba(239, 68, 68, 0.2)',
-                border: '1px solid rgba(239, 68, 68, 0.3)',
-                color: '#ef4444',
+                ...textStyle.caption,
+                padding: '8px 16px',
+                background: 'transparent',
+                border: `1px solid ${colors.border.subtle}`,
+                color: colors.text.tertiary,
+                transition: 'color 0.6s ease, border-color 0.6s ease',
               }}
             >
               UNDO LAST
@@ -167,11 +180,14 @@ export default function ShipPlacement({
 
           <button
             onClick={onAutoPlace}
-            className="w-full py-2 px-4 rounded text-sm tracking-wider transition-colors cursor-pointer"
+            className="w-full cursor-pointer"
             style={{
-              background: 'rgba(56, 189, 248, 0.15)',
-              border: '1px solid rgba(56, 189, 248, 0.3)',
-              color: '#38bdf8',
+              ...textStyle.caption,
+              padding: '8px 16px',
+              background: 'transparent',
+              border: `1px solid ${colors.border.subtle}`,
+              color: colors.text.secondary,
+              transition: 'color 0.6s ease, border-color 0.6s ease',
             }}
           >
             AUTO DEPLOY
@@ -180,16 +196,20 @@ export default function ShipPlacement({
           <AnimatePresence>
             {allShipsPlaced && (
               <motion.button
-                initial={{ scale: 0, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0, opacity: 0 }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={transition.fadeIn}
                 onClick={onConfirm}
                 disabled={loading}
-                className="w-full py-3 px-4 rounded text-sm font-bold tracking-widest cursor-pointer"
+                className="w-full cursor-pointer"
                 style={{
-                  background: 'rgba(34, 197, 94, 0.3)',
-                  border: '2px solid #22c55e',
-                  color: '#22c55e',
+                  ...textStyle.caption,
+                  padding: '12px 16px',
+                  background: 'transparent',
+                  border: `1px solid ${colors.border.emphasis}`,
+                  color: colors.accent.silver,
+                  transition: 'color 0.6s ease, border-color 0.6s ease',
                 }}
               >
                 {loading ? 'DEPLOYING...' : 'START BATTLE'}

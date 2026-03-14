@@ -1,4 +1,7 @@
 import { motion, AnimatePresence } from 'framer-motion';
+import { colors, overlay } from '../../design/theme';
+import { textStyle, fontFamily } from '../../design/typography';
+import { transition, ease } from '../../design/motion';
 
 interface LobbyOverlayProps {
   visible: boolean;
@@ -15,49 +18,58 @@ export default function LobbyOverlay({ visible, roomCode, opponentConnected, onC
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.5 }}
+          transition={transition.fadeIn}
           className="fixed inset-0 z-50 flex flex-col items-center justify-center"
-          style={{ background: 'rgba(2, 6, 23, 0.95)' }}
+          style={{ background: overlay.backdrop }}
         >
           <motion.div
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.2, duration: 0.6 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.2, duration: 1.2, ease: ease.default }}
             className="flex flex-col items-center gap-8"
           >
             <h2
-              className="text-2xl font-bold tracking-[0.2em] uppercase"
-              style={{ color: '#38bdf8' }}
+              style={{
+                ...textStyle.title,
+                color: colors.text.secondary,
+              }}
             >
               AWAITING OPPONENT
             </h2>
 
             <div
-              className="px-10 py-8 rounded-lg text-center"
+              className="px-10 py-8 text-center"
               style={{
-                background: 'rgba(10, 14, 26, 0.9)',
-                border: '1px solid rgba(56, 189, 248, 0.3)',
-                backdropFilter: 'blur(8px)',
+                background: colors.bg.deep,
+                border: `1px solid ${colors.border.hairline}`,
               }}
             >
               <p
-                className="text-xs tracking-[0.3em] uppercase mb-4"
-                style={{ color: '#64748b' }}
+                style={{
+                  ...textStyle.caption,
+                  color: colors.text.tertiary,
+                  marginBottom: 16,
+                }}
               >
                 ROOM CODE
               </p>
               <p
-                className="text-6xl font-bold tracking-[0.6em] font-mono"
                 style={{
-                  color: '#fbbf24',
-                  textShadow: '0 0 30px rgba(251, 191, 36, 0.4), 0 0 60px rgba(251, 191, 36, 0.15)',
+                  fontFamily: fontFamily.mono,
+                  fontSize: '48px',
+                  color: colors.accent.warmWhite,
+                  letterSpacing: '0.5em',
+                  fontWeight: 300,
                 }}
               >
                 {roomCode}
               </p>
               <p
-                className="text-xs tracking-[0.2em] uppercase mt-4"
-                style={{ color: '#475569' }}
+                style={{
+                  ...textStyle.caption,
+                  color: colors.text.tertiary,
+                  marginTop: 16,
+                }}
               >
                 Share this code with your opponent
               </p>
@@ -65,16 +77,11 @@ export default function LobbyOverlay({ visible, roomCode, opponentConnected, onC
 
             <div className="flex flex-col items-center gap-4">
               <div className="flex items-center gap-3">
-                <div
-                  className="w-3 h-3 rounded-full"
-                  style={{
-                    background: '#22c55e',
-                    boxShadow: '0 0 8px #22c55e',
-                  }}
-                />
                 <span
-                  className="text-xs tracking-[0.2em] uppercase"
-                  style={{ color: '#94a3b8' }}
+                  style={{
+                    ...textStyle.caption,
+                    color: colors.text.secondary,
+                  }}
                 >
                   Player 1 (You) — Ready
                 </span>
@@ -82,55 +89,52 @@ export default function LobbyOverlay({ visible, roomCode, opponentConnected, onC
 
               <div className="flex items-center gap-3">
                 {opponentConnected ? (
-                  <div
-                    className="w-3 h-3 rounded-full"
+                  <span
                     style={{
-                      background: '#22c55e',
-                      boxShadow: '0 0 8px #22c55e',
+                      ...textStyle.caption,
+                      color: colors.text.secondary,
                     }}
-                  />
+                  >
+                    Opponent — Joined
+                  </span>
                 ) : (
-                  <motion.div
-                    animate={{ opacity: [0.3, 1, 0.3] }}
-                    transition={{ duration: 1.5, repeat: Infinity }}
-                    className="w-3 h-3 rounded-full"
-                    style={{ background: '#64748b' }}
-                  />
+                  <motion.span
+                    animate={{ opacity: [0.3, 0.7, 0.3] }}
+                    transition={{ duration: 2.5, repeat: Infinity, ease: ease.default }}
+                    style={{
+                      ...textStyle.caption,
+                      color: colors.text.tertiary,
+                    }}
+                  >
+                    Player 2 — Waiting...
+                  </motion.span>
                 )}
-                <span
-                  className="text-xs tracking-[0.2em] uppercase"
-                  style={{ color: opponentConnected ? '#94a3b8' : '#64748b' }}
-                >
-                  {opponentConnected ? 'Opponent — Joined!' : 'Player 2 — Waiting...'}
-                </span>
               </div>
             </div>
 
             {!opponentConnected && (
               <motion.div
-                animate={{ opacity: [0.4, 1, 0.4] }}
-                transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+                animate={{ opacity: [0.3, 0.7, 0.3] }}
+                transition={{ duration: 2.5, repeat: Infinity, ease: ease.default }}
                 className="flex items-center gap-2"
               >
-                <div className="w-1.5 h-1.5 rounded-full" style={{ background: '#38bdf8' }} />
-                <div className="w-1.5 h-1.5 rounded-full" style={{ background: '#38bdf8' }} />
-                <div className="w-1.5 h-1.5 rounded-full" style={{ background: '#38bdf8' }} />
+                <span style={{ color: colors.text.tertiary }}>...</span>
               </motion.div>
             )}
 
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
+            <button
               onClick={onCancel}
-              className="px-6 py-2 text-xs font-bold tracking-[0.3em] uppercase cursor-pointer rounded mt-4"
+              className="px-6 py-2 text-xs tracking-widest uppercase cursor-pointer mt-4"
               style={{
                 background: 'transparent',
-                border: '1px solid rgba(100, 116, 139, 0.3)',
-                color: '#64748b',
+                border: `1px solid ${colors.border.subtle}`,
+                color: colors.text.tertiary,
+                fontFamily: fontFamily.mono,
+                transition: 'color 0.8s, border-color 0.8s',
               }}
             >
               CANCEL
-            </motion.button>
+            </button>
           </motion.div>
         </motion.div>
       )}

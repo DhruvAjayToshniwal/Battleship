@@ -1,18 +1,14 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { colors } from '../../design/theme';
+import { textStyle, fontFamily } from '../../design/typography';
+import { ease } from '../../design/motion';
 
 interface Notification {
   id: string;
   text: string;
   type: 'hit' | 'miss' | 'sunk' | 'info';
 }
-
-const TYPE_COLORS: Record<string, string> = {
-  hit: '#ef4444',
-  miss: '#38bdf8',
-  sunk: '#fbbf24',
-  info: '#94a3b8',
-};
 
 interface NotificationStackProps {
   message: string;
@@ -52,20 +48,21 @@ export default function NotificationStack({ lastResult }: NotificationStackProps
         {notifications.map((n) => (
           <motion.div
             key={n.id}
-            initial={{ opacity: 0, x: 40, scale: 0.9 }}
-            animate={{ opacity: 1, x: 0, scale: 1 }}
-            exit={{ opacity: 0, x: 40, scale: 0.9 }}
-            transition={{ duration: 0.25 }}
-            className="px-3 py-2 rounded text-xs font-bold tracking-widest uppercase"
+            initial={{ opacity: 0, x: 40 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 40 }}
+            transition={{ duration: 0.6, ease: ease.default }}
             style={{
-              background: 'rgba(10, 14, 26, 0.9)',
-              border: `1px solid ${TYPE_COLORS[n.type]}40`,
-              color: TYPE_COLORS[n.type],
-              backdropFilter: 'blur(8px)',
-              textShadow: `0 0 10px ${TYPE_COLORS[n.type]}60`,
+              padding: '8px 12px',
+              background: 'rgba(10,10,10,0.8)',
+              border: `1px solid ${colors.border.hairline}`,
+              color: colors.text.secondary,
+              ...textStyle.caption,
             }}
           >
-            {n.text}
+            <span style={{ fontFamily: fontFamily.mono }}>
+              {n.text}
+            </span>
           </motion.div>
         ))}
       </AnimatePresence>

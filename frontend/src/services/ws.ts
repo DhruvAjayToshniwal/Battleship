@@ -21,8 +21,6 @@ export type WsListener = (event: WsEvent) => void;
 
 function getWsBaseUrl(): string {
   if (import.meta.env.VITE_WS_URL) return import.meta.env.VITE_WS_URL;
-  const isTauri = !!(window as unknown as Record<string, unknown>).__TAURI_INTERNALS__;
-  if (isTauri) return 'ws://localhost:8000';
   const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
   return `${proto}//${window.location.host}`;
 }

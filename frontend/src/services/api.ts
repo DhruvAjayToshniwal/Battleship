@@ -1,7 +1,6 @@
 import axios from 'axios';
 
-const isTauri = !!(window as unknown as Record<string, unknown>).__TAURI_INTERNALS__;
-const baseURL = import.meta.env.VITE_API_URL || (isTauri ? 'http://localhost:8000' : '');
+const baseURL = import.meta.env.VITE_API_URL || '';
 
 const api = axios.create({ baseURL });
 

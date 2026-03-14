@@ -4,6 +4,10 @@ import * as api from '../services/api';
 import { saveSession } from '../services/session';
 import { useRealtimeRoom } from '../hooks/useRealtimeRoom';
 import LobbyOverlay from '../components/overlays/LobbyOverlay';
+import { colors } from '../design/theme';
+import { textStyle, fontFamily } from '../design/typography';
+import { duration, ease } from '../design/motion';
+import { buttonStyle, buttonHoverStyle, inputStyle } from '../design/components';
 
 interface LobbyPageProps {
   playerName: string;
@@ -30,6 +34,7 @@ export default function LobbyPage({ playerName, onGameReady, onBack }: LobbyPage
   const [playerId, setPlayerId] = useState('');
   const [playerSlot, setPlayerSlot] = useState('');
   const [opponentName, setOpponentName] = useState<string | null>(null);
+  const [hoveredBtn, setHoveredBtn] = useState<string | null>(null);
 
   useRealtimeRoom({
     roomId,
@@ -114,63 +119,71 @@ export default function LobbyPage({ playerName, onGameReady, onBack }: LobbyPage
   return (
     <div
       className="w-full h-full flex flex-col items-center justify-center relative"
-      style={{ background: 'radial-gradient(ellipse at center, #0f1a2e 0%, #0a0e1a 100%)' }}
+      style={{ background: colors.bg.void }}
     >
       {lobbyState === 'choose' && (
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: duration.slow, ease: ease.default }}
           className="flex flex-col items-center gap-6"
         >
           <h2
-            className="text-3xl font-bold tracking-[0.2em] uppercase mb-8"
-            style={{ color: '#38bdf8' }}
+            className="mb-8"
+            style={{
+              ...textStyle.title,
+              fontSize: '28px',
+              color: colors.text.secondary,
+            }}
           >
             MULTIPLAYER
           </h2>
 
-          <motion.button
-            whileHover={{ scale: 1.03 }}
-            whileTap={{ scale: 0.97 }}
+          <button
+            onMouseEnter={() => setHoveredBtn('create')}
+            onMouseLeave={() => setHoveredBtn(null)}
             onClick={handleCreateRoom}
             disabled={loading}
-            className="px-8 py-4 text-sm font-bold tracking-[0.3em] uppercase cursor-pointer rounded w-64"
+            className="px-8 py-4 text-sm tracking-[0.3em] uppercase cursor-pointer w-64"
             style={{
-              background: 'rgba(10, 14, 26, 0.8)',
-              border: '1px solid #38bdf840',
-              color: '#38bdf8',
+              ...buttonStyle,
+              ...(hoveredBtn === 'create' ? buttonHoverStyle : {}),
+              fontFamily: fontFamily.serif,
+              fontWeight: 300,
             }}
           >
             CREATE ROOM
-          </motion.button>
+          </button>
 
-          <motion.button
-            whileHover={{ scale: 1.03 }}
-            whileTap={{ scale: 0.97 }}
+          <button
+            onMouseEnter={() => setHoveredBtn('join')}
+            onMouseLeave={() => setHoveredBtn(null)}
             onClick={() => setLobbyState('joining')}
-            className="px-8 py-4 text-sm font-bold tracking-[0.3em] uppercase cursor-pointer rounded w-64"
+            className="px-8 py-4 text-sm tracking-[0.3em] uppercase cursor-pointer w-64"
             style={{
-              background: 'rgba(10, 14, 26, 0.8)',
-              border: '1px solid #22c55e40',
-              color: '#22c55e',
+              ...buttonStyle,
+              ...(hoveredBtn === 'join' ? buttonHoverStyle : {}),
+              fontFamily: fontFamily.serif,
+              fontWeight: 300,
             }}
           >
             JOIN ROOM
-          </motion.button>
+          </button>
 
-          <motion.button
-            whileHover={{ scale: 1.03 }}
-            whileTap={{ scale: 0.97 }}
+          <button
+            onMouseEnter={() => setHoveredBtn('back')}
+            onMouseLeave={() => setHoveredBtn(null)}
             onClick={onBack}
-            className="px-8 py-3 text-xs font-bold tracking-[0.3em] uppercase cursor-pointer rounded w-64 mt-4"
+            className="px-8 py-3 text-xs tracking-[0.3em] uppercase cursor-pointer w-64 mt-4"
             style={{
-              background: 'transparent',
-              border: '1px solid #64748b40',
-              color: '#64748b',
+              ...buttonStyle,
+              ...(hoveredBtn === 'back' ? buttonHoverStyle : {}),
+              fontFamily: fontFamily.serif,
+              fontWeight: 300,
             }}
           >
             BACK
-          </motion.button>
+          </button>
         </motion.div>
       )}
 
@@ -183,13 +196,17 @@ export default function LobbyPage({ playerName, onGameReady, onBack }: LobbyPage
 
       {lobbyState === 'joining' && (
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: duration.slow, ease: ease.default }}
           className="flex flex-col items-center gap-6"
         >
           <h2
-            className="text-2xl font-bold tracking-[0.2em] uppercase"
-            style={{ color: '#22c55e' }}
+            style={{
+              ...textStyle.title,
+              fontSize: '24px',
+              color: colors.text.secondary,
+            }}
           >
             JOIN ROOM
           </h2>
@@ -202,59 +219,65 @@ export default function LobbyPage({ playerName, onGameReady, onBack }: LobbyPage
               onKeyDown={(e) => e.key === 'Enter' && handleJoinRoom()}
               placeholder="ROOM CODE"
               maxLength={6}
-              className="px-6 py-4 text-3xl font-mono font-bold text-center tracking-[0.5em] uppercase rounded w-72 outline-none"
+              className="px-6 py-4 text-3xl text-center w-72 outline-none"
               style={{
-                background: 'rgba(10, 14, 26, 0.9)',
-                border: '1px solid #22c55e40',
-                color: '#fbbf24',
-                caretColor: '#fbbf24',
+                ...inputStyle,
+                fontFamily: fontFamily.mono,
+                fontWeight: 400,
+                letterSpacing: '0.5em',
+                textTransform: 'uppercase',
+                color: colors.accent.warmWhite,
+                caretColor: colors.accent.warmWhite,
               }}
             />
 
-            <motion.button
-              whileHover={{ scale: 1.03 }}
-              whileTap={{ scale: 0.97 }}
+            <button
+              onMouseEnter={() => setHoveredBtn('joinSubmit')}
+              onMouseLeave={() => setHoveredBtn(null)}
               onClick={handleJoinRoom}
               disabled={loading || joinCode.length < 4}
-              className="px-8 py-3 text-sm font-bold tracking-[0.3em] uppercase cursor-pointer rounded w-72"
+              className="px-8 py-3 text-sm tracking-[0.3em] uppercase cursor-pointer w-72"
               style={{
-                background: loading ? 'rgba(10, 14, 26, 0.5)' : 'rgba(10, 14, 26, 0.8)',
-                border: '1px solid #22c55e40',
-                color: loading ? '#64748b' : '#22c55e',
+                ...buttonStyle,
+                ...(hoveredBtn === 'joinSubmit' ? buttonHoverStyle : {}),
+                fontFamily: fontFamily.serif,
+                fontWeight: 300,
+                opacity: loading ? 0.4 : 1,
               }}
             >
               {loading ? 'JOINING...' : 'JOIN'}
-            </motion.button>
+            </button>
 
-            <motion.button
-              whileHover={{ scale: 1.03 }}
-              whileTap={{ scale: 0.97 }}
+            <button
+              onMouseEnter={() => setHoveredBtn('joinBack')}
+              onMouseLeave={() => setHoveredBtn(null)}
               onClick={() => {
                 setLobbyState('choose');
                 setError(null);
               }}
-              className="px-6 py-2 text-xs font-bold tracking-[0.3em] uppercase cursor-pointer rounded mt-2"
+              className="px-6 py-2 text-xs tracking-[0.3em] uppercase cursor-pointer mt-2"
               style={{
-                background: 'transparent',
-                border: '1px solid #64748b40',
-                color: '#64748b',
+                ...buttonStyle,
+                ...(hoveredBtn === 'joinBack' ? buttonHoverStyle : {}),
+                fontFamily: fontFamily.serif,
+                fontWeight: 300,
               }}
             >
               BACK
-            </motion.button>
+            </button>
           </div>
         </motion.div>
       )}
 
       {error && (
         <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="absolute bottom-8 px-6 py-3 rounded text-xs font-bold tracking-widest uppercase"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: duration.slow, ease: ease.default }}
+          className="absolute bottom-8 px-6 py-3 text-xs tracking-widest uppercase"
           style={{
-            background: 'rgba(239, 68, 68, 0.15)',
-            border: '1px solid #ef444440',
-            color: '#ef4444',
+            color: colors.accent.red,
+            fontFamily: fontFamily.serif,
           }}
         >
           {error}

@@ -1,5 +1,7 @@
 import type { Phase } from '../../hooks/useBattleSequence';
 import type { Difficulty, GameStateResponse } from '../../services/api';
+import { colors } from '../../design/theme';
+import { textStyle } from '../../design/typography';
 import TopStatusBar from './TopStatusBar';
 import FleetPanel from './FleetPanel';
 import DifficultyBadge from './DifficultyBadge';
@@ -41,14 +43,14 @@ export default function CommandHUD({
             title={`${playerName}'s Fleet`}
             shipsRemaining={gameState.player_ships_remaining}
             shotsCount={gameState.ai_shots.length}
-            accentColor="#22d3ee"
+            accentColor={colors.player}
             side="left"
           />
           <FleetPanel
             title={mode === 'ai' ? 'Enemy Fleet' : 'Opponent Fleet'}
             shipsRemaining={gameState.ai_ships_remaining}
             shotsCount={gameState.player_shots.length}
-            accentColor="#ef4444"
+            accentColor={colors.enemy}
             side="right"
           />
         </>
@@ -57,14 +59,18 @@ export default function CommandHUD({
       {phase !== 'setup' && (
         <div className="fixed bottom-3 left-0 right-0 z-20 flex justify-center pointer-events-none" style={{ gap: '14rem' }}>
           <span
-            className="text-[10px] font-bold tracking-widest uppercase"
-            style={{ color: 'rgba(34, 211, 238, 0.4)' }}
+            style={{
+              ...textStyle.caption,
+              color: colors.text.tertiary,
+            }}
           >
             {playerName.toUpperCase()}'S WATERS
           </span>
           <span
-            className="text-[10px] font-bold tracking-widest uppercase"
-            style={{ color: 'rgba(239, 68, 68, 0.4)' }}
+            style={{
+              ...textStyle.caption,
+              color: colors.text.tertiary,
+            }}
           >
             ENEMY WATERS
           </span>
@@ -74,13 +80,17 @@ export default function CommandHUD({
       {phase === 'playing' && (
         <button
           onClick={() => mode === 'human' && onBackToMenu ? onBackToMenu() : onRestart()}
-          className="fixed bottom-3 left-4 z-20 px-3 py-1.5 rounded text-[10px] font-bold tracking-widest uppercase cursor-pointer transition-all hover:scale-105"
+          className="fixed bottom-3 left-4 z-20 cursor-pointer"
           style={{
-            background: 'rgba(239, 68, 68, 0.1)',
-            border: '1px solid rgba(239, 68, 68, 0.3)',
-            color: '#ef4444',
-            backdropFilter: 'blur(8px)',
+            ...textStyle.caption,
+            padding: '6px 12px',
+            background: 'transparent',
+            border: `1px solid ${colors.border.subtle}`,
+            color: colors.text.tertiary,
+            transition: 'color 0.6s cubic-bezier(0.25,0.1,0.25,1)',
           }}
+          onMouseEnter={(e) => { e.currentTarget.style.color = colors.text.secondary; }}
+          onMouseLeave={(e) => { e.currentTarget.style.color = colors.text.tertiary; }}
         >
           {mode === 'human' ? 'ABANDON' : 'RETREAT'}
         </button>

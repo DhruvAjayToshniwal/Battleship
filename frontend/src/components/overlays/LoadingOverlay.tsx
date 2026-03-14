@@ -1,4 +1,8 @@
 import { motion, AnimatePresence } from 'framer-motion';
+import { overlay } from '../../design/theme';
+import { colors } from '../../design/theme';
+import { textStyle } from '../../design/typography';
+import { transition, ease } from '../../design/motion';
 
 interface LoadingOverlayProps {
   visible: boolean;
@@ -13,21 +17,16 @@ export default function LoadingOverlay({ visible, message = 'Loading...' }: Load
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.3 }}
+          transition={transition.fadeIn}
           className="fixed inset-0 z-50 flex items-center justify-center"
-          style={{
-            background: 'rgba(2, 6, 23, 0.9)',
-            backdropFilter: 'blur(4px)',
-          }}
+          style={{ background: overlay.backdrop }}
         >
           <motion.span
-            animate={{ opacity: [0.4, 1, 0.4] }}
-            transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
-            className="text-lg tracking-widest uppercase font-bold"
+            animate={{ opacity: [0.3, 0.7, 0.3] }}
+            transition={{ duration: 2.5, repeat: Infinity, ease: ease.default }}
             style={{
-              color: '#22d3ee',
-              textShadow: '0 0 20px rgba(34,211,238,0.3)',
-              fontFamily: "'Inter', sans-serif",
+              ...textStyle.caption,
+              color: colors.text.secondary,
             }}
           >
             {message}

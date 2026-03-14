@@ -70,12 +70,3 @@ For PostgreSQL (production):
 - Create a database and set `DATABASE_URL`
 - Tables are auto-created on startup
 
-### Desktop (Tauri)
-
-The app includes a Tauri v2 configuration for desktop packaging:
-```bash
-cd frontend
-npm run tauri build
-```
-
-This bundles the Python backend as a sidecar and creates a native desktop application.

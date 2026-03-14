@@ -249,7 +249,7 @@ export default function GamePage({
   const isAiWin = game.gameState?.game_status === 'ai_wins';
 
   return (
-    <div className="w-full h-full relative" style={{ background: '#0a0e1a' }}>
+    <div className="w-full h-full relative" style={{ background: '#0a0a0a' }}>
       <Canvas
         camera={{
           position: [0, 35, 30],

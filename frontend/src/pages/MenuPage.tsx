@@ -1,5 +1,9 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
+import { colors } from '../design/theme';
+import { textStyle, fontFamily } from '../design/typography';
+import { duration, ease, stagger } from '../design/motion';
+import { buttonStyle, buttonHoverStyle, inputStyle } from '../design/components';
 
 interface MenuPageProps {
   onPlayAI: (playerName: string) => void;
@@ -26,7 +30,6 @@ export default function MenuPage({
     try {
       localStorage.setItem('battleship_player_name', trimmed);
     } catch {
-      // noop
     }
   };
 
@@ -35,36 +38,40 @@ export default function MenuPage({
   return (
     <div
       className="w-full h-full flex flex-col items-center justify-center relative"
-      style={{ background: 'radial-gradient(ellipse at center, #0f1a2e 0%, #0a0e1a 100%)' }}
+      style={{ background: colors.bg.void }}
     >
       <motion.div
-        initial={{ opacity: 0, y: -30 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8 }}
-        className="text-center mb-16"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: duration.reveal, ease: ease.default }}
+        className="text-center mb-20"
       >
         <h1
-          className="text-7xl font-bold tracking-[0.3em] uppercase"
           style={{
-            color: '#38bdf8',
-            textShadow: '0 0 40px rgba(56, 189, 248, 0.5), 0 0 80px rgba(56, 189, 248, 0.2)',
+            ...textStyle.display,
+            fontSize: '56px',
+            color: colors.text.primary,
+            letterSpacing: '0.3em',
           }}
         >
           BATTLESHIP
         </h1>
         <p
-          className="text-sm tracking-[0.5em] uppercase mt-4"
-          style={{ color: '#64748b' }}
+          className="mt-4"
+          style={{
+            ...textStyle.caption,
+            color: colors.text.tertiary,
+          }}
         >
-          Naval Command System
+          Naval Command
         </p>
       </motion.div>
 
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 0.2 }}
-        className="mb-8"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: duration.slow, delay: 0.6, ease: ease.default }}
+        className="mb-20"
       >
         <input
           type="text"
@@ -72,33 +79,39 @@ export default function MenuPage({
           onChange={(e) => handleNameChange(e.target.value)}
           placeholder="ENTER YOUR NAME"
           maxLength={16}
-          className="px-6 py-3 text-sm font-bold text-center tracking-[0.2em] uppercase rounded w-72 outline-none"
+          className="px-6 py-3 text-center w-72 outline-none"
           style={{
-            background: 'rgba(10, 14, 26, 0.9)',
-            border: '1px solid #38bdf830',
-            color: '#fbbf24',
-            caretColor: '#fbbf24',
+            ...inputStyle,
+            fontFamily: fontFamily.serif,
+            fontSize: '14px',
+            letterSpacing: '0.2em',
+            textTransform: 'uppercase',
+            color: colors.text.primary,
+            caretColor: colors.accent.warmWhite,
           }}
         />
       </motion.div>
 
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 0.3 }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: duration.slow, delay: 0.8, ease: ease.default }}
         className="flex flex-col gap-4 w-72"
       >
-        <MenuButton label="ENGAGE AI" color="#22c55e" onClick={() => onPlayAI(resolvedName)} delay={0.4} />
-        <MenuButton label="MULTIPLAYER" color="#38bdf8" onClick={() => onPlayMultiplayer(resolvedName)} delay={0.5} />
-        <MenuButton label="BATTLE HISTORY" color="#94a3b8" onClick={onViewHistory} delay={0.6} />
+        <MenuButton label="ENGAGE AI" onClick={() => onPlayAI(resolvedName)} delay={1.0} />
+        <MenuButton label="MULTIPLAYER" onClick={() => onPlayMultiplayer(resolvedName)} delay={1.0 + stagger.normal} />
+        <MenuButton label="BATTLE HISTORY" onClick={onViewHistory} delay={1.0 + stagger.normal * 2} />
       </motion.div>
 
       <motion.p
         initial={{ opacity: 0 }}
-        animate={{ opacity: 0.3 }}
-        transition={{ delay: 1.5 }}
-        className="absolute bottom-6 text-xs tracking-widest uppercase"
-        style={{ color: '#64748b' }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: duration.drift, delay: 2.0, ease: ease.default }}
+        className="absolute bottom-6"
+        style={{
+          ...textStyle.caption,
+          color: colors.text.ghost,
+        }}
       >
         Strategic Naval Warfare Simulator
       </motion.p>
@@ -108,30 +121,29 @@ export default function MenuPage({
 
 function MenuButton({
   label,
-  color,
   onClick,
   delay,
 }: {
   label: string;
-  color: string;
   onClick: () => void;
   delay: number;
 }) {
+  const [hovered, setHovered] = useState(false);
+
   return (
     <motion.button
-      initial={{ opacity: 0, x: -20 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ duration: 0.4, delay }}
-      whileHover={{ scale: 1.03, x: 4 }}
-      whileTap={{ scale: 0.97 }}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: duration.slow, delay, ease: ease.default }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
       onClick={onClick}
-      className="px-6 py-4 text-sm font-bold tracking-[0.3em] uppercase cursor-pointer rounded"
+      className="px-6 py-4 text-sm tracking-[0.3em] uppercase cursor-pointer"
       style={{
-        background: 'rgba(10, 14, 26, 0.8)',
-        border: `1px solid ${color}40`,
-        color,
-        textShadow: `0 0 10px ${color}40`,
-        backdropFilter: 'blur(8px)',
+        ...buttonStyle,
+        ...(hovered ? buttonHoverStyle : {}),
+        fontFamily: fontFamily.serif,
+        fontWeight: 300,
       }}
     >
       {label}
