@@ -32,17 +32,6 @@ class HistoryRepository:
 		except Exception as e:
 			raise RuntimeError(f"Failed to record move: {e}") from e
 
-	async def get_moves_for_room(self, room_id: str) -> list[MoveHistory]:
-		try:
-			result = await self.session.execute(
-				select(MoveHistory)
-				.where(MoveHistory.room_id == room_id)
-				.order_by(MoveHistory.turn_number)
-			)
-			return list(result.scalars().all())
-		except Exception as e:
-			raise RuntimeError(f"Failed to get moves: {e}") from e
-
 	async def get_completed_games(self, limit: int = 20, offset: int = 0) -> list[dict]:
 		try:
 			result = await self.session.execute(
@@ -105,63 +94,3 @@ class HistoryRepository:
 		except Exception as e:
 			raise RuntimeError(f"Failed to get completed games: {e}") from e
 
-	async def get_game_detail(self, room_id: str) -> dict | None:
-		try:
-			result = await self.session.execute(
-				select(GameRoom).where(GameRoom.id == room_id)
-			)
-			room = result.scalar_one_or_none()
-			if room is None:
-				return None
-
-			moves = await self.get_moves_for_room(room_id)
-
-			players_result = await self.session.execute(
-				select(PlayerSession).where(PlayerSession.room_id == room_id)
-			)
-			player_list = list(players_result.scalars().all())
-
-			winner_name = None
-			if room.winner_player_id:
-				for p in player_list:
-					if p.id == room.winner_player_id:
-						winner_name = p.display_name
-						break
-
-			duration = None
-			if room.updated_at and room.created_at:
-				duration = int((room.updated_at - room.created_at).total_seconds())
-
-			return {
-				"room_id": room.id,
-				"room_code": room.room_code,
-				"mode": room.mode,
-				"status": room.status,
-				"winner_name": winner_name,
-				"winner_player_id": room.winner_player_id,
-				"duration_seconds": duration,
-				"created_at": room.created_at.isoformat() if room.created_at else None,
-				"players": [
-					{
-						"player_id": p.id,
-						"player_slot": p.player_slot,
-						"display_name": p.display_name,
-					}
-					for p in player_list
-				],
-				"moves": [
-					{
-						"turn_number": m.turn_number,
-						"actor_player_id": m.actor_player_id,
-						"coordinate": m.coordinate,
-						"result": m.result,
-						"sunk_ship": m.sunk_ship,
-						"created_at": m.created_at.isoformat()
-						if m.created_at
-						else None,
-					}
-					for m in moves
-				],
-			}
-		except Exception as e:
-			raise RuntimeError(f"Failed to get game detail: {e}") from e

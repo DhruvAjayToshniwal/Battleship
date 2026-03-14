@@ -141,7 +141,11 @@ export default function GamePage({
 
   useEffect(() => {
     if (mode === 'ai') {
-      game.startGame();
+      if (roomId && playerToken) {
+        game.restoreGame(roomId, playerToken);
+      } else {
+        game.startGame();
+      }
     }
   }, []);
 

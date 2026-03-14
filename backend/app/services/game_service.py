@@ -4,6 +4,7 @@ from app.engine.game_engine import parse_coordinate, format_coordinate
 from app.engine.ship import Ship
 from app.repositories.games import GameRepository
 from app.repositories.history import HistoryRepository
+from app.repositories.players import PlayerRepository
 from app.repositories.rooms import RoomRepository
 
 
@@ -193,6 +194,34 @@ class GameService:
 					if engine.game_status in ("player_wins", "ai_wins"):
 						await room_repo.set_winner(room_id, player.id)
 						updated["current_turn"] = None
+
+						try:
+							player_repo = PlayerRepository(session)
+							for p in players:
+								if p.client_id:
+									is_winner = p.id == player.id
+									shot_count = len(
+										engine.player_shots
+										if p.player_slot == "player1"
+										else engine.ai_shots
+									)
+									hit_count = sum(
+										1
+										for s in (
+											engine.player_shots
+											if p.player_slot == "player1"
+											else engine.ai_shots
+										)
+										if s.get("result") in ("hit", "sunk")
+									)
+									await player_repo.record_game_result(
+										p.client_id,
+										won=is_winner,
+										shots=shot_count,
+										hits=hit_count,
+									)
+						except Exception:
+							pass
 					else:
 						updated["current_turn"] = opponent.id if opponent else player.id
 

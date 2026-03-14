@@ -80,48 +80,29 @@ async def test_join_nonexistent_room(client):
 @pytest.mark.asyncio
 async def test_reconnect(client):
 	create_resp = await client.post(
-		"/rooms", json={"mode": "human", "display_name": "Alice"}
+		"/rooms",
+		json={"mode": "human", "display_name": "Alice", "client_id": "test-uuid-123"},
 	)
 	data = create_resp.json()
 	room_id = data["room_id"]
-	token = data["client_token"]
 
 	reconnect_resp = await client.post(
-		f"/rooms/{room_id}/reconnect",
-		json={"client_token": token},
+		"/rooms/reconnect",
+		headers={"X-Client-Id": "test-uuid-123"},
 	)
 	assert reconnect_resp.status_code == 200
 	rdata = reconnect_resp.json()
 	assert rdata["player_slot"] == "player1"
 	assert rdata["room_id"] == room_id
+	assert rdata["client_token"]
 
 
 @pytest.mark.asyncio
-async def test_reconnect_invalid_token(client):
-	create_resp = await client.post(
-		"/rooms", json={"mode": "human", "display_name": "Alice"}
-	)
-	room_id = create_resp.json()["room_id"]
-
+async def test_reconnect_no_active_room(client):
 	resp = await client.post(
-		f"/rooms/{room_id}/reconnect",
-		json={"client_token": "invalid_token_here"},
+		"/rooms/reconnect",
+		headers={"X-Client-Id": "nonexistent-uuid"},
 	)
-	assert resp.status_code == 401
+	assert resp.status_code == 404
 
 
-@pytest.mark.asyncio
-async def test_get_room_state(client):
-	create_resp = await client.post(
-		"/rooms", json={"mode": "human", "display_name": "Alice"}
-	)
-	data = create_resp.json()
-
-	resp = await client.get(
-		f"/rooms/{data['room_id']}",
-		headers={"X-Client-Token": data["client_token"]},
-	)
-	assert resp.status_code == 200
-	rdata = resp.json()
-	assert rdata["mode"] == "human"
-	assert len(rdata["players"]) == 1

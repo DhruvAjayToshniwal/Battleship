@@ -6,7 +6,7 @@ import { useAudioDirector } from './useAudioDirector';
 import { coordToRowCol } from '../utils/coordinates';
 import { buildGridFromState } from '../utils/boardState';
 import type { Difficulty } from '../services/api';
-import { saveSession, clearSession } from '../services/session';
+import { markInGame, clearSession } from '../services/session';
 
 export type { Phase } from './useBattleSequence';
 export type { Orientation, PlacedShip } from './useShipPlacement';
@@ -50,13 +50,7 @@ export function useGame(options: UseGameOptions = {}) {
         battle.resetBattle();
         audio.playGameStart();
 
-        saveSession({
-          roomId: result.room_id,
-          playerToken: result.client_token,
-          mode: 'ai',
-          playerSlot: 'player1',
-          playerId: result.player_id,
-        });
+        markInGame();
 
         return result;
       }
@@ -65,6 +59,25 @@ export function useGame(options: UseGameOptions = {}) {
       return null;
     }
   }, [apiState, placement, battle, audio]);
+
+  const restoreGame = useCallback(async (restoredRoomId: string, restoredToken: string) => {
+    try {
+      apiState.setGameId(restoredRoomId);
+      const state = await apiState.refreshState(restoredRoomId, restoredToken);
+      if (state && 'game_status' in state) {
+        const status = (state as { game_status: string }).game_status;
+        if (status === 'playing') {
+          battle.startBattle();
+        } else if (status === 'player_wins' || status === 'ai_wins') {
+          battle.receiveGameUpdate(status, false);
+        }
+        return state;
+      }
+      return null;
+    } catch (e) {
+      return null;
+    }
+  }, [apiState, battle]);
 
   const confirmPlacement = useCallback(async () => {
     try {
@@ -184,6 +197,7 @@ export function useGame(options: UseGameOptions = {}) {
     mode,
 
     startGame,
+    restoreGame,
     placeShipAt,
     confirmPlacement,
     fireShot,

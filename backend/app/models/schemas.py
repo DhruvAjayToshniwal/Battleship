@@ -8,16 +8,6 @@ class ShipPlacement(BaseModel):
 	coordinates: list[str]
 
 
-class PlaceShipsRequest(BaseModel):
-	game_id: str
-	ships: list[ShipPlacement]
-
-
-class FireRequest(BaseModel):
-	game_id: str
-	coordinate: str
-
-
 class ShotResult(BaseModel):
 	result: str
 	ship: Optional[str] = None
@@ -60,16 +50,6 @@ class GameStateResponse(BaseModel):
 	ai_ships_remaining: int
 
 
-class StartGameRequest(BaseModel):
-	difficulty: str = "hard"
-
-
-class StartGameResponse(BaseModel):
-	game_id: str
-	difficulty: str = "hard"
-	message: str = "Game created. Place your ships to begin."
-
-
 class ErrorResponse(BaseModel):
 	detail: str
 
@@ -78,6 +58,7 @@ class CreateRoomRequest(BaseModel):
 	mode: str = "human"
 	display_name: str = "Player"
 	difficulty: str = "hard"
+	client_id: Optional[str] = None
 
 
 class CreateRoomResponse(BaseModel):
@@ -92,6 +73,7 @@ class CreateRoomResponse(BaseModel):
 class JoinRoomRequest(BaseModel):
 	room_code: str
 	display_name: str = "Player"
+	client_id: Optional[str] = None
 
 
 class JoinRoomResponse(BaseModel):
@@ -102,10 +84,6 @@ class JoinRoomResponse(BaseModel):
 	player_slot: str
 
 
-class ReconnectRequest(BaseModel):
-	client_token: str
-
-
 class PlayerInfo(BaseModel):
 	player_id: str
 	player_slot: str
@@ -113,19 +91,12 @@ class PlayerInfo(BaseModel):
 	connected: bool
 
 
-class RoomStateResponse(BaseModel):
-	room_id: str
-	room_code: str
-	mode: str
-	status: str
-	players: list[PlayerInfo]
-
-
 class ReconnectResponse(BaseModel):
 	room_id: str
 	room_code: str
 	player_id: str
 	player_slot: str
+	client_token: str
 	room_status: str
 	mode: str
 	players: list[PlayerInfo]
@@ -173,26 +144,16 @@ class GameHistoryListResponse(BaseModel):
 	games: list[GameHistorySummary]
 
 
-class MoveDetail(BaseModel):
-	turn_number: int
-	actor_player_id: str
-	coordinate: str
-	result: str
-	sunk_ship: Optional[str] = None
+class PlayerStatsResponse(BaseModel):
+	client_id: str
+	display_name: str
+	wins: int
+	losses: int
+	games_played: int
+	total_shots: int
+	total_hits: int
+	hit_rate: float
 	created_at: Optional[str] = None
-
-
-class GameHistoryDetailResponse(BaseModel):
-	room_id: str
-	room_code: str
-	mode: str
-	status: str
-	winner_name: Optional[str] = None
-	winner_player_id: Optional[str] = None
-	duration_seconds: Optional[int] = None
-	created_at: Optional[str] = None
-	players: list[dict]
-	moves: list[MoveDetail]
 
 
 class WsEvent(BaseModel):
