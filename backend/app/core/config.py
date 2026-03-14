@@ -5,7 +5,7 @@ class Settings(BaseSettings):
 	model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}
 
 	DATABASE_URL: str = "sqlite+aiosqlite:///./battleship.db"
-	CORS_ORIGINS: str = "http://localhost:5173,http://localhost:1420"
+	CORS_ORIGINS: str = "http://localhost:5173"
 	ROOM_CODE_LENGTH: int = 6
 	TOKEN_LENGTH: int = 32
 	WS_HEARTBEAT_INTERVAL: int = 30

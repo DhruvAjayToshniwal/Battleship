@@ -11,12 +11,12 @@ A full-stack Battleship game with 3D graphics, AI opponents, and real-time multi
 
 ## Features
 
-- **3D Game Board** — React Three Fiber powered ocean scene with animated ships, explosions, and water effects
-- **AI Opponents** — Three difficulty levels (Easy, Medium, Hard) with probability-based targeting
-- **Real-Time Multiplayer** — WebSocket-driven PvP with room codes, turn-based combat, and live state sync
-- **Refresh Persistence** — Browser refresh mid-game restores your session automatically
-- **Anti-Cheat** — Server-authoritative game logic; enemy ship positions hidden until sunk
-- **Game History** — Browse completed games with stats, accuracy, and move counts
+- **3D Game Board**: React Three Fiber ocean scene with animated ships, explosions, and water effects
+- **AI Opponents**: Three difficulty levels (Easy, Medium, Hard) with probability-based targeting
+- **Real-Time Multiplayer**: WebSocket PvP with room codes, turn-based combat, and live state sync
+- **Refresh Persistence**: Browser refresh mid-game restores your session automatically
+- **Anti-Cheat**: Server-authoritative game logic; enemy ship positions stay hidden until sunk
+- **Game History**: Browse completed games with stats, accuracy, and move counts
 
 ## Tech Stack
 
