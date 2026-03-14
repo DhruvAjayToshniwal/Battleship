@@ -70,7 +70,7 @@
 - `player1_board` / `player2_board` (JSON)
 - `player1_placed` / `player2_placed` (boolean)
 - `player1_shots` / `player2_shots` (JSON)
-- `ships_remaining` (JSON)
+- `player1_ships_remaining` / `player2_ships_remaining` (int)
 - `game_status`
 - `difficulty` (for AI games)
 - `ai_strategy_state` (JSON, for AI games)

@@ -78,14 +78,6 @@ export interface PlayerInfo {
   connected: boolean;
 }
 
-export interface RoomStateResponse {
-  room_id: string;
-  room_code: string;
-  mode: string;
-  status: string;
-  players: PlayerInfo[];
-}
-
 export interface ReconnectResponse {
   room_id: string;
   room_code: string;
@@ -138,16 +130,6 @@ export interface GameHistorySummary {
   players: Array<{ player_id: string; player_slot: string; display_name: string }>;
 }
 
-export interface GameHistoryDetail extends GameHistorySummary {
-  moves: Array<{
-    turn_number: number;
-    actor_player_id: string;
-    coordinate: string;
-    result: string;
-    sunk_ship: string | null;
-    created_at: string | null;
-  }>;
-}
 
 export async function createRoom(
   mode: string = 'human',
@@ -169,16 +151,6 @@ export async function joinRoom(
   const response = await api.post('/rooms/join', {
     room_code: roomCode,
     display_name: displayName,
-  });
-  return response.data;
-}
-
-export async function getRoomInfo(
-  roomId: string,
-  token: string
-): Promise<RoomStateResponse> {
-  const response = await api.get(`/rooms/${roomId}`, {
-    headers: { 'X-Client-Token': token },
   });
   return response.data;
 }
@@ -237,9 +209,3 @@ export async function getHistory(
   return response.data;
 }
 
-export async function getGameDetail(
-  roomId: string
-): Promise<GameHistoryDetail> {
-  const response = await api.get(`/games/history/${roomId}`);
-  return response.data;
-}

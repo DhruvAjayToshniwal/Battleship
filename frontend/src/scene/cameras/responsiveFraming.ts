@@ -29,14 +29,3 @@ export function getResponsiveShot(
   return adjusted;
 }
 
-export function getViewportScale(width: number, height: number): number {
-  const aspect = width / height;
-
-  if (aspect < 0.8) {
-    return 1.4;
-  }
-  if (aspect < 1.3) {
-    return 1.2;
-  }
-  return 1.0;
-}
