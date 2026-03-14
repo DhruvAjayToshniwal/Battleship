@@ -1,5 +1,4 @@
 import { Suspense } from 'react';
-import OceanSurface from './environment/OceanSurface';
 import SkyBackdrop from './environment/SkyBackdrop';
 import Atmosphere from './environment/Atmosphere';
 import LightingRig from './environment/LightingRig';
@@ -85,8 +84,6 @@ function SceneContent(props: SceneRootProps) {
       <FogController near={20} far={60} />
       <SkyBackdrop />
       <Atmosphere />
-      <OceanSurface position={[0, -0.15, 0]} size={[50, 50]} segments={quality.oceanSegments} />
-
       <MainCameraRig
         phase={props.phase}
         isPlayerTurn={props.isPlayerTurn}
