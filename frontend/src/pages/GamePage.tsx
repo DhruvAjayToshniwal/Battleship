@@ -6,7 +6,7 @@ import { useRealtimeRoom } from '../hooks/useRealtimeRoom';
 import SceneRoot from '../scene/SceneRoot';
 import ShipPlacement from '../components/ShipPlacement';
 import CommandHUD from '../components/hud/CommandHUD';
-import Radar from '../components/Radar';
+
 import TurnBanner from '../components/hud/TurnBanner';
 import FireControlPanel from '../components/hud/FireControlPanel';
 import NotificationStack from '../components/hud/NotificationStack';
@@ -240,9 +240,6 @@ export default function GamePage({
     return `${letter}${row + 1}`;
   }, [enemyHoverCell]);
 
-  const playerShots = useMemo(() => game.gameState?.player_shots ?? [], [game.gameState]);
-  const aiShots = useMemo(() => game.gameState?.ai_shots ?? [], [game.gameState]);
-
   const lastFireCoord = game.lastPlayerResult?.coordinate ?? null;
   const boardSpacing = 7;
 
@@ -320,10 +317,6 @@ export default function GamePage({
           />
         )}
       </AnimatePresence>
-
-      {game.phase === 'playing' && (
-        <Radar playerShots={playerShots} aiShots={aiShots} />
-      )}
 
       <TurnBanner isPlayerTurn={game.isPlayerTurn} visible={showTurnBanner} />
 
