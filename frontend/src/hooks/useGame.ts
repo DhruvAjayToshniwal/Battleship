@@ -88,8 +88,8 @@ export function useGame(options: UseGameOptions = {}) {
 
   const confirmPlacement = useCallback(async () => {
     try {
-      const gId = options.roomId ?? apiState.gameId;
-      const tkn = options.playerToken ?? apiState.token;
+      const gId = apiState.gameId ?? options.roomId;
+      const tkn = apiState.token ?? options.playerToken;
       if (!gId || !placement.allShipsPlaced || !tkn) return;
 
       const shipPlacements = placement.placedShips.map((s) => ({
@@ -118,7 +118,7 @@ export function useGame(options: UseGameOptions = {}) {
   const fireShot = useCallback(
     async (coordinate: string) => {
       try {
-        const gId = options.roomId ?? apiState.gameId;
+        const gId = apiState.gameId ?? options.roomId;
         if (!gId) return;
         await battle.fireShot(gId, coordinate);
       } catch (e) {
