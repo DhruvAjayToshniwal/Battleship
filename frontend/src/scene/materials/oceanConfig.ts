@@ -26,38 +26,29 @@ void main() {
   vUv = uv;
   vec3 pos = position;
 
-  vec3 w1 = gerstnerWave(pos.xz, 0.18, 0.8, 0.6, vec2(1.0, 0.4), 0.6, 0.0);
-  vec3 w2 = gerstnerWave(pos.xz, 0.12, 1.3, 0.5, vec2(-0.6, 1.0), 0.9, 1.3);
-  vec3 w3 = gerstnerWave(pos.xz, 0.07, 2.2, 0.4, vec2(0.8, -0.5), 1.4, 2.7);
-  vec3 w4 = gerstnerWave(pos.xz, 0.04, 3.8, 0.35, vec2(-0.3, -0.9), 2.0, 4.1);
-  vec3 w5 = gerstnerWave(pos.xz, 0.025, 5.5, 0.3, vec2(0.5, 0.8), 2.8, 0.9);
-  vec3 w6 = gerstnerWave(pos.xz, 0.015, 8.0, 0.25, vec2(-0.9, 0.3), 3.5, 3.3);
-  vec3 w7 = gerstnerWave(pos.xz, 0.008, 12.0, 0.2, vec2(0.2, -1.0), 4.2, 5.5);
+  vec3 w1 = gerstnerWave(pos.xz, 0.22, 0.7, 0.6, vec2(1.0, 0.4), 0.6, 0.0);
+  vec3 w2 = gerstnerWave(pos.xz, 0.14, 1.2, 0.5, vec2(-0.6, 1.0), 0.9, 1.3);
+  vec3 w3 = gerstnerWave(pos.xz, 0.08, 2.0, 0.4, vec2(0.8, -0.5), 1.4, 2.7);
+  vec3 w4 = gerstnerWave(pos.xz, 0.04, 3.5, 0.35, vec2(-0.3, -0.9), 2.0, 4.1);
 
-  vec3 totalDisplacement = w1 + w2 + w3 + w4 + w5 + w6 + w7;
+  vec3 totalDisplacement = w1 + w2 + w3 + w4;
   pos.x += totalDisplacement.x;
   pos.y += totalDisplacement.y;
   pos.z += totalDisplacement.z;
 
   vElevation = totalDisplacement.y;
 
-  float eps = 0.05;
+  float eps = 0.1;
 
-  vec3 dxW1 = gerstnerWave(vec2(position.x + eps, position.z), 0.18, 0.8, 0.6, vec2(1.0, 0.4), 0.6, 0.0);
-  vec3 dxW2 = gerstnerWave(vec2(position.x + eps, position.z), 0.12, 1.3, 0.5, vec2(-0.6, 1.0), 0.9, 1.3);
-  vec3 dxW3 = gerstnerWave(vec2(position.x + eps, position.z), 0.07, 2.2, 0.4, vec2(0.8, -0.5), 1.4, 2.7);
-  vec3 dxW4 = gerstnerWave(vec2(position.x + eps, position.z), 0.04, 3.8, 0.35, vec2(-0.3, -0.9), 2.0, 4.1);
-  vec3 dxW5 = gerstnerWave(vec2(position.x + eps, position.z), 0.025, 5.5, 0.3, vec2(0.5, 0.8), 2.8, 0.9);
-  vec3 dxTotal = dxW1 + dxW2 + dxW3 + dxW4 + dxW5;
-  float dxHeight = dxTotal.y;
+  vec3 dxW1 = gerstnerWave(vec2(position.x + eps, position.z), 0.22, 0.7, 0.6, vec2(1.0, 0.4), 0.6, 0.0);
+  vec3 dxW2 = gerstnerWave(vec2(position.x + eps, position.z), 0.14, 1.2, 0.5, vec2(-0.6, 1.0), 0.9, 1.3);
+  vec3 dxW3 = gerstnerWave(vec2(position.x + eps, position.z), 0.08, 2.0, 0.4, vec2(0.8, -0.5), 1.4, 2.7);
+  float dxHeight = (dxW1 + dxW2 + dxW3).y;
 
-  vec3 dzW1 = gerstnerWave(vec2(position.x, position.z + eps), 0.18, 0.8, 0.6, vec2(1.0, 0.4), 0.6, 0.0);
-  vec3 dzW2 = gerstnerWave(vec2(position.x, position.z + eps), 0.12, 1.3, 0.5, vec2(-0.6, 1.0), 0.9, 1.3);
-  vec3 dzW3 = gerstnerWave(vec2(position.x, position.z + eps), 0.07, 2.2, 0.4, vec2(0.8, -0.5), 1.4, 2.7);
-  vec3 dzW4 = gerstnerWave(vec2(position.x, position.z + eps), 0.04, 3.8, 0.35, vec2(-0.3, -0.9), 2.0, 4.1);
-  vec3 dzW5 = gerstnerWave(vec2(position.x, position.z + eps), 0.025, 5.5, 0.3, vec2(0.5, 0.8), 2.8, 0.9);
-  vec3 dzTotal = dzW1 + dzW2 + dzW3 + dzW4 + dzW5;
-  float dzHeight = dzTotal.y;
+  vec3 dzW1 = gerstnerWave(vec2(position.x, position.z + eps), 0.22, 0.7, 0.6, vec2(1.0, 0.4), 0.6, 0.0);
+  vec3 dzW2 = gerstnerWave(vec2(position.x, position.z + eps), 0.14, 1.2, 0.5, vec2(-0.6, 1.0), 0.9, 1.3);
+  vec3 dzW3 = gerstnerWave(vec2(position.x, position.z + eps), 0.08, 2.0, 0.4, vec2(0.8, -0.5), 1.4, 2.7);
+  float dzHeight = (dzW1 + dzW2 + dzW3).y;
 
   vec3 tangentX = normalize(vec3(eps, dxHeight - totalDisplacement.y, 0.0));
   vec3 tangentZ = normalize(vec3(0.0, dzHeight - totalDisplacement.y, eps));

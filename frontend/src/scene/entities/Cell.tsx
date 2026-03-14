@@ -1,5 +1,4 @@
 import { useRef, memo } from 'react';
-import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 
 interface CellProps {
@@ -22,22 +21,7 @@ export default memo(function Cell({
   isEnemyBoard = false,
 }: CellProps) {
   const meshRef = useRef<THREE.Mesh>(null);
-  const hoveredRef = useRef(false);
-  const glowRef = useRef<THREE.PointLight>(null);
-  const reticleRef = useRef<THREE.Mesh>(null);
   const matRef = useRef<THREE.MeshStandardMaterial>(null);
-
-  useFrame(({ clock }) => {
-    const t = clock.getElapsedTime();
-    if (state === 'hit' && glowRef.current) {
-      glowRef.current.intensity = 1.5 + Math.sin(t * 3) * 0.5;
-    }
-    if (hoveredRef.current && isEnemyBoard && reticleRef.current) {
-      reticleRef.current.rotation.z = t * 2;
-      const pulse = 1 + Math.sin(t * 4) * 0.1;
-      reticleRef.current.scale.set(pulse, pulse, 1);
-    }
-  });
 
   if (isPreview) {
     return (
@@ -57,21 +41,14 @@ export default memo(function Cell({
   if (state === 'hit') {
     return (
       <group position={position}>
-        <mesh position={[0, 0.25, 0]} ref={meshRef}>
-          <sphereGeometry args={[0.25, 16, 16]} />
+        <mesh position={[0, 0.25, 0]}>
+          <sphereGeometry args={[0.25, 12, 12]} />
           <meshStandardMaterial
             color="#ef4444"
             emissive="#ef4444"
-            emissiveIntensity={0.8}
+            emissiveIntensity={1.0}
           />
         </mesh>
-        <pointLight
-          ref={glowRef}
-          position={[0, 0.5, 0]}
-          color="#ef4444"
-          intensity={1.5}
-          distance={3}
-        />
         <mesh position={[0, 0.02, 0]}>
           <boxGeometry args={[0.9, 0.04, 0.9]} />
           <meshStandardMaterial
@@ -88,7 +65,7 @@ export default memo(function Cell({
     return (
       <group position={position}>
         <mesh position={[0, 0.02, 0]}>
-          <ringGeometry args={[0.2, 0.35, 16]} />
+          <ringGeometry args={[0.2, 0.35, 12]} />
           <meshStandardMaterial
             color="#38bdf8"
             emissive="#38bdf8"
@@ -96,17 +73,6 @@ export default memo(function Cell({
             side={THREE.DoubleSide}
             transparent
             opacity={0.7}
-          />
-        </mesh>
-        <mesh position={[0, 0.03, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-          <ringGeometry args={[0.1, 0.15, 16]} />
-          <meshStandardMaterial
-            color="#7dd3fc"
-            emissive="#7dd3fc"
-            emissiveIntensity={0.3}
-            side={THREE.DoubleSide}
-            transparent
-            opacity={0.5}
           />
         </mesh>
       </group>
@@ -128,74 +94,44 @@ export default memo(function Cell({
 
   if (isClickable) {
     return (
-      <group>
-        <mesh
-          ref={meshRef}
-          position={[position[0], position[1] + 0.01, position[2]]}
-          onPointerEnter={(e) => {
-            e.stopPropagation();
-            hoveredRef.current = true;
-            document.body.style.cursor = 'crosshair';
-            if (matRef.current) {
-              matRef.current.opacity = 0.7;
-              matRef.current.emissiveIntensity = 0.4;
-              matRef.current.color.set(isEnemyBoard ? '#1e3a5f' : '#1e3a5f');
-              matRef.current.emissive.set(isEnemyBoard ? '#ef4444' : '#38bdf8');
-            }
-          }}
-          onPointerLeave={(e) => {
-            e.stopPropagation();
-            hoveredRef.current = false;
-            document.body.style.cursor = 'default';
-            if (matRef.current) {
-              matRef.current.opacity = 0.1;
-              matRef.current.emissiveIntensity = 0;
-              matRef.current.color.set('#0a1628');
-              matRef.current.emissive.set('#000000');
-            }
-          }}
-          onClick={(e) => {
-            e.stopPropagation();
-            onClick?.();
-          }}
-        >
-          <boxGeometry args={[0.9, 0.02, 0.9]} />
-          <meshStandardMaterial
-            ref={matRef}
-            color="#0a1628"
-            transparent
-            opacity={0.1}
-            emissive="#000000"
-            emissiveIntensity={0}
-          />
-        </mesh>
-        {isEnemyBoard && (
-          <>
-            <mesh
-              ref={reticleRef}
-              position={[position[0], position[1] + 0.06, position[2]]}
-              rotation={[-Math.PI / 2, 0, 0]}
-              visible={false}
-            >
-              <ringGeometry args={[0.3, 0.38, 4]} />
-              <meshStandardMaterial
-                color="#ef4444"
-                emissive="#ef4444"
-                emissiveIntensity={1}
-                transparent
-                opacity={0.8}
-                side={THREE.DoubleSide}
-              />
-            </mesh>
-            <pointLight
-              position={[position[0], position[1] + 0.3, position[2]]}
-              color="#ef4444"
-              intensity={0}
-              distance={2}
-            />
-          </>
-        )}
-      </group>
+      <mesh
+        ref={meshRef}
+        position={[position[0], position[1] + 0.01, position[2]]}
+        onPointerEnter={(e) => {
+          e.stopPropagation();
+          document.body.style.cursor = 'crosshair';
+          if (matRef.current) {
+            matRef.current.opacity = 0.7;
+            matRef.current.emissiveIntensity = 0.4;
+            matRef.current.color.set(isEnemyBoard ? '#1e3a5f' : '#1e3a5f');
+            matRef.current.emissive.set(isEnemyBoard ? '#ef4444' : '#38bdf8');
+          }
+        }}
+        onPointerLeave={(e) => {
+          e.stopPropagation();
+          document.body.style.cursor = 'default';
+          if (matRef.current) {
+            matRef.current.opacity = 0.1;
+            matRef.current.emissiveIntensity = 0;
+            matRef.current.color.set('#0a1628');
+            matRef.current.emissive.set('#000000');
+          }
+        }}
+        onClick={(e) => {
+          e.stopPropagation();
+          onClick?.();
+        }}
+      >
+        <boxGeometry args={[0.9, 0.02, 0.9]} />
+        <meshStandardMaterial
+          ref={matRef}
+          color="#0a1628"
+          transparent
+          opacity={0.1}
+          emissive="#000000"
+          emissiveIntensity={0}
+        />
+      </mesh>
     );
   }
 
