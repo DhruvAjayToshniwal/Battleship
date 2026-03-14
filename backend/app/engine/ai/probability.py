@@ -1,4 +1,3 @@
-BOARD_SIZE = 10
 HIT_BONUS_MULTIPLIER = 5
 
 
@@ -8,21 +7,22 @@ def build_probability_grid(
 	miss_cells: set[tuple[int, int]],
 	sunk_coords: set[tuple[int, int]],
 	hit_cells: set[tuple[int, int]],
+	board_size: int = 10,
 ) -> list[list[int]]:
-	grid = [[0] * BOARD_SIZE for _ in range(BOARD_SIZE)]
+	grid = [[0] * board_size for _ in range(board_size)]
 	unsunk_hits = hit_cells - sunk_coords
 
 	for ship_len in remaining_ships:
-		for r in range(BOARD_SIZE):
-			for c in range(BOARD_SIZE - ship_len + 1):
+		for r in range(board_size):
+			for c in range(board_size - ship_len + 1):
 				cells = [(r, c + i) for i in range(ship_len)]
 				if placement_valid(cells, miss_cells, sunk_coords):
 					weight = placement_weight(cells, unsunk_hits)
 					for cr, cc in cells:
 						grid[cr][cc] += weight
 
-		for r in range(BOARD_SIZE - ship_len + 1):
-			for c in range(BOARD_SIZE):
+		for r in range(board_size - ship_len + 1):
+			for c in range(board_size):
 				cells = [(r + i, c) for i in range(ship_len)]
 				if placement_valid(cells, miss_cells, sunk_coords):
 					weight = placement_weight(cells, unsunk_hits)
@@ -30,7 +30,7 @@ def build_probability_grid(
 						grid[cr][cc] += weight
 
 	for r, c in miss_cells | sunk_coords:
-		if 0 <= r < BOARD_SIZE and 0 <= c < BOARD_SIZE:
+		if 0 <= r < board_size and 0 <= c < board_size:
 			grid[r][c] = 0
 
 	return grid

@@ -1,13 +1,13 @@
 import type { GameStateResponse } from '../services/api';
 import { coordToRowCol } from './coordinates';
-import { BOARD_SIZE } from './constants';
 
 export function buildGridFromState(
   gameState: GameStateResponse | null,
-  board: 'player' | 'ai'
+  board: 'player' | 'ai',
+  boardSize: number = 10
 ): (string | null)[][] {
-  const grid: (string | null)[][] = Array.from({ length: BOARD_SIZE }, () =>
-    Array(BOARD_SIZE).fill(null)
+  const grid: (string | null)[][] = Array.from({ length: boardSize }, () =>
+    Array(boardSize).fill(null)
   );
   if (!gameState) return grid;
 

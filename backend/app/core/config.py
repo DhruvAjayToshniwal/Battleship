@@ -9,6 +9,7 @@ class Settings(BaseSettings):
 	ROOM_CODE_LENGTH: int = 6
 	TOKEN_LENGTH: int = 32
 	WS_HEARTBEAT_INTERVAL: int = 30
+	BOARD_SIZE: int = 10
 
 
 class SettingsFactory:

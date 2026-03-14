@@ -47,6 +47,7 @@ export interface AIBoardState {
 export interface GameStateResponse {
   game_id: string;
   game_status: 'setup' | 'playing' | 'player_wins' | 'ai_wins';
+  board_size: number;
   player_board: PlayerBoardState;
   ai_board: AIBoardState;
   player_shots: ShotResult[];
@@ -70,6 +71,7 @@ export interface CreateRoomResponse {
   client_token: string;
   mode: string;
   difficulty: string | null;
+  board_size: number;
 }
 
 export interface JoinRoomResponse {
@@ -95,12 +97,14 @@ export interface ReconnectResponse {
   client_token: string;
   room_status: string;
   mode: string;
+  board_size: number;
   players: PlayerInfo[];
 }
 
 export interface MultiplayerGameState {
   game_id: string;
   game_status: string;
+  board_size: number;
   player_slot: string;
   your_turn: boolean;
   turn_number: number;
@@ -144,13 +148,15 @@ export interface GameHistorySummary {
 export async function createRoom(
   mode: string = 'human',
   displayName: string = 'Player',
-  difficulty: Difficulty = 'hard'
+  difficulty: Difficulty = 'hard',
+  boardSize: number = 10
 ): Promise<CreateRoomResponse> {
   const response = await api.post('/rooms', {
     mode,
     display_name: displayName,
     difficulty,
     client_id: getClientId(),
+    board_size: boardSize,
   });
   return response.data;
 }

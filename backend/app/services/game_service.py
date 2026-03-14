@@ -260,6 +260,7 @@ class GameService:
 					return {
 						"game_id": room_id,
 						"game_status": "setup",
+						"board_size": 10,
 						"player_slot": player.player_slot,
 						"your_turn": False,
 					}
@@ -272,6 +273,7 @@ class GameService:
 				return {
 					"game_id": room_id,
 					"game_status": snapshot.game_status,
+					"board_size": engine.board_size,
 					"player_slot": player.player_slot,
 					"your_turn": snapshot.current_turn == player.id,
 					"turn_number": snapshot.turn_number,

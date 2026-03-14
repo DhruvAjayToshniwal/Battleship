@@ -4,15 +4,15 @@ interface BoardMarkersProps {
   size?: number;
 }
 
-const COLUMNS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'];
 const MARKER_COLOR = '#64748b';
 
 export default function BoardMarkers({ size = 10 }: BoardMarkersProps) {
   const half = size / 2;
+  const columns = Array.from({ length: size }, (_, i) => String.fromCharCode(65 + i));
 
   return (
     <group>
-      {COLUMNS.map((letter, i) => (
+      {columns.map((letter, i) => (
         <group key={`col-${i}`} position={[i - half + 0.5, 0.06, -half - 0.45]}>
           <mesh>
             <sphereGeometry args={[0.04, 8, 8]} />
@@ -37,7 +37,7 @@ export default function BoardMarkers({ size = 10 }: BoardMarkersProps) {
         </group>
       ))}
 
-      {Array.from({ length: 10 }, (_, i) => (
+      {Array.from({ length: size }, (_, i) => (
         <group key={`row-${i}`} position={[-half - 0.45, 0.06, i - half + 0.5]}>
           <mesh>
             <sphereGeometry args={[0.04, 8, 8]} />

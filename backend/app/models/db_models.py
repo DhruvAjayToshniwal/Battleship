@@ -78,6 +78,7 @@ class GameSnapshot(Base):
 	turn_number: Mapped[int] = mapped_column(Integer, default=0)
 	game_status: Mapped[str] = mapped_column(String(20), default="setup")
 	difficulty: Mapped[str | None] = mapped_column(String(10), nullable=True)
+	board_size: Mapped[int] = mapped_column(Integer, default=10)
 	ai_strategy_state: Mapped[dict | None] = mapped_column(JSON, nullable=True)
 
 	room: Mapped["GameRoom"] = relationship("GameRoom", back_populates="snapshot")

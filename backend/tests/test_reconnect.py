@@ -277,3 +277,98 @@ async def test_reconnect_state_survives_multiple_refreshes(client):
 		state = state_resp.json()
 		assert state["game_status"] == "playing"
 		assert len(state["player_shots"]) >= 2
+
+
+@pytest.mark.asyncio
+async def test_custom_board_size_ai(client):
+	create_resp = await client.post(
+		"/rooms",
+		json={
+			"mode": "ai",
+			"display_name": "Alice",
+			"difficulty": "easy",
+			"client_id": CLIENT_UUID_1,
+			"board_size": 7,
+		},
+	)
+	assert create_resp.status_code == 201
+	data = create_resp.json()
+	assert data["board_size"] == 7
+	room_id = data["room_id"]
+	token = data["client_token"]
+
+	ships = [
+		{"name": "Carrier", "coordinates": ["A1", "A2", "A3", "A4", "A5"]},
+		{"name": "Battleship", "coordinates": ["B1", "B2", "B3", "B4"]},
+		{"name": "Cruiser", "coordinates": ["C1", "C2", "C3"]},
+		{"name": "Submarine", "coordinates": ["D1", "D2", "D3"]},
+		{"name": "Destroyer", "coordinates": ["E1", "E2"]},
+	]
+	place_resp = await client.post(
+		f"/rooms/{room_id}/place-ships",
+		json={"client_token": token, "ships": ships},
+	)
+	assert place_resp.status_code == 200
+	assert place_resp.json()["board_size"] == 7
+
+	fire_resp = await client.post(
+		f"/rooms/{room_id}/fire",
+		json={"client_token": token, "coordinate": "A1"},
+	)
+	assert fire_resp.status_code == 200
+
+	state_resp = await client.get(
+		f"/rooms/{room_id}/state",
+		headers={"X-Client-Token": token},
+	)
+	assert state_resp.status_code == 200
+	assert state_resp.json()["board_size"] == 7
+
+
+@pytest.mark.asyncio
+async def test_board_size_out_of_range(client):
+	resp = await client.post(
+		"/rooms",
+		json={"mode": "ai", "display_name": "Alice", "board_size": 3},
+	)
+	assert resp.status_code == 422
+
+	resp = await client.post(
+		"/rooms",
+		json={"mode": "ai", "display_name": "Alice", "board_size": 30},
+	)
+	assert resp.status_code == 422
+
+
+@pytest.mark.asyncio
+async def test_board_size_coordinate_validation(client):
+	create_resp = await client.post(
+		"/rooms",
+		json={
+			"mode": "ai",
+			"display_name": "Alice",
+			"difficulty": "easy",
+			"board_size": 7,
+		},
+	)
+	data = create_resp.json()
+	room_id = data["room_id"]
+	token = data["client_token"]
+
+	ships = [
+		{"name": "Carrier", "coordinates": ["A1", "A2", "A3", "A4", "A5"]},
+		{"name": "Battleship", "coordinates": ["B1", "B2", "B3", "B4"]},
+		{"name": "Cruiser", "coordinates": ["C1", "C2", "C3"]},
+		{"name": "Submarine", "coordinates": ["D1", "D2", "D3"]},
+		{"name": "Destroyer", "coordinates": ["E1", "E2"]},
+	]
+	await client.post(
+		f"/rooms/{room_id}/place-ships",
+		json={"client_token": token, "ships": ships},
+	)
+
+	fire_resp = await client.post(
+		f"/rooms/{room_id}/fire",
+		json={"client_token": token, "coordinate": "H1"},
+	)
+	assert fire_resp.status_code == 400

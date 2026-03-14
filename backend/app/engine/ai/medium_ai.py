@@ -4,8 +4,8 @@ from app.engine.ai.ai_base import BattleshipAI
 
 
 class MediumAI(BattleshipAI):
-	def __init__(self) -> None:
-		super().__init__()
+	def __init__(self, board_size: int = 10) -> None:
+		super().__init__(board_size)
 		self.target_queue: list[tuple[int, int]] = []
 
 	def choose_move(self, board_state: list[list[int]]) -> tuple[int, int]:

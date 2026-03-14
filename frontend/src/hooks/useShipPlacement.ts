@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { rowColToCoord } from '../utils/coordinates';
-import { SHIPS_TO_PLACE, BOARD_SIZE } from '../utils/constants';
+import { SHIPS_TO_PLACE } from '../utils/constants';
 
 export type Orientation = 'h' | 'v';
 
@@ -10,7 +10,7 @@ export interface PlacedShip {
   coordinates: string[];
 }
 
-export function useShipPlacement() {
+export function useShipPlacement(boardSize: number = 10) {
   const [orientation, setOrientation] = useState<Orientation>('h');
   const [placedShips, setPlacedShips] = useState<PlacedShip[]>([]);
   const [currentShipIndex, setCurrentShipIndex] = useState(0);
@@ -37,7 +37,7 @@ export function useShipPlacement() {
       for (let i = 0; i < currentShip.size; i++) {
         const r = orientation === 'v' ? row + i : row;
         const c = orientation === 'h' ? col + i : col;
-        if (r < 0 || r >= BOARD_SIZE || c < 0 || c >= BOARD_SIZE) return null;
+        if (r < 0 || r >= boardSize || c < 0 || c >= boardSize) return null;
         coords.push(rowColToCoord(r, c));
       }
       const allPlacedCoords = new Set(placedShips.flatMap((s) => s.coordinates));
@@ -78,8 +78,8 @@ export function useShipPlacement() {
       let attempts = 0;
       while (attempts < 1000) {
         const o: Orientation = Math.random() < 0.5 ? 'h' : 'v';
-        const maxRow = o === 'v' ? BOARD_SIZE - ship.size : BOARD_SIZE - 1;
-        const maxCol = o === 'h' ? BOARD_SIZE - ship.size : BOARD_SIZE - 1;
+        const maxRow = o === 'v' ? boardSize - ship.size : boardSize - 1;
+        const maxCol = o === 'h' ? boardSize - ship.size : boardSize - 1;
         const row = Math.floor(Math.random() * (maxRow + 1));
         const col = Math.floor(Math.random() * (maxCol + 1));
         const coords: string[] = [];
