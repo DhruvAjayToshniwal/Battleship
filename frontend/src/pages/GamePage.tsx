@@ -155,7 +155,7 @@ export default function GamePage({
   }, []);
 
   useEffect(() => {
-    if (!game.loading && showIntro && game.phase === 'setup') {
+    if (!game.loading && showIntro) {
       const timer = setTimeout(() => setShowIntro(false), 1200);
       return () => clearTimeout(timer);
     }
