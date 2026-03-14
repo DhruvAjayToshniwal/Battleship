@@ -85,7 +85,7 @@ function SceneContent(props: SceneRootProps) {
       <FogController near={20} far={60} />
       <SkyBackdrop />
       <Atmosphere />
-      <OceanSurface position={[0, -0.15, 0]} size={[80, 80]} segments={quality.oceanSegments} />
+      <OceanSurface position={[0, -0.15, 0]} size={[50, 50]} segments={quality.oceanSegments} />
 
       <MainCameraRig
         phase={props.phase}

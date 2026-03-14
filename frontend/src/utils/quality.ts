@@ -13,7 +13,7 @@ interface QualitySettings {
 
 const QUALITY_PRESETS: Record<QualityLevel, QualitySettings> = {
   low: {
-    oceanSegments: 64,
+    oceanSegments: 48,
     shadowMapSize: 512,
     particleMultiplier: 0.5,
     enableBloom: false,
@@ -23,22 +23,22 @@ const QUALITY_PRESETS: Record<QualityLevel, QualitySettings> = {
     maxExplosionParticles: 12,
   },
   medium: {
-    oceanSegments: 128,
+    oceanSegments: 80,
     shadowMapSize: 1024,
     particleMultiplier: 0.75,
-    enableBloom: true,
+    enableBloom: false,
     enableVignette: true,
-    waveOctaves: 5,
+    waveOctaves: 4,
     maxTrailParticles: 10,
     maxExplosionParticles: 20,
   },
   high: {
-    oceanSegments: 192,
-    shadowMapSize: 2048,
+    oceanSegments: 128,
+    shadowMapSize: 1024,
     particleMultiplier: 1.0,
     enableBloom: true,
     enableVignette: true,
-    waveOctaves: 7,
+    waveOctaves: 5,
     maxTrailParticles: 12,
     maxExplosionParticles: 24,
   },
@@ -62,8 +62,8 @@ function detectQualityLevel(): QualityLevel {
 
   const dpr = window.devicePixelRatio || 1
   const screenPixels = window.screen.width * window.screen.height * dpr * dpr
-  if (screenPixels > 4000000) return 'high'
-  if (screenPixels > 2000000) return 'medium'
+  if (screenPixels > 8000000) return 'high'
+  if (screenPixels > 3000000) return 'medium'
   return 'low'
 }
 

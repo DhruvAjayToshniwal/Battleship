@@ -208,8 +208,11 @@ export default function CinematicCameraController({
     scratchVecs.lookTarget.copy(camera.position).add(scratchVecs.currentLook);
     camera.lookAt(scratchVecs.lookTarget);
 
-    perspCamera.fov = THREE.MathUtils.lerp(perspCamera.fov, targetFovRef.current, lerpFactor);
-    perspCamera.updateProjectionMatrix();
+    const newFov = THREE.MathUtils.lerp(perspCamera.fov, targetFovRef.current, lerpFactor);
+    if (Math.abs(newFov - perspCamera.fov) > 0.01) {
+      perspCamera.fov = newFov;
+      perspCamera.updateProjectionMatrix();
+    }
   });
 
   return null;

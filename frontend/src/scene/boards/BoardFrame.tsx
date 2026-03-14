@@ -3,43 +3,6 @@ import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { createBoardGlowMaterial } from '../materials/boardGlowMaterial';
 
-interface GlowBarProps {
-  position: [number, number, number];
-  args: [number, number, number];
-  color: THREE.Color;
-}
-
-function GlowBar({ position, args, color }: GlowBarProps) {
-  const materialRef = useRef<THREE.ShaderMaterial>(null);
-
-  const material = useMemo(() => {
-    try {
-      return createBoardGlowMaterial(color, 0.5);
-    } catch {
-      return null;
-    }
-  }, [color]);
-
-  useFrame(({ clock }) => {
-    try {
-      if (materialRef.current && materialRef.current.uniforms) {
-        materialRef.current.uniforms.uTime.value = clock.getElapsedTime();
-      }
-    } catch {
-      // noop
-    }
-  });
-
-  if (!material) return null;
-
-  return (
-    <mesh position={[position[0], position[1] + 0.02, position[2]]}>
-      <boxGeometry args={[args[0] + 0.04, args[1] + 0.02, args[2] + 0.04]} />
-      <primitive object={material} ref={materialRef} attach="material" />
-    </mesh>
-  );
-}
-
 interface BoardFrameProps {
   size?: number;
   color?: string;
@@ -57,7 +20,26 @@ export default function BoardFrame({
   const longLength = size + barDepth * 2;
   const cornerSize = barDepth + 0.06;
 
-  const glowColorObj = useMemo(() => new THREE.Color(glowColor), [glowColor]);
+  const glowMaterialRefs = useRef<THREE.ShaderMaterial[]>([]);
+
+  const glowMaterials = useMemo(() => {
+    try {
+      const colorObj = new THREE.Color(glowColor);
+      return Array.from({ length: 4 }, () => createBoardGlowMaterial(colorObj, 0.5));
+    } catch {
+      return [];
+    }
+  }, [glowColor]);
+
+  useFrame(({ clock }) => {
+    const time = clock.getElapsedTime();
+    for (let i = 0; i < glowMaterialRefs.current.length; i++) {
+      const mat = glowMaterialRefs.current[i];
+      if (mat && mat.uniforms) {
+        mat.uniforms.uTime.value = time;
+      }
+    }
+  });
 
   const bars: { pos: [number, number, number]; args: [number, number, number] }[] = [
     { pos: [0, barHeight / 2, -half - barDepth / 2], args: [longLength, barHeight, barDepth] },
@@ -87,7 +69,16 @@ export default function BoardFrame({
               roughness={0.3}
             />
           </mesh>
-          <GlowBar position={bar.pos} args={bar.args} color={glowColorObj} />
+          {glowMaterials[i] && (
+            <mesh position={[bar.pos[0], bar.pos[1] + 0.02, bar.pos[2]]}>
+              <boxGeometry args={[bar.args[0] + 0.04, bar.args[1] + 0.02, bar.args[2] + 0.04]} />
+              <primitive
+                object={glowMaterials[i]}
+                ref={(ref: THREE.ShaderMaterial) => { glowMaterialRefs.current[i] = ref; }}
+                attach="material"
+              />
+            </mesh>
+          )}
         </group>
       ))}
 
