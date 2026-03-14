@@ -52,5 +52,3 @@ async def test_history_after_ai_game(client):
 	game = games[0]
 	assert game["mode"] == "ai"
 	assert game["move_count"] > 0
-
-

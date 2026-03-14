@@ -39,4 +39,3 @@ class GameRepository:
 			raise
 		except Exception as e:
 			raise RuntimeError(f"Failed to update snapshot: {e}") from e
-

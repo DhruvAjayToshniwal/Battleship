@@ -104,5 +104,3 @@ async def test_reconnect_no_active_room(client):
 		headers={"X-Client-Id": "nonexistent-uuid"},
 	)
 	assert resp.status_code == 404
-
-

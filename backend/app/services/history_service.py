@@ -23,4 +23,3 @@ class HistoryService:
 				return await history_repo.get_completed_games(limit, offset)
 		except Exception as e:
 			raise RuntimeError(f"Failed to get completed games: {e}") from e
-

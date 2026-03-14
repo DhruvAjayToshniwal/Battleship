@@ -146,6 +146,8 @@ export default function GamePage({
       } else {
         game.startGame();
       }
+    } else if (mode === 'human' && roomId && playerToken) {
+      game.restoreGame(roomId, playerToken);
     }
   }, []);
 
