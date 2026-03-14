@@ -1,3 +1,5 @@
+from typing import Union
+
 from fastapi import APIRouter, HTTPException, Header, status
 
 from app.core.db import DatabaseManager
@@ -6,10 +8,10 @@ from app.models.schemas import (
 	ErrorResponse,
 	FireAuthRequest,
 	GameStateResponse,
+	MultiplayerGameStateResponse,
+	MultiplayerShotResponse,
 	PlaceShipsAuthRequest,
 	PlacementResponse,
-	MultiplayerShotResponse,
-	ShotResult,
 	TurnResult,
 )
 from app.repositories.rooms import RoomRepository
@@ -21,6 +23,7 @@ router = APIRouter(tags=["games"])
 
 @router.post(
 	"/rooms/{room_id}/place-ships",
+	response_model=Union[GameStateResponse, PlacementResponse],
 	status_code=status.HTTP_200_OK,
 	responses={
 		400: {"model": ErrorResponse},
@@ -28,7 +31,9 @@ router = APIRouter(tags=["games"])
 		404: {"model": ErrorResponse},
 	},
 )
-async def place_ships(room_id: str, request: PlaceShipsAuthRequest) -> dict:
+async def place_ships(
+	room_id: str, request: PlaceShipsAuthRequest
+) -> Union[GameStateResponse, PlacementResponse]:
 	try:
 		db = DatabaseManager.get_instance()
 		async with db.get_session() as session:
@@ -46,7 +51,7 @@ async def place_ships(room_id: str, request: PlaceShipsAuthRequest) -> dict:
 		if mode == "ai":
 			service = AIGameService.get_instance()
 			result = await service.place_ships(room_id, request.client_token, ships)
-			return result
+			return GameStateResponse(**result)
 		else:
 			service = GameService.get_instance()
 			result = await service.place_ships(room_id, request.client_token, ships)
@@ -69,7 +74,7 @@ async def place_ships(room_id: str, request: PlaceShipsAuthRequest) -> dict:
 					},
 				)
 
-			return result
+			return PlacementResponse(**result)
 	except ValueError as e:
 		error_msg = str(e)
 		if "Unauthorized" in error_msg:
@@ -87,6 +92,7 @@ async def place_ships(room_id: str, request: PlaceShipsAuthRequest) -> dict:
 
 @router.post(
 	"/rooms/{room_id}/fire",
+	response_model=Union[TurnResult, MultiplayerShotResponse],
 	status_code=status.HTTP_200_OK,
 	responses={
 		400: {"model": ErrorResponse},
@@ -94,7 +100,9 @@ async def place_ships(room_id: str, request: PlaceShipsAuthRequest) -> dict:
 		404: {"model": ErrorResponse},
 	},
 )
-async def fire(room_id: str, request: FireAuthRequest) -> dict:
+async def fire(
+	room_id: str, request: FireAuthRequest
+) -> Union[TurnResult, MultiplayerShotResponse]:
 	try:
 		db = DatabaseManager.get_instance()
 		async with db.get_session() as session:
@@ -112,7 +120,7 @@ async def fire(room_id: str, request: FireAuthRequest) -> dict:
 			result = await service.fire(
 				room_id, request.client_token, request.coordinate
 			)
-			return result
+			return TurnResult(**result)
 		else:
 			service = GameService.get_instance()
 			result = await service.fire(
@@ -137,7 +145,7 @@ async def fire(room_id: str, request: FireAuthRequest) -> dict:
 					},
 				)
 
-			return result
+			return MultiplayerShotResponse(**result)
 	except ValueError as e:
 		error_msg = str(e)
 		if "Unauthorized" in error_msg:
@@ -155,6 +163,7 @@ async def fire(room_id: str, request: FireAuthRequest) -> dict:
 
 @router.get(
 	"/rooms/{room_id}/state",
+	response_model=Union[GameStateResponse, MultiplayerGameStateResponse],
 	status_code=status.HTTP_200_OK,
 	responses={
 		401: {"model": ErrorResponse},
@@ -163,7 +172,7 @@ async def fire(room_id: str, request: FireAuthRequest) -> dict:
 )
 async def get_state(
 	room_id: str, x_client_token: str = Header(alias="X-Client-Token")
-) -> dict:
+) -> Union[GameStateResponse, MultiplayerGameStateResponse]:
 	try:
 		db = DatabaseManager.get_instance()
 		async with db.get_session() as session:
@@ -178,10 +187,12 @@ async def get_state(
 
 		if mode == "ai":
 			service = AIGameService.get_instance()
-			return await service.get_state(room_id, x_client_token)
+			result = await service.get_state(room_id, x_client_token)
+			return GameStateResponse(**result)
 		else:
 			service = GameService.get_instance()
-			return await service.get_state(room_id, x_client_token)
+			result = await service.get_state(room_id, x_client_token)
+			return MultiplayerGameStateResponse(**result)
 	except ValueError as e:
 		error_msg = str(e)
 		if "Unauthorized" in error_msg:
