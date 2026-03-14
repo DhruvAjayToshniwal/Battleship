@@ -61,6 +61,16 @@ class DatabaseManager:
 		except Exception:
 			pass
 
+		try:
+			result = await conn.execute(text("PRAGMA table_info(game_snapshots)"))
+			columns = [row[1] for row in result.fetchall()]
+			if "board_size" not in columns:
+				await conn.execute(
+					text("ALTER TABLE game_snapshots ADD COLUMN board_size INTEGER DEFAULT 10")
+				)
+		except Exception:
+			pass
+
 	@classmethod
 	async def reset(cls) -> None:
 		try:

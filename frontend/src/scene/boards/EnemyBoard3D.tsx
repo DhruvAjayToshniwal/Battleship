@@ -1,5 +1,4 @@
 import { useRef, useState, useCallback, useMemo, useEffect } from 'react';
-import { HALF_BOARD } from '../../utils/constants';
 import { rowColToCoord, coordToPosition } from '../../utils/coordinates';
 import type { ShotResult } from '../../services/api';
 import OceanSurface from '../environment/OceanSurface';
@@ -19,6 +18,7 @@ import RadarSweep from '../effects/RadarSweep';
 interface EnemyBoard3DProps {
   position: [number, number, number];
   grid: (string | null)[][];
+  boardSize?: number;
   isClickable: boolean;
   onCellClick?: (row: number, col: number, coord: string) => void;
   shipCoordinates?: string[][];
@@ -36,12 +36,14 @@ interface EffectEntry {
 export default function EnemyBoard3D({
   position,
   grid,
+  boardSize = 10,
   isClickable,
   onCellClick,
   shipCoordinates = [],
   latestResult,
   hoverCell = null,
 }: EnemyBoard3DProps) {
+  const HALF_BOARD = boardSize / 2;
   const [effects, setEffects] = useState<EffectEntry[]>([]);
   const lastResultRef = useRef<string | null>(null);
 
@@ -104,15 +106,15 @@ export default function EnemyBoard3D({
 
   return (
     <group position={position}>
-      <OceanSurface position={[0, -0.1, 0]} size={[12, 12]} />
+      <OceanSurface position={[0, -0.1, 0]} size={[boardSize + 2, boardSize + 2]} />
 
-      <GridPlane position={[0, 0.02, 0]} />
+      <GridPlane position={[0, 0.02, 0]} size={boardSize} />
 
-      <BoardFrame color="#3f1e1e" glowColor="#ef4444" />
+      <BoardFrame color="#3f1e1e" glowColor="#ef4444" size={boardSize} />
 
-      <BoardMarkers />
+      <BoardMarkers size={boardSize} />
 
-      <RadarSweep position={[0, 0.01, 0]} size={10} active={isClickable} />
+      <RadarSweep position={[0, 0.01, 0]} size={boardSize} active={isClickable} />
 
       {grid.map((row, rowIdx) =>
         row.map((cellState, colIdx) => {

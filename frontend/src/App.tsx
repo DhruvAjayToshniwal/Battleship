@@ -103,6 +103,7 @@ function App() {
           playerToken={reconnect.client_token}
           playerId={reconnect.player_id}
           playerSlot={reconnect.player_slot}
+          boardSize={reconnect.board_size}
           playerName={playerName}
           onBackToMenu={navigateToMenu}
         />

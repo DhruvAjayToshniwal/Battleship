@@ -1,6 +1,6 @@
 from typing import Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class ShipPlacement(BaseModel):
@@ -42,6 +42,7 @@ class AIBoardState(BaseModel):
 class GameStateResponse(BaseModel):
 	game_id: str
 	game_status: str
+	board_size: int = 10
 	player_board: PlayerBoardState
 	ai_board: AIBoardState
 	player_shots: list[ShotResult]
@@ -59,6 +60,7 @@ class CreateRoomRequest(BaseModel):
 	display_name: str = "Player"
 	difficulty: str = "hard"
 	client_id: Optional[str] = None
+	board_size: int = Field(default=10, ge=5, le=26)
 
 
 class CreateRoomResponse(BaseModel):
@@ -68,6 +70,7 @@ class CreateRoomResponse(BaseModel):
 	client_token: str
 	mode: str
 	difficulty: Optional[str] = None
+	board_size: int = 10
 
 
 class JoinRoomRequest(BaseModel):
@@ -99,6 +102,7 @@ class ReconnectResponse(BaseModel):
 	client_token: str
 	room_status: str
 	mode: str
+	board_size: int = 10
 	players: list[PlayerInfo]
 
 
@@ -147,6 +151,7 @@ class GameHistoryListResponse(BaseModel):
 class MultiplayerGameStateResponse(BaseModel):
 	game_id: str
 	game_status: str
+	board_size: int = 10
 	player_slot: str
 	your_turn: bool
 	turn_number: int = 0

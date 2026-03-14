@@ -24,15 +24,16 @@ class AIGameService:
 		cls.instance = None
 
 	async def initialize_game(
-		self, room_id: str, difficulty: str, session: AsyncSession
+		self, room_id: str, difficulty: str, session: AsyncSession, board_size: int = 10
 	) -> None:
 		try:
 			game_repo = GameRepository(session)
-			engine = GameEngine(difficulty=difficulty)
+			engine = GameEngine(difficulty=difficulty, board_size=board_size)
 			engine.setup_ai()
 
 			snapshot_data = GameEngineAdapter.snapshot_from_engine(engine)
 			snapshot_data["difficulty"] = difficulty
+			snapshot_data["board_size"] = board_size
 			snapshot_data["player2_placed"] = True
 			snapshot_data["game_status"] = "setup"
 
@@ -76,6 +77,7 @@ class AIGameService:
 					return {
 						"game_id": room_id,
 						"game_status": "playing",
+						"board_size": engine.board_size,
 						**view,
 					}
 		except ValueError:
@@ -207,6 +209,7 @@ class AIGameService:
 				return {
 					"game_id": room_id,
 					"game_status": engine.game_status,
+					"board_size": engine.board_size,
 					**view,
 				}
 		except ValueError:

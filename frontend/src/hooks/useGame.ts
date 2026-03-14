@@ -18,18 +18,22 @@ interface UseGameOptions {
   playerToken?: string | null;
   playerId?: string | null;
   playerName?: string;
+  boardSize?: number;
 }
 
 export function useGame(options: UseGameOptions = {}) {
   const mode = options.mode ?? 'ai';
+
+  const boardSize = options.boardSize ?? 10;
 
   const apiState = useGameApiState({
     mode,
     roomId: options.roomId,
     playerToken: options.playerToken,
     playerName: options.playerName,
+    boardSize,
   });
-  const placement = useShipPlacement();
+  const placement = useShipPlacement(boardSize);
   const audio = useAudioDirector();
 
   const battle = useBattleSequence({
@@ -139,10 +143,10 @@ export function useGame(options: UseGameOptions = {}) {
 
   const localPlayerGrid = useMemo((): (string | null)[][] => {
     if (battle.phase !== 'setup') {
-      return buildGridFromState(apiState.gameState, 'player');
+      return buildGridFromState(apiState.gameState, 'player', boardSize);
     }
-    const grid: (string | null)[][] = Array.from({ length: 10 }, () =>
-      Array(10).fill(null)
+    const grid: (string | null)[][] = Array.from({ length: boardSize }, () =>
+      Array(boardSize).fill(null)
     );
     for (const ship of placement.placedShips) {
       for (const coord of ship.coordinates) {
@@ -154,8 +158,8 @@ export function useGame(options: UseGameOptions = {}) {
   }, [battle.phase, apiState.gameState, placement.placedShips]);
 
   const aiGrid = useMemo(
-    () => buildGridFromState(apiState.gameState, 'ai'),
-    [apiState.gameState]
+    () => buildGridFromState(apiState.gameState, 'ai', boardSize),
+    [apiState.gameState, boardSize]
   );
 
   const leaveGame = useCallback(() => {
@@ -198,6 +202,7 @@ export function useGame(options: UseGameOptions = {}) {
     localPlayerGrid,
     aiGrid,
     mode,
+    boardSize,
 
     startGame,
     restoreGame,

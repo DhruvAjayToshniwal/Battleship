@@ -26,6 +26,7 @@ interface GamePageProps {
   playerId?: string | null;
   playerSlot?: string | null;
   playerName?: string;
+  boardSize?: number;
   onBackToMenu?: () => void;
 }
 
@@ -35,9 +36,10 @@ export default function GamePage({
   playerToken = null,
   playerId = null,
   playerName = 'Player',
+  boardSize: initialBoardSize = 10,
   onBackToMenu,
 }: GamePageProps) {
-  const game = useGame({ mode, roomId, playerToken, playerId, playerName });
+  const game = useGame({ mode, roomId, playerToken, playerId, playerName, boardSize: initialBoardSize });
 
   const [hoverCoord, setHoverCoord] = useState<[number, number] | null>(null);
   const [enemyHoverCell, setEnemyHoverCell] = useState<[number, number] | null>(null);
@@ -76,6 +78,7 @@ export default function GamePage({
         const mapped: GameStateResponse = {
           game_id: stateData.game_id || roomId || '',
           game_status: (stateData.game_status || 'setup') as GameStateResponse['game_status'],
+          board_size: ((data as Record<string, unknown>).board_size as number) ?? initialBoardSize,
           player_board: stateData.player_board || { ships: [], shots_received: [] },
           ai_board: (data as Record<string, unknown>).opponent_board
             ? ((data as Record<string, unknown>).opponent_board as GameStateResponse['ai_board'])
@@ -276,6 +279,7 @@ export default function GamePage({
           isFiring={game.isFiring}
           lastFireCoord={lastFireCoord}
           boardSpacing={boardSpacing}
+          boardSize={game.boardSize}
           playerGrid={game.localPlayerGrid}
           aiGrid={game.aiGrid}
           playerShipCoordinates={playingPlayerShipCoords}

@@ -13,14 +13,15 @@ DIFFICULTY_MAP: dict[str, type[BattleshipAI]] = {
 }
 
 
-def parse_coordinate(coord_str: str) -> tuple[int, int]:
+def parse_coordinate(coord_str: str, board_size: int = 10) -> tuple[int, int]:
 	coord_str = coord_str.strip().upper()
 	if len(coord_str) < 2 or len(coord_str) > 3:
 		raise ValueError(f"Invalid coordinate format: {coord_str}")
 
 	col_char = coord_str[0]
-	if not col_char.isalpha() or col_char < "A" or col_char > "J":
-		raise ValueError(f"Column must be A-J, got {col_char}")
+	max_col = chr(ord("A") + board_size - 1)
+	if not col_char.isalpha() or col_char < "A" or col_char > max_col:
+		raise ValueError(f"Column must be A-{max_col}, got {col_char}")
 	col = ord(col_char) - ord("A")
 
 	try:
@@ -28,8 +29,8 @@ def parse_coordinate(coord_str: str) -> tuple[int, int]:
 	except ValueError:
 		raise ValueError(f"Invalid row number in: {coord_str}")
 
-	if row_num < 1 or row_num > 10:
-		raise ValueError(f"Row must be 1-10, got {row_num}")
+	if row_num < 1 or row_num > board_size:
+		raise ValueError(f"Row must be 1-{board_size}, got {row_num}")
 	row = row_num - 1
 
 	return (row, col)
@@ -52,12 +53,13 @@ class BaseGameEngine:
 
 
 class GameEngine(BaseGameEngine):
-	def __init__(self, difficulty: str = "hard") -> None:
-		self.player_board = Board()
-		self.ai_board = Board()
+	def __init__(self, difficulty: str = "hard", board_size: int = 10) -> None:
+		self.board_size = board_size
+		self.player_board = Board(board_size)
+		self.ai_board = Board(board_size)
 		self.difficulty = difficulty
 		ai_class = DIFFICULTY_MAP.get(difficulty, HardAI)
-		self.ai_strategy: BattleshipAI = ai_class()
+		self.ai_strategy: BattleshipAI = ai_class(board_size)
 		self.game_status: str = "setup"
 		self.player_shots: list[dict] = []
 		self.ai_shots: list[dict] = []
@@ -75,7 +77,7 @@ class GameEngine(BaseGameEngine):
 
 			for p in placements:
 				name = p["name"]
-				coords = [parse_coordinate(c) for c in p["coordinates"]]
+				coords = [parse_coordinate(c, self.board_size) for c in p["coordinates"]]
 				ship = Ship(name, coords)
 				self.player_board.place_ship(ship, coords)
 
@@ -92,7 +94,7 @@ class GameEngine(BaseGameEngine):
 			raise RuntimeError(f"Ship placement failed: {e}") from e
 
 	def build_board_state(self) -> list[list[int]]:
-		state = [[0] * 10 for _ in range(10)]
+		state = [[0] * self.board_size for _ in range(self.board_size)]
 		for coord in self.ai_strategy.hit_cells:
 			r, c = coord
 			state[r][c] = 1

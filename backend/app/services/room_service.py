@@ -24,6 +24,7 @@ class RoomService:
 		display_name: str = "Player",
 		difficulty: str = "hard",
 		client_id: str | None = None,
+		board_size: int = 10,
 	) -> dict:
 		try:
 			db = DatabaseManager.get_instance()
@@ -52,7 +53,7 @@ class RoomService:
 						from app.services.ai_game_service import AIGameService
 
 						ai_service = AIGameService.get_instance()
-						await ai_service.initialize_game(room.id, difficulty, session)
+						await ai_service.initialize_game(room.id, difficulty, session, board_size)
 						room.status = "placement"
 						await session.flush()
 
@@ -63,6 +64,7 @@ class RoomService:
 						"client_token": client_token,
 						"mode": mode,
 						"difficulty": difficulty if mode == "ai" else None,
+						"board_size": board_size,
 					}
 		except Exception as e:
 			raise RuntimeError(f"Failed to create room: {e}") from e
@@ -124,6 +126,7 @@ class RoomService:
 			async with db.get_session() as session:
 				async with session.begin():
 					room_repo = RoomRepository(session)
+					game_repo = GameRepository(session)
 
 					player = await room_repo.get_active_player_by_client_id(client_id)
 					if player is None:
@@ -132,6 +135,9 @@ class RoomService:
 					room = await room_repo.get_by_id(player.room_id)
 					if room is None:
 						raise ValueError("Room no longer exists")
+
+					snapshot = await game_repo.get_snapshot(room.id)
+					board_size = getattr(snapshot, "board_size", 10) if snapshot else 10
 
 					player.connected = True
 					await session.flush()
@@ -146,6 +152,7 @@ class RoomService:
 						"client_token": player.client_token,
 						"room_status": room.status,
 						"mode": room.mode,
+						"board_size": board_size,
 						"players": [
 							{
 								"player_id": p.id,

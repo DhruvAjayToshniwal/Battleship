@@ -35,18 +35,18 @@ class GameEngineAdapter:
 			raise RuntimeError(f"Failed to serialize board: {e}") from e
 
 	@staticmethod
-	def deserialize_board(data: dict) -> Board:
+	def deserialize_board(data: dict, board_size: int = 10) -> Board:
 		try:
-			board = Board()
+			board = Board(board_size)
 			for ship_data in data.get("ships", []):
-				coords = [parse_coordinate(c) for c in ship_data["coordinates"]]
+				coords = [parse_coordinate(c, board_size) for c in ship_data["coordinates"]]
 				ship = Ship(ship_data["name"], coords)
 				board.place_ship(ship, coords)
 				for hit_str in ship_data.get("hits", []):
-					hit_coord = parse_coordinate(hit_str)
+					hit_coord = parse_coordinate(hit_str, board_size)
 					ship.hit(hit_coord)
 			for shot_str in data.get("shots_received", []):
-				board.shots_received.add(parse_coordinate(shot_str))
+				board.shots_received.add(parse_coordinate(shot_str, board_size))
 			return board
 		except Exception as e:
 			raise RuntimeError(f"Failed to deserialize board: {e}") from e
@@ -68,10 +68,10 @@ class GameEngineAdapter:
 			raise RuntimeError(f"Failed to serialize AI state: {e}") from e
 
 	@staticmethod
-	def deserialize_ai_state(data: dict, difficulty: str) -> BattleshipAI:
+	def deserialize_ai_state(data: dict, difficulty: str, board_size: int = 10) -> BattleshipAI:
 		try:
 			ai_class = DIFFICULTY_AI_MAP.get(difficulty, HardAI)
-			ai = ai_class()
+			ai = ai_class(board_size)
 			ai.shots_taken = {tuple(c) for c in data.get("shots_taken", [])}
 			ai.hit_cells = {tuple(c) for c in data.get("hit_cells", [])}
 			ai.miss_cells = {tuple(c) for c in data.get("miss_cells", [])}
@@ -87,7 +87,9 @@ class GameEngineAdapter:
 	def engine_from_snapshot(snapshot) -> GameEngine:
 		try:
 			difficulty = snapshot.difficulty or "hard"
+			board_size = getattr(snapshot, "board_size", None) or 10
 			engine = GameEngine.__new__(GameEngine)
+			engine.board_size = board_size
 			engine.difficulty = difficulty
 			engine.game_status = snapshot.game_status
 			engine.player_shots = list(snapshot.player1_shots or [])
@@ -95,25 +97,25 @@ class GameEngineAdapter:
 
 			if snapshot.player1_board:
 				engine.player_board = GameEngineAdapter.deserialize_board(
-					snapshot.player1_board
+					snapshot.player1_board, board_size
 				)
 			else:
-				engine.player_board = Board()
+				engine.player_board = Board(board_size)
 
 			if snapshot.player2_board:
 				engine.ai_board = GameEngineAdapter.deserialize_board(
-					snapshot.player2_board
+					snapshot.player2_board, board_size
 				)
 			else:
-				engine.ai_board = Board()
+				engine.ai_board = Board(board_size)
 
 			if snapshot.ai_strategy_state:
 				engine.ai_strategy = GameEngineAdapter.deserialize_ai_state(
-					snapshot.ai_strategy_state, difficulty
+					snapshot.ai_strategy_state, difficulty, board_size
 				)
 			else:
 				ai_class = DIFFICULTY_AI_MAP.get(difficulty, HardAI)
-				engine.ai_strategy = ai_class()
+				engine.ai_strategy = ai_class(board_size)
 
 			return engine
 		except Exception as e:
@@ -134,6 +136,7 @@ class GameEngineAdapter:
 					1 for s in engine.ai_board.ships if not s.is_sunk()
 				),
 				"game_status": engine.game_status,
+				"board_size": getattr(engine, "board_size", 10),
 				"ai_strategy_state": GameEngineAdapter.serialize_ai_state(
 					engine.ai_strategy
 				)

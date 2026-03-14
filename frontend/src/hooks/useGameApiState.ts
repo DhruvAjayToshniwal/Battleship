@@ -9,6 +9,7 @@ interface UseGameApiStateOptions {
   roomId?: string | null;
   playerToken?: string | null;
   playerName?: string;
+  boardSize?: number;
 }
 
 export function useGameApiState(options: UseGameApiStateOptions = {}) {
@@ -24,12 +25,13 @@ export function useGameApiState(options: UseGameApiStateOptions = {}) {
 
   const clearError = useCallback(() => setError(null), []);
 
-  const startGame = useCallback(async (diff?: Difficulty) => {
+  const startGame = useCallback(async (diff?: Difficulty, boardSize?: number) => {
     const selectedDifficulty = diff ?? difficulty;
+    const selectedBoardSize = boardSize ?? options.boardSize ?? 10;
     setLoading(true);
     setError(null);
     try {
-      const result = await api.createRoom('ai', playerName, selectedDifficulty);
+      const result = await api.createRoom('ai', playerName, selectedDifficulty, selectedBoardSize);
       setDifficulty(selectedDifficulty);
       setGameId(result.room_id);
       setGameState(null);

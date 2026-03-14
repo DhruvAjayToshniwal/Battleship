@@ -24,6 +24,7 @@ class HardAI(BattleshipAI):
 			self.miss_cells,
 			self.sunk_coords,
 			self.hit_cells,
+			self.board_size,
 		)
 
 		max_score = 0
@@ -56,7 +57,7 @@ class HardAI(BattleshipAI):
 		ship_groups = self.group_adjacent_hits(unsunk_hits)
 
 		for group in ship_groups:
-			targets = generate_target_cells(group, self.shots_taken)
+			targets = generate_target_cells(group, self.shots_taken, self.board_size)
 			if targets:
 				if len(targets) == 1:
 					return targets[0]
@@ -67,6 +68,7 @@ class HardAI(BattleshipAI):
 					self.miss_cells,
 					self.sunk_coords,
 					self.hit_cells,
+					self.board_size,
 				)
 				targets.sort(key=lambda t: prob_grid[t[0]][t[1]], reverse=True)
 				return targets[0]

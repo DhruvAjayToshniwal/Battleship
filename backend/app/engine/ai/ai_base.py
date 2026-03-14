@@ -1,8 +1,6 @@
 from abc import ABC, abstractmethod
 
 
-BOARD_SIZE = 10
-
 SHIP_LENGTHS: dict[str, int] = {
 	"Carrier": 5,
 	"Battleship": 4,
@@ -13,8 +11,8 @@ SHIP_LENGTHS: dict[str, int] = {
 
 
 class BattleshipAI(ABC):
-	def __init__(self) -> None:
-		self.board_size: int = BOARD_SIZE
+	def __init__(self, board_size: int = 10) -> None:
+		self.board_size: int = board_size
 		self.shots_taken: set[tuple[int, int]] = set()
 		self.hit_cells: set[tuple[int, int]] = set()
 		self.miss_cells: set[tuple[int, int]] = set()

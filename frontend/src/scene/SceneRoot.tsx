@@ -29,6 +29,7 @@ interface SceneRootProps {
   onPlayerCellClick?: (row: number, col: number, coord: string) => void;
   onEnemyCellClick?: (row: number, col: number, coord: string) => void;
   enemyHoverCell?: [number, number] | null;
+  boardSize?: number;
 }
 
 export default function SceneRoot({
@@ -49,6 +50,7 @@ export default function SceneRoot({
   onPlayerCellClick,
   onEnemyCellClick,
   enemyHoverCell,
+  boardSize,
 }: SceneRootProps) {
   return (
     <QualityProvider>
@@ -70,6 +72,7 @@ export default function SceneRoot({
         onPlayerCellClick={onPlayerCellClick}
         onEnemyCellClick={onEnemyCellClick}
         enemyHoverCell={enemyHoverCell}
+        boardSize={boardSize}
       />
     </QualityProvider>
   );
@@ -95,6 +98,7 @@ function SceneContent(props: SceneRootProps) {
       <PlayerBoard3D
         position={[-props.boardSpacing, 0, 0]}
         grid={props.playerGrid}
+        boardSize={props.boardSize}
         showShips={true}
         isClickable={props.isPlayerBoardClickable}
         onCellClick={props.onPlayerCellClick}
@@ -106,6 +110,7 @@ function SceneContent(props: SceneRootProps) {
       <EnemyBoard3D
         position={[props.boardSpacing, 0, 0]}
         grid={props.aiGrid}
+        boardSize={props.boardSize}
         isClickable={props.isEnemyBoardClickable}
         onCellClick={props.onEnemyCellClick}
         shipCoordinates={props.enemyShipCoordinates}

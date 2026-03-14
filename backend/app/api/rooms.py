@@ -31,6 +31,7 @@ async def create_room(
 			display_name=request.display_name,
 			difficulty=request.difficulty,
 			client_id=request.client_id,
+			board_size=request.board_size,
 		)
 		return CreateRoomResponse(**result)
 	except ValueError as e:

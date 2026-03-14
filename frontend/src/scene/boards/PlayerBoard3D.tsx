@@ -1,5 +1,4 @@
 import { useRef, useState, useCallback, useMemo, useEffect } from 'react';
-import { HALF_BOARD } from '../../utils/constants';
 import { rowColToCoord, coordToPosition } from '../../utils/coordinates';
 import type { ShotResult } from '../../services/api';
 import OceanSurface from '../environment/OceanSurface';
@@ -17,6 +16,7 @@ import SmokeEffect from '../effects/SmokeEffect';
 interface PlayerBoard3DProps {
   position: [number, number, number];
   grid: (string | null)[][];
+  boardSize?: number;
   showShips: boolean;
   isClickable: boolean;
   onCellClick?: (row: number, col: number, coord: string) => void;
@@ -35,6 +35,7 @@ interface EffectEntry {
 export default function PlayerBoard3D({
   position,
   grid,
+  boardSize = 10,
   showShips,
   isClickable,
   onCellClick,
@@ -42,6 +43,7 @@ export default function PlayerBoard3D({
   previewCoords = null,
   latestResult,
 }: PlayerBoard3DProps) {
+  const HALF_BOARD = boardSize / 2;
   const [effects, setEffects] = useState<EffectEntry[]>([]);
   const lastResultRef = useRef<string | null>(null);
 
@@ -100,13 +102,13 @@ export default function PlayerBoard3D({
 
   return (
     <group position={position}>
-      <OceanSurface position={[0, -0.1, 0]} size={[12, 12]} />
+      <OceanSurface position={[0, -0.1, 0]} size={[boardSize + 2, boardSize + 2]} />
 
-      <GridPlane position={[0, 0.02, 0]} />
+      <GridPlane position={[0, 0.02, 0]} size={boardSize} />
 
-      <BoardFrame />
+      <BoardFrame size={boardSize} />
 
-      <BoardMarkers />
+      <BoardMarkers size={boardSize} />
 
       {grid.map((row, rowIdx) =>
         row.map((cellState, colIdx) => {

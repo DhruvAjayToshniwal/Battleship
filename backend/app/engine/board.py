@@ -5,9 +5,8 @@ from app.engine.ship import Ship
 
 
 class BaseBoard:
-	SIZE = 10
-
-	def __init__(self) -> None:
+	def __init__(self, board_size: int = 10) -> None:
+		self.size: int = board_size
 		self.ships: list[Ship] = []
 		self.shots_received: set[tuple[int, int]] = set()
 		self.occupied: dict[tuple[int, int], Ship] = {}
@@ -31,7 +30,7 @@ class Board(BaseBoard):
 				)
 
 			for r, c in coordinates:
-				if not (0 <= r < self.SIZE and 0 <= c < self.SIZE):
+				if not (0 <= r < self.size and 0 <= c < self.size):
 					raise ValueError(f"Coordinate ({r}, {c}) is out of bounds")
 
 			for coord in coordinates:
@@ -69,7 +68,7 @@ class Board(BaseBoard):
 
 	def receive_shot(self, coord: tuple[int, int]) -> dict:
 		try:
-			if not (0 <= coord[0] < self.SIZE and 0 <= coord[1] < self.SIZE):
+			if not (0 <= coord[0] < self.size and 0 <= coord[1] < self.size):
 				raise ValueError(f"Shot coordinate {coord} out of bounds")
 			if coord in self.shots_received:
 				raise ValueError(f"Cell {coord} has already been targeted")
@@ -111,12 +110,12 @@ class Board(BaseBoard):
 				while not placed:
 					orientation = random.choice(["horizontal", "vertical"])
 					if orientation == "horizontal":
-						row = random.randint(0, self.SIZE - 1)
-						col = random.randint(0, self.SIZE - size)
+						row = random.randint(0, self.size - 1)
+						col = random.randint(0, self.size - size)
 						coords = [(row, col + i) for i in range(size)]
 					else:
-						row = random.randint(0, self.SIZE - size)
-						col = random.randint(0, self.SIZE - 1)
+						row = random.randint(0, self.size - size)
+						col = random.randint(0, self.size - 1)
 						coords = [(row + i, col) for i in range(size)]
 
 					if any(c in self.occupied for c in coords):
