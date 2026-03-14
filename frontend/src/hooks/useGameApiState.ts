@@ -2,12 +2,23 @@ import { useState, useCallback, useMemo } from 'react';
 import * as api from '../services/api';
 import type { GameStateResponse, Difficulty } from '../services/api';
 
-export function useGameApiState() {
+export type GameMode = 'ai' | 'human';
+
+interface UseGameApiStateOptions {
+  mode?: GameMode;
+  roomId?: string | null;
+  playerToken?: string | null;
+}
+
+export function useGameApiState(options: UseGameApiStateOptions = {}) {
   const [gameState, setGameState] = useState<GameStateResponse | null>(null);
-  const [gameId, setGameId] = useState<string | null>(null);
+  const [gameId, setGameId] = useState<string | null>(options.roomId ?? null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [difficulty, setDifficulty] = useState<Difficulty>('hard');
+
+  const mode = options.mode ?? 'ai';
+  const token = options.playerToken ?? null;
 
   const clearError = useCallback(() => setError(null), []);
 
@@ -16,11 +27,11 @@ export function useGameApiState() {
     setLoading(true);
     setError(null);
     try {
-      const { game_id } = await api.startGame(selectedDifficulty);
+      const result = await api.createRoom('ai', 'Player', selectedDifficulty);
       setDifficulty(selectedDifficulty);
-      setGameId(game_id);
+      setGameId(result.room_id);
       setGameState(null);
-      return game_id;
+      return result;
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Failed to start game';
       setError(msg);
@@ -32,14 +43,19 @@ export function useGameApiState() {
 
   const placeShips = useCallback(async (
     gId: string,
-    shipPlacements: api.ShipPlacement[]
-  ): Promise<GameStateResponse | null> => {
+    shipPlacements: api.ShipPlacement[],
+    playerToken?: string
+  ): Promise<GameStateResponse | api.PlacementResult | null> => {
     setLoading(true);
     setError(null);
     try {
-      const state = await api.placeShips(gId, shipPlacements);
-      setGameState(state);
-      return state;
+      const tkn = playerToken ?? token;
+      if (!tkn) throw new Error('No authentication token');
+      const result = await api.placeShipsAuth(gId, tkn, shipPlacements);
+      if ('player_board' in result) {
+        setGameState(result as GameStateResponse);
+      }
+      return result;
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Failed to place ships';
       setError(msg);
@@ -47,31 +63,37 @@ export function useGameApiState() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [token]);
 
-  const fireShot = useCallback(async (gId: string, coordinate: string) => {
+  const fireShot = useCallback(async (gId: string, coordinate: string, playerToken?: string) => {
     setError(null);
     try {
-      const response = await api.fireShot(gId, coordinate);
+      const tkn = playerToken ?? token;
+      if (!tkn) throw new Error('No authentication token');
+      const response = await api.fireShotAuth(gId, tkn, coordinate);
       return response;
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Failed to fire shot';
       setError(msg);
       return null;
     }
-  }, []);
+  }, [token]);
 
-  const refreshState = useCallback(async (gId: string) => {
+  const refreshState = useCallback(async (gId: string, playerToken?: string) => {
     try {
-      const state = await api.getGameState(gId);
-      setGameState(state);
+      const tkn = playerToken ?? token;
+      if (!tkn) throw new Error('No authentication token');
+      const state = await api.getGameStateAuth(gId, tkn);
+      if ('player_board' in state) {
+        setGameState(state as GameStateResponse);
+      }
       return state;
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Failed to get game state';
       setError(msg);
       return null;
     }
-  }, []);
+  }, [token]);
 
   const firedCoords = useMemo(() => {
     if (!gameState) return new Set<string>();
@@ -87,7 +109,9 @@ export function useGameApiState() {
 
   return {
     gameState,
+    setGameState,
     gameId,
+    setGameId,
     loading,
     error,
     difficulty,
@@ -98,5 +122,7 @@ export function useGameApiState() {
     fireShot,
     refreshState,
     changeDifficulty,
+    mode,
+    token,
   };
 }

@@ -13,6 +13,8 @@ interface CommandHUDProps {
   onRestart: (difficulty?: Difficulty) => void;
   onChangeDifficulty: (d: Difficulty) => void;
   loading: boolean;
+  mode?: 'ai' | 'human';
+  onBackToMenu?: () => void;
 }
 
 export default function CommandHUD({
@@ -22,6 +24,8 @@ export default function CommandHUD({
   message,
   difficulty,
   onRestart,
+  mode = 'ai',
+  onBackToMenu,
 }: CommandHUDProps) {
   return (
     <>
@@ -67,7 +71,7 @@ export default function CommandHUD({
 
       {phase === 'playing' && (
         <button
-          onClick={() => onRestart()}
+          onClick={() => mode === 'human' && onBackToMenu ? onBackToMenu() : onRestart()}
           className="fixed bottom-3 left-4 z-20 px-3 py-1.5 rounded text-[10px] font-bold tracking-widest uppercase cursor-pointer transition-all hover:scale-105"
           style={{
             background: 'rgba(239, 68, 68, 0.1)',
@@ -76,7 +80,7 @@ export default function CommandHUD({
             backdropFilter: 'blur(8px)',
           }}
         >
-          RETREAT
+          {mode === 'human' ? 'ABANDON' : 'RETREAT'}
         </button>
       )}
     </>

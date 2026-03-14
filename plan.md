@@ -1,601 +1,628 @@
 # ROLE
 
-You are a principal game graphics engineer, senior technical artist, React Three Fiber architect, and cinematic UI designer.
+You are a principal full-stack engineer, realtime systems engineer, game architect, and product-minded startup builder.
 
-You are rebuilding an existing Battleship frontend from the scene layer upward.
-
-The current implementation is functional but visually unacceptable:
-- fake striped water
-- flat tactical boards
-- weak scene composition
-- ships that read like dark blocks
-- no believable world scale
-- no premium postprocessing glue
-- not enough cinematic depth
-
-We are **not** rewriting the backend or game rules.
-We are rebuilding the **entire frontend scene, presentation, and visual language** so it feels like a proper 3D naval tactics game.
-
-The backend already exists and works:
-- FastAPI
+You are working on an existing Battleship codebase that already has:
+- FastAPI backend
 - Python game engine
-- difficulty levels already implemented
-- stable API contract
+- AI difficulty levels
+- React frontend
+- a playable UI
+- some 3D / visual work already attempted
 
-The frontend already exists and works:
+You must now upgrade the system to satisfy a real engineering work trial.
+
+This is no longer just a toy frontend exercise.
+This must become a **deployed, end-to-end product**.
+
+Your mission is to make the project fully satisfy these requirements:
+
+1. Feature-complete Battleship
+2. Single-player vs AI
+3. Multiplayer vs Human in real time
+4. Room creation + room code join flow
+5. Max 2 players per room
+6. Refresh persistence mid-game
+7. Completed game history stored for later querying
+8. Publicly deployable frontend and backend
+9. Secure enough to discuss cheating prevention intelligently
+10. Clean architecture and a repo writeup that explains approach and AI usage
+
+Use all AI-assisted engineering you want, but produce clean code and good system design.
+
+---
+
+# PRODUCT REQUIREMENTS
+
+## Core Gameplay
+Implement a complete, rules-correct Battleship game:
+
+- 10x10 board
+- Ship placement phase
+- Ships:
+  - Carrier (5)
+  - Battleship (4)
+  - Cruiser (3)
+  - Submarine (3)
+  - Destroyer (2)
+- Placement validation
+- Rotate ships before confirming
+- Firing phase
+- hit / miss / sunk feedback
+- announce sunk ship type
+- win detection
+- rematch or return to menu
+
+## Game Modes
+
+### 1. Single-player vs AI
+- AI places ships randomly
+- AI move logic must be at least moderately intelligent
+- Existing AI system can be reused and improved
+
+### 2. Multiplayer vs Human
+- Two players in separate browser windows
+- Real-time updates without refresh
+- One player creates a room
+- Another player joins using a room code
+- Max 2 players in a room
+- If a third person tries to join, deny access
+- Both players see updates instantly
+
+## Persistence
+- Refreshing the page mid-game must restore the current game state
+- At minimum this must fully work for multiplayer
+- Completed games must be stored with:
+  - moves
+  - outcome
+  - timestamps
+  - metadata useful for later query / replay
+
+## Hosting
+- The app must be deployable to a public URL
+- Frontend and backend must communicate correctly in deployed environments
+- API base URL and WebSocket URL must be env-configurable
+
+## Writeup
+In the repo, include a markdown writeup explaining:
+- architecture
+- tradeoffs
+- storage choice
+- anti-cheat considerations
+- scalability considerations
+- how AI tools were used
+
+---
+
+# KEY SYSTEM DESIGN DECISIONS
+
+You must build this as a **real deployable app**.
+
+Use this architecture unless you have a clearly better alternative:
+
+Frontend
 - React
 - TypeScript
-- React Three Fiber
-- Three.js
-- cleaned hooks
-- fixed R3F performance issues
+- Vite
+- existing UI / scene code reused where sensible
 
-Now the mission is to build the scene **properly from scratch**.
+Backend
+- FastAPI
+- existing game engine reused where sensible
+- REST for normal operations
+- WebSockets for realtime multiplayer updates
 
-Use the right technologies correctly:
-- React Three Fiber as the Three.js renderer
-- Three.js `Water` or a water implementation of similar quality as the primary benchmark for the ocean layer
-- react-postprocessing for Bloom / Outline / Selection / SelectiveBloom style effects
-- Drei helpers where useful
-- GSAP and/or Theatre.js for cinematic choreography
-- browser-first architecture that remains compatible with future Tauri wrapping
+Persistence
+- Use a real database, not in-memory state only
+- Prefer PostgreSQL if available
+- SQLite is acceptable only if you justify it carefully for the work-trial scope
+- Use SQLAlchemy or SQLModel or another clean ORM layer
+- Persist games, players, moves, room state, and reconnectable session state
 
-Important facts to respect:
-- Three.js provides a `Water` object as a reflective animated flat water effect and it is a valid baseline for premium water presentation.
-- react-postprocessing is the proper wrapper for postprocessing in R3F and can provide Bloom, DepthOfField, Outline, etc.
-- React Three Fiber performance guidance explicitly warns against `setState` in `useFrame`, against excessive mounting, and encourages mutation/refs, shared geometries/materials, and instancing.
-- Tauri compatibility should be preserved by keeping the frontend as a standard web app.
+Realtime
+- WebSocket channel per room
+- Backend is source of truth
+- Clients never directly trust each other
+- Broadcast state updates to both connected players
 
-References for implementation choices:
-- R3F intro: https://r3f.docs.pmnd.rs/getting-started/introduction
-- Three.js Water: https://threejs.org/docs/pages/Water.html
-- react-postprocessing intro: https://react-postprocessing.docs.pmnd.rs/introduction
-- R3F performance pitfalls: https://r3f.docs.pmnd.rs/advanced/pitfalls
+Session / reconnect
+- Persist player seat assignment
+- Persist room state and game state
+- Refreshing a browser should rehydrate the correct player and room if a valid local session token / player token exists
 
----
+Deployment
+- Frontend as a Vite app with env-configured API/WS URLs
+- Backend deployed separately
+- CORS configured correctly
+- WebSocket origin / connection assumptions documented
 
-# PRIMARY GOAL
-
-Create a **real 3D naval battlefield presentation**.
-
-The new scene must feel like:
-- ocean
-- world scale
-- atmosphere
-- physical tactical surfaces
-- readable ships
-- cinematic camera composition
-- premium glow and FX
-- game-quality presentation
-
-It must **not** feel like:
-- UI on an animated sheet
-- shader experiment
-- debug dashboard
-- transparent grids floating in space
+Do not keep game state only in memory.
+Use persistence from the start.
 
 ---
 
-# HARD VISUAL REQUIREMENTS
+# FASTAPI / REALTIME NOTES
 
-## 1. OCEAN
-Replace the current fake water completely.
-
-Implement a proper ocean solution:
-- preferably based on Three.js `Water`
-- or a custom shader at that quality level
-- reflective or pseudo-reflective
-- believable swell
-- fresnel-ish edge response
-- calm but premium motion
-- horizon-friendly
-- suitable for cinematic camera angles
-
-Requirements:
-- no striped scrolling texture look
-- no cheap UV-only animation feel
-- no “fabric” appearance
-- support fog and scene lighting
-- optional local disturbance / ripple near impacts if feasible
-
-Deliver:
-- `scene/environment/OceanSurface.tsx`
-- `scene/materials/oceanConfig.ts`
-- any normal-map or helper setup needed
-
-Use a big water plane that extends past the boards so the world feels large.
+FastAPI supports WebSockets and React clients can connect to them using browser WebSocket utilities. Use that for the multiplayer room sync layer. Build a proper room connection manager and reconnection flow. Do not fake realtime with polling unless there is a very strong reason. The frontend should still use normal REST endpoints for initial room creation, joining, fetching history, etc. ([FastAPI WebSockets docs](https://fastapi.tiangolo.com/advanced/websockets/))
 
 ---
 
-## 2. WORLD COMPOSITION
-Rebuild the entire scene composition.
+# FRONTEND/BACKEND DEPLOYMENT NOTES
 
-The boards should no longer just sit centered on-screen.
+The frontend must read environment variables for:
+- API base URL
+- WebSocket base URL
 
-Target composition:
-- player board foreground-left
-- enemy board midground-right
-- visible ocean extending around and beyond both
-- clear horizon line
-- atmospheric depth
-- asymmetry
-- dramatic but readable angle
+The backend must expose its origin configuration through environment variables.
 
-Add:
-- sky dome / gradient sky / fog
-- distant atmosphere
-- horizon separation
-- slight camera perspective that sells scale
+The app must be easy to deploy to something like:
+- frontend on Vercel / Netlify / static host
+- backend on Railway / Render / Fly / similar
+- database managed separately
 
-Deliver:
-- `scene/SceneRoot.tsx`
-- `scene/environment/SkyBackdrop.tsx`
-- `scene/environment/Atmosphere.tsx`
-- `scene/environment/FogController.tsx`
+Do not hardcode localhost URLs.
+Vite supports static frontend deployment and environment-driven configuration, so keep the frontend cleanly separated from the API runtime. ([Vite static deploy docs](https://vite.dev/guide/static-deploy.html))
 
 ---
 
-## 3. PHYSICAL BOARDS
-The tactical boards must become physical objects.
+# DATA MODEL REQUIREMENTS
 
-Each board should have:
-- real frame geometry
-- thickness
-- bevel or edge treatment
-- emissive trim
-- tactical-glass / polished-surface feel
-- correct light response
-- clear faction identity
+Design persistent models for at least:
 
-Player board:
-- cool cyan identity
+## GameRoom
+- id
+- room_code
+- mode (`ai` or `human`)
+- status (`waiting`, `placement`, `active`, `finished`, `abandoned`)
+- created_at
+- updated_at
+- winner_player_id nullable
+- rematch_of nullable if useful
 
-Enemy board:
-- restrained red identity
+## PlayerSession
+- id
+- room_id
+- player_slot (`player1`, `player2`, maybe `ai`)
+- display_name optional
+- client_token / reconnect_token
+- connected boolean
+- created_at
+- updated_at
 
-Do not make them look like HTML panels.
-Make them look like military tactical surfaces placed into the world.
+## GameSnapshot or GameState
+Persist the authoritative game state:
+- room_id
+- current_turn
+- player1 board state
+- player2 board state / AI board state
+- placement complete flags
+- sunk ships state
+- turn number
+- game status
 
-Deliver:
-- `scene/boards/PlayerBoard3D.tsx`
-- `scene/boards/EnemyBoard3D.tsx`
-- `scene/boards/GridPlane.tsx`
-- `scene/boards/BoardFrame.tsx`
-- `scene/boards/BoardMarkers.tsx`
-- `scene/materials/boardGlowMaterial.ts`
+You may store structured board state as JSON if that is simplest, but do it cleanly.
 
----
+## MoveHistory
+- id
+- room_id
+- turn_number
+- actor_player_id
+- coordinate
+- result
+- sunk_ship nullable
+- created_at
 
-## 4. SHIPS
-The ships must become proper readable 3D pieces.
+## CompletedGame
+If separate from room:
+- room_id
+- mode
+- outcome
+- duration
+- timestamps
+- summary metadata
 
-Current dark rectangular blocks are not acceptable.
-
-Preferred path:
-- use GLTF ship models if available
-
-Fallback path:
-- build elegant low-poly ship meshes procedurally
-
-Requirements:
-- distinct silhouettes by ship class / length
-- readable hull + deck structure
-- proper materials that catch light
-- subtle bobbing
-- optional wake
-- visible damage state for hit
-- stronger sunk-state treatment
-
-Use the standard R3F / Drei asset loading approach if assets exist.
-If not, generate attractive fallback geometry.
-
-Deliver:
-- `scene/fleet/ShipFactory.tsx`
-- `scene/fleet/PlayerFleet.tsx`
-- `scene/fleet/EnemyFleet.tsx`
-- `scene/fleet/ShipWake.tsx`
-- `scene/fleet/ShipDamageFX.tsx`
+You may simplify if your schema is elegant, but all required behavior must be supported.
 
 ---
 
-## 5. LIGHTING
-Build a proper lighting rig.
+# CHEATING / TRUST MODEL
 
-Requirements:
-- ambient fill
-- cool directional key light
-- subtle rim light for ships and frames
-- emissive contribution from tactical elements
-- stronger local contrast
-- believable separation of water / boards / ships
+Design explicitly against cheating.
 
-Mood:
-- cool
-- deep
-- premium
-- naval
-- cinematic
+You must include anti-cheat considerations in both code and writeup.
 
-Avoid:
-- washed out look
-- muddy darkness
-- flat lighting
+Required principles:
+- server is source of truth
+- enemy ship positions are never sent to the wrong client
+- move legality validated server-side
+- turn order validated server-side
+- placement legality validated server-side
+- room seat ownership validated server-side
+- player reconnect token is unguessable
+- room code alone should not grant control of another player’s seat
 
-Deliver:
-- `scene/environment/LightingRig.tsx`
+Optional but good:
+- separate public/private game state serializers
+- audit trail from MoveHistory
+- signed player session token or opaque reconnect token
+- game state versioning for race prevention
 
 ---
 
-## 6. POSTPROCESSING
-The scene must be glued together with proper postprocessing.
+# SCALABILITY / COMPLEXITY CONSIDERATIONS
 
-Add a post stack using `@react-three/postprocessing`.
+Include design notes for:
+- how board operations scale if board size grows significantly
+- complexity of AI move logic
+- complexity of move validation
+- implications of storing full move history
+- handling many simultaneous rooms
+- WebSocket connection manager design
+- possible future use of Redis pub/sub if horizontally scaled
 
-Use:
-- Bloom for emissive trims, reticles, tactical highlights
-- Outline or Selection for hover / lock states
-- Optional mild vignette
-- Optional very subtle DOF only in cinematics, not regular gameplay
-- Optional SMAA/MSAA if appropriate
-
-The goal is premium cohesion, not overblown FX.
-
-Deliver:
-- `scene/post/PostStack.tsx`
-
-Important:
-- use emissive values and tone mapping settings appropriately so bloom actually works
-- keep gameplay readability first
+You do not need to implement massive-scale infra, but design the interfaces so the path is clear.
 
 ---
 
-## 7. CAMERA
-The camera must be completely rethought.
+# REQUIRED FEATURES TO IMPLEMENT
 
-The current framing is not acceptable.
+## A. Main Menu / Entry Flow
+- Play vs AI
+- Play vs Human
+- View recent / completed games (at least basic history page)
+- Enter display name if useful
+- Clean entry UX
 
-Implement a real camera system with:
-- authored composition
-- better angles
-- stronger depth
-- readable boards
-- dynamic event framing
-- responsive framing for different viewport sizes
+## B. Multiplayer Room Flow
+### Create room
+- Player selects human multiplayer
+- Backend creates room_code
+- Assign creator to player1
+- Returns room info + player reconnect token
+- Show room code to user
 
-Required shots:
-1. intro fly-in over ocean
-2. settle into deployment angle
-3. battle framing
-4. player target focus
-5. missile follow shot
-6. impact punch-in
-7. enemy turn emphasis
-8. victory orbit
-9. defeat pullback
+### Join room
+- Player enters room code
+- Backend checks capacity
+- Assigns player2
+- Returns room info + reconnect token
+- If room full, show friendly error
 
-Use Theatre.js and/or GSAP for cinematic choreography where appropriate.
+### Waiting room
+- Show both seat states
+- Show when opponent joins
+- Allow both to proceed into placement phase
 
-Deliver:
-- `scene/cameras/MainCameraRig.tsx`
-- `scene/cameras/CinematicCameraController.tsx`
-- `scene/cameras/CameraShots.ts`
-- `scene/cameras/responsiveFraming.ts`
-- `scene/theatre/theatreProject.ts`
-- `scene/theatre/theatreSheets.ts`
-- `scene/theatre/sequences.ts`
-- `scene/animation/gsapTimelines.ts`
+## C. Placement Phase
+For human multiplayer:
+- Each player places their own fleet privately
+- Opponent must not see placement
+- Server persists placement state
+- Refresh restores placement view
+- Once both are ready, transition to active play
 
----
+For AI:
+- player places fleet
+- AI fleet auto-generated
+- state persisted as well if practical
 
-## 8. RADAR / TARGETING / TACTICAL FEEL
-The enemy board must feel like a target acquisition surface.
+## D. Active Gameplay
+- Real-time update both clients after every move
+- Show your board with incoming hits/misses
+- Show enemy board with your shots only
+- Enforce turn order
+- Show hit / miss / sunk / win states
+- Refresh restores exact current state
 
-Requirements:
-- radar sweep that feels premium
-- hover confidence
-- target lock reticle
-- board-local pulse
-- clearer active target indication
-- no clutter
+## E. Game End
+- Winner announced
+- Store completed game
+- Allow rematch or back to menu
+- Rematch behavior should be clearly designed
+- If rematch is too large, implement back-to-menu and justify
 
-Deliver:
-- `scene/effects/RadarSweep.tsx`
-- `scene/boards/TargetLock.tsx`
-- `scene/materials/radarMaterial.ts`
-- `scene/materials/reticleMaterial.ts`
-
----
-
-## 9. MISSILES / IMPACTS
-Keep the current stable architecture, but do a visual art pass.
-
-Requirements:
-- missile trail looks intentional
-- launch has presence
-- miss = water splash + ripple + cool light
-- hit = hot flash + smoke + impact intensity
-- sunk = stronger flourish
-- camera can react to impact
-- do not reintroduce bad R3F patterns
-
-Deliver:
-- `scene/effects/MissileSystem.tsx`
-- `scene/effects/MissileTrail.tsx`
-- `scene/effects/ExplosionSystem.tsx`
-- `scene/effects/SplashSystem.tsx`
-- `scene/effects/ShockwaveRing.tsx`
-- `scene/effects/HitFlash.tsx`
+## F. History
+At least one basic endpoint/page to query completed games later:
+- room code or id
+- timestamps
+- winner
+- mode
+- moves count
+- maybe move list / replay metadata
 
 ---
 
-## 10. HUD
-The HUD should be redesigned to fit the new world.
+# API DESIGN
 
-Current HUD should become:
-- cleaner
-- more premium
-- more game-like
-- more integrated
-- less “app panel”
+Build a clean API with REST + WebSocket.
 
-Create:
-- `components/hud/CommandHUD.tsx`
-- `components/hud/TopStatusBar.tsx`
-- `components/hud/FleetPanel.tsx`
-- `components/hud/TurnBanner.tsx`
-- `components/hud/FireControlPanel.tsx`
-- `components/hud/DifficultyBadge.tsx`
-- `components/hud/NotificationStack.tsx`
+## Suggested REST endpoints
 
-Create overlays:
-- `components/overlays/IntroOverlay.tsx`
-- `components/overlays/VictoryOverlay.tsx`
-- `components/overlays/DefeatOverlay.tsx`
-- `components/overlays/LoadingOverlay.tsx`
-- `components/overlays/NetworkErrorOverlay.tsx`
+### Session / Room
+- `POST /rooms` -> create human room
+- `POST /rooms/join` -> join room by code
+- `GET /rooms/{room_id}` -> get room summary for authenticated seat
+- `POST /rooms/{room_id}/reconnect` -> reconnect with player token
+- `POST /rooms/{room_id}/ready` -> mark ready / placement ready if needed
 
-Keep it premium and restrained.
+### AI mode
+- `POST /games/ai` -> create AI game
+- `POST /games/ai/{room_id}/place-ships`
+- `POST /games/ai/{room_id}/fire`
+- `GET /games/ai/{room_id}`
 
----
+### Shared gameplay
+- `POST /rooms/{room_id}/place-ships`
+- `POST /rooms/{room_id}/fire`
+- `GET /rooms/{room_id}/state`
+- `GET /games/history`
+- `GET /games/history/{room_id}`
 
-## 11. PERFORMANCE RULES
-Do not break the cleaned codebase.
+## WebSocket
+- `GET /ws/rooms/{room_id}?token=...`
 
-Must follow:
-- no `setState` in `useFrame`
-- reuse materials/geometries where possible
-- use refs and mutation in frame loops
-- avoid excessive mount/unmount churn
-- use instancing where appropriate
-- keep ocean and post stack performant
-- support quality modes if helpful
+WebSocket should:
+- authenticate seat
+- join connection manager
+- receive room/game events
+- push updates on:
+  - player joined
+  - placement ready
+  - game started
+  - shot fired
+  - turn changed
+  - game finished
+  - reconnect state sync
 
-Deliver:
-- `utils/quality.ts`
-- `utils/sceneTheme.ts`
-- `utils/viewport.ts`
-
----
-
-## 12. TAURI READINESS
-Keep the frontend browser-first but easy to wrap with Tauri later.
-
-Provide:
-- sample `src-tauri/tauri.conf.json`
-- notes for future desktop packaging
-
-Do not introduce hacks that would fight Tauri later.
+You may define a proper event schema:
+- `room.updated`
+- `game.state`
+- `game.move`
+- `game.finished`
+- `error`
 
 ---
 
-# REQUIRED FILE STRUCTURE
+# FRONTEND STATE / UX REQUIREMENTS
 
-Refactor or expand toward:
+Refactor or extend frontend state so it supports:
+- menu mode
+- room create/join flow
+- waiting room
+- AI game flow
+- human multiplayer flow
+- reconnect-on-refresh
+- history page
+- websocket-driven updates
+- optimistic UI only where safe
+- server-truth rendering
+
+Store a reconnect token locally (e.g. localStorage) keyed by room id or active session.
+On app load:
+- if an active session token exists
+- attempt rehydrate / reconnect
+- restore room and role
+
+Do not lose mid-game state on refresh.
+
+---
+
+# IMPLEMENTATION DETAILS
+
+## Board state serialization
+Design a clean server-side representation for:
+- ship positions
+- hits
+- misses
+- sunk state
+- current turn
+
+Use public/private serializers:
+- private board = full self board
+- public enemy board = only visible shot results, never hidden ship positions
+
+## AI integration
+Reuse the existing AI logic for AI games.
+Ensure AI state is persisted enough that a refresh does not corrupt the game.
+
+## Reconnect tokens
+Generate secure opaque tokens.
+Do not use guessable player indexes alone.
+
+## Room codes
+Use short human-readable codes:
+- e.g. 6 chars uppercase alphanumeric
+- ensure uniqueness
+
+## Validation
+Every action must be validated server-side.
+
+---
+
+# REPO WRITEUP REQUIREMENT
+
+In the repo, generate:
+- `APPROACH.md`
+
+It must explain:
+1. architecture
+2. storage choice
+3. multiplayer sync design
+4. anti-cheat model
+5. refresh persistence
+6. deployment strategy
+7. scalability notes
+8. AI usage during development
+9. tradeoffs and shortcuts if any
+
+Also generate:
+- `DEPLOYMENT.md`
+- `ARCHITECTURE.md`
+
+---
+
+# TESTING REQUIREMENTS
+
+Add or improve tests for:
+
+## Backend
+- room creation
+- join flow
+- max 2 players
+- placement validation
+- turn order enforcement
+- multiplayer fire flow
+- win detection
+- reconnect flow
+- history persistence
+- public/private board serialization
+- websocket event flow at least minimally if feasible
+
+## Frontend
+At least some tests for:
+- reconnect token handling
+- room code UX logic
+- state restoration helpers
+
+If frontend test coverage is too large, prioritize backend correctness and document frontend tradeoff.
+
+---
+
+# MIGRATION STRATEGY
+
+You are working in an existing repo.
+Do not unnecessarily delete working code.
+
+Preferred strategy:
+1. preserve and reuse existing core engine
+2. introduce persistence layer
+3. introduce room/session models
+4. introduce websocket manager
+5. adapt frontend to new state flows
+6. keep AI mode and human mode sharing as much code as possible
+
+---
+
+# REQUIRED PROJECT STRUCTURE
+
+Refactor or expand toward something like:
+
+backend/
+  app/
+    main.py
+    core/
+      config.py
+      security.py
+      db.py
+      websocket_manager.py
+    api/
+      rooms.py
+      games.py
+      history.py
+      ws.py
+    engine/
+      ...
+    models/
+      db_models.py
+      schemas.py
+    repositories/
+      rooms.py
+      games.py
+      history.py
+    services/
+      room_service.py
+      game_service.py
+      ai_game_service.py
+      history_service.py
+    tests/
+      ...
 
 frontend/
   src/
-    scene/
-      SceneRoot.tsx
-
-      environment/
-        OceanSurface.tsx
-        SkyBackdrop.tsx
-        Atmosphere.tsx
-        FogController.tsx
-        LightingRig.tsx
-
-      boards/
-        PlayerBoard3D.tsx
-        EnemyBoard3D.tsx
-        GridPlane.tsx
-        BoardFrame.tsx
-        BoardMarkers.tsx
-        TargetLock.tsx
-
-      fleet/
-        ShipFactory.tsx
-        PlayerFleet.tsx
-        EnemyFleet.tsx
-        ShipWake.tsx
-        ShipDamageFX.tsx
-
-      cameras/
-        MainCameraRig.tsx
-        CinematicCameraController.tsx
-        CameraShots.ts
-        responsiveFraming.ts
-
-      effects/
-        MissileSystem.tsx
-        MissileTrail.tsx
-        ExplosionSystem.tsx
-        SplashSystem.tsx
-        ShockwaveRing.tsx
-        HitFlash.tsx
-        RadarSweep.tsx
-
-      materials/
-        oceanConfig.ts
-        radarMaterial.ts
-        boardGlowMaterial.ts
-        reticleMaterial.ts
-
-      post/
-        PostStack.tsx
-
-      theatre/
-        theatreProject.ts
-        theatreSheets.ts
-        sequences.ts
-
-      animation/
-        gsapTimelines.ts
-
+    pages/
+      MenuPage.tsx
+      LobbyPage.tsx
+      GamePage.tsx
+      HistoryPage.tsx
+    hooks/
+      useGame.ts
+      useRealtimeRoom.ts
+      useSessionRestore.ts
+    services/
+      api.ts
+      ws.ts
+      session.ts
+    state/
+      ...
     components/
-      hud/
-        CommandHUD.tsx
-        TopStatusBar.tsx
-        FleetPanel.tsx
-        TurnBanner.tsx
-        FireControlPanel.tsx
-        DifficultyBadge.tsx
-        NotificationStack.tsx
-
-      overlays/
-        IntroOverlay.tsx
-        VictoryOverlay.tsx
-        DefeatOverlay.tsx
-        LoadingOverlay.tsx
-        NetworkErrorOverlay.tsx
-
+      ...
     utils/
-      quality.ts
-      sceneTheme.ts
-      viewport.ts
+      ...
 
-src-tauri/
-  tauri.conf.json
+docs/
+  APPROACH.md
+  ARCHITECTURE.md
+  DEPLOYMENT.md
 
 ---
 
-# OUTPUT INSTRUCTIONS
+# REQUIRED OUTPUT FORMAT
 
-When responding, do it in this exact order:
+When responding, do it in this order:
 
-## 1. Scene redesign overview
-Explain the visual direction and technical architecture
+## 1. Architecture overview
+Explain the final system design
 
-## 2. Updated folder tree
+## 2. Data model design
+Show DB schema / ORM models
 
-## 3. Install commands
-Include all needed packages:
-- three
-- @react-three/fiber
-- @react-three/drei
-- @react-three/postprocessing
-- gsap
-- @theatre/core
-- @theatre/r3f
-- @theatre/studio
-- any utility packages you choose
+## 3. Backend structure and key files
+Generate or refactor real code for:
+- config/db setup
+- DB models
+- core schemas
+- repositories
+- services
+- REST endpoints
+- websocket manager
+- websocket route
+- persistence / reconnect logic
 
-## 4. Core utilities
-Show full code for:
-- `utils/sceneTheme.ts`
-- `utils/quality.ts`
-- `utils/viewport.ts`
+## 4. Frontend structure and key files
+Generate or refactor real code for:
+- API client
+- websocket client
+- room create/join flow
+- reconnect/session restore
+- GamePage integration for both AI and multiplayer
+- history page
+- state management
 
-## 5. Water / materials
-Show full code for:
-- `scene/environment/OceanSurface.tsx`
-- `scene/materials/oceanConfig.ts`
-- `scene/materials/radarMaterial.ts`
-- `scene/materials/boardGlowMaterial.ts`
-- `scene/materials/reticleMaterial.ts`
+## 5. Storage and anti-cheat notes
+Explain and implement the trust boundary
 
-## 6. Environment
-Show full code for:
-- `SkyBackdrop.tsx`
-- `Atmosphere.tsx`
-- `FogController.tsx`
-- `LightingRig.tsx`
+## 6. Deployment setup
+Generate:
+- backend env config
+- frontend env config
+- sample `.env.example`
+- deployment notes for public hosting
 
-## 7. Boards
-Show full code for:
-- `PlayerBoard3D.tsx`
-- `EnemyBoard3D.tsx`
-- `GridPlane.tsx`
-- `BoardFrame.tsx`
-- `BoardMarkers.tsx`
-- `TargetLock.tsx`
+## 7. Docs
+Generate:
+- `APPROACH.md`
+- `ARCHITECTURE.md`
+- `DEPLOYMENT.md`
 
-## 8. Fleet
-Show full code for:
-- `ShipFactory.tsx`
-- `PlayerFleet.tsx`
-- `EnemyFleet.tsx`
-- `ShipWake.tsx`
-- `ShipDamageFX.tsx`
+## 8. Tests
+Generate critical backend tests and any practical frontend tests
 
-## 9. Camera / animation
-Show full code for:
-- `MainCameraRig.tsx`
-- `CinematicCameraController.tsx`
-- `CameraShots.ts`
-- `responsiveFraming.ts`
-- `theatreProject.ts`
-- `theatreSheets.ts`
-- `sequences.ts`
-- `gsapTimelines.ts`
+## 9. Migration plan
+Exactly how to apply this on top of the current repo
 
-## 10. Effects
-Show full code for:
-- `MissileSystem.tsx`
-- `MissileTrail.tsx`
-- `ExplosionSystem.tsx`
-- `SplashSystem.tsx`
-- `ShockwaveRing.tsx`
-- `HitFlash.tsx`
-- upgraded `RadarSweep.tsx`
-
-## 11. Postprocessing
-Show full code for:
-- `post/PostStack.tsx`
-
-## 12. HUD / overlays
-Show full code for:
-- `CommandHUD.tsx`
-- `TopStatusBar.tsx`
-- `FleetPanel.tsx`
-- `TurnBanner.tsx`
-- `FireControlPanel.tsx`
-- `DifficultyBadge.tsx`
-- `NotificationStack.tsx`
-- `IntroOverlay.tsx`
-- `VictoryOverlay.tsx`
-- `DefeatOverlay.tsx`
-- `LoadingOverlay.tsx`
-- `NetworkErrorOverlay.tsx`
-
-## 13. Integration notes
-Explain exactly how to wire the new scene into the current cleaned codebase
-
-## 14. Tauri config
-Show a sample `src-tauri/tauri.conf.json`
-
-## 15. Final validation checklist
-Confirm:
-- water no longer looks fake
-- boards feel physical
-- ships are more readable
-- scene has world depth
-- postprocessing is added
-- camera composition is improved
-- gameplay is preserved
-- future Tauri wrapping remains easy
-
-If the output is too long, continue in clearly labeled parts.
-Do not reduce scope.
 Do not give a shallow answer.
+Do not just describe.
+Generate the actual code and file contents.
+If too large, continue in clearly labeled parts without reducing ambition.
 
 Start now.

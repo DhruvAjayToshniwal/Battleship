@@ -1,145 +1,264 @@
-import uuid
-from typing import Optional
-
-from app.engine.game_engine import GameEngine
-from app.models.schemas import (
-	FireRequest,
-	GameStateResponse,
-	PlaceShipsRequest,
-	ShotResult,
-	StartGameRequest,
-	StartGameResponse,
-	TurnResult,
-)
+from app.core.db import DatabaseManager
+from app.engine.adapter import GameEngineAdapter
+from app.engine.game_engine import parse_coordinate, format_coordinate
+from app.engine.ship import Ship
+from app.repositories.games import GameRepository
+from app.repositories.history import HistoryRepository
+from app.repositories.rooms import RoomRepository
 
 
 class GameService:
-	instance: Optional["GameService"] = None
-	games: dict[str, GameEngine] = {}
+    instance: "GameService | None" = None
 
-	def __new__(cls) -> "GameService":
-		if cls.instance is None:
-			cls.instance = super().__new__(cls)
-			cls.instance.games = {}
-		return cls.instance
+    @classmethod
+    def get_instance(cls) -> "GameService":
+        if cls.instance is None:
+            cls.instance = cls()
+        return cls.instance
 
-	@classmethod
-	def get_instance(cls) -> "GameService":
-		if cls.instance is None:
-			cls.instance = cls()
-		return cls.instance
+    @classmethod
+    def reset(cls) -> None:
+        cls.instance = None
 
-	@classmethod
-	def reset(cls) -> None:
-		cls.instance = None
-		cls.games = {}
+    async def place_ships(
+        self, room_id: str, client_token: str, ships: list[dict]
+    ) -> dict:
+        try:
+            db = DatabaseManager.get_instance()
+            async with db.get_session() as session:
+                async with session.begin():
+                    room_repo = RoomRepository(session)
+                    game_repo = GameRepository(session)
 
-	def get_engine(self, game_id: str) -> GameEngine:
-		engine = self.games.get(game_id)
-		if engine is None:
-			raise ValueError(f"Game {game_id} not found")
-		return engine
+                    player = await room_repo.get_player_by_token(client_token)
+                    if player is None or player.room_id != room_id:
+                        raise ValueError("Unauthorized")
 
-	async def start_game(self, difficulty: str = "hard") -> StartGameResponse:
-		try:
-			if difficulty not in ("easy", "medium", "hard"):
-				raise ValueError(
-					f"Invalid difficulty: {difficulty}. Must be easy, medium, or hard."
-				)
-			game_id = str(uuid.uuid4())
-			engine = GameEngine(difficulty=difficulty)
-			engine.setup_ai()
-			self.games[game_id] = engine
-			return StartGameResponse(game_id=game_id, difficulty=difficulty)
-		except ValueError:
-			raise
-		except Exception as e:
-			raise RuntimeError(f"Failed to start game: {e}") from e
+                    room = await room_repo.get_by_id(room_id)
+                    if room is None:
+                        raise ValueError("Room not found")
 
-	async def place_ships(self, request: PlaceShipsRequest) -> GameStateResponse:
-		try:
-			engine = self.get_engine(request.game_id)
-			placements = [
-				{"name": s.name, "coordinates": s.coordinates} for s in request.ships
-			]
-			engine.place_player_ships(placements)
-			return self.build_state_response(request.game_id, engine)
-		except ValueError:
-			raise
-		except Exception as e:
-			raise RuntimeError(f"Failed to place ships: {e}") from e
+                    if room.status not in ("placement", "active"):
+                        raise ValueError("Not in placement phase")
 
-	async def fire(self, request: FireRequest) -> TurnResult:
-		try:
-			engine = self.get_engine(request.game_id)
+                    snapshot = await game_repo.get_snapshot(room_id)
+                    if snapshot is None:
+                        snapshot_data = {
+                            "game_status": "setup",
+                            "current_turn": None,
+                        }
+                        snapshot = await game_repo.save_snapshot(
+                            room_id, snapshot_data
+                        )
 
-			player_result = engine.fire_shot(request.coordinate)
-			player_shot = ShotResult(
-				result=player_result["result"],
-				ship=player_result["ship"],
-				coordinate=player_result["coordinate"],
-				sunk_ship_coords=player_result["sunk_ship_coords"],
-			)
+                    engine = GameEngineAdapter.engine_from_snapshot(snapshot)
 
-			ai_shot: Optional[ShotResult] = None
-			if engine.game_status == "playing":
-				ai_result = engine.ai_turn()
-				ai_shot = ShotResult(
-					result=ai_result["result"],
-					ship=ai_result["ship"],
-					coordinate=ai_result["coordinate"],
-					sunk_ship_coords=ai_result["sunk_ship_coords"],
-				)
+                    if player.player_slot == "player1":
+                        if snapshot.player1_placed:
+                            raise ValueError("Ships already placed")
+                        engine.place_player_ships(ships)
+                        placed_field = "player1_placed"
+                    else:
+                        if snapshot.player2_placed:
+                            raise ValueError("Ships already placed")
 
-			return TurnResult(
-				player_shot=player_shot,
-				ai_shot=ai_shot,
-				game_status=engine.game_status,
-			)
-		except ValueError:
-			raise
-		except Exception as e:
-			raise RuntimeError(f"Failed to fire: {e}") from e
+                        for p in ships:
+                            name = p["name"]
+                            coords = [parse_coordinate(c) for c in p["coordinates"]]
+                            ship = Ship(name, coords)
+                            engine.ai_board.place_ship(ship, coords)
 
-	async def get_state(self, game_id: str) -> GameStateResponse:
-		try:
-			engine = self.get_engine(game_id)
-			return self.build_state_response(game_id, engine)
-		except ValueError:
-			raise
-		except Exception as e:
-			raise RuntimeError(f"Failed to get state: {e}") from e
+                        expected_names = set(Ship.SHIP_SIZES.keys())
+                        placed_names = {s.name for s in engine.ai_board.ships}
+                        if placed_names != expected_names:
+                            missing = expected_names - placed_names
+                            raise ValueError(f"Missing ships: {missing}")
 
-	def build_state_response(
-		self, game_id: str, engine: GameEngine
-	) -> GameStateResponse:
-		try:
-			state = engine.get_state()
-			return GameStateResponse(
-				game_id=game_id,
-				game_status=state["game_status"],
-				player_board=state["player_board"],
-				ai_board=state["ai_board"],
-				player_shots=[
-					ShotResult(
-						result=s["result"],
-						ship=s["ship"],
-						coordinate=s["coordinate"],
-						sunk_ship_coords=s["sunk_ship_coords"],
-					)
-					for s in state["player_shots"]
-				],
-				ai_shots=[
-					ShotResult(
-						result=s["result"],
-						ship=s["ship"],
-						coordinate=s["coordinate"],
-						sunk_ship_coords=s["sunk_ship_coords"],
-					)
-					for s in state["ai_shots"]
-				],
-				player_ships_remaining=state["player_ships_remaining"],
-				ai_ships_remaining=state["ai_ships_remaining"],
-			)
-		except Exception as e:
-			raise RuntimeError(f"Failed to build state response: {e}") from e
+                        placed_field = "player2_placed"
+
+                    updated = GameEngineAdapter.snapshot_from_engine(engine)
+                    updated[placed_field] = True
+
+                    other_placed = (
+                        snapshot.player2_placed
+                        if placed_field == "player1_placed"
+                        else snapshot.player1_placed
+                    )
+
+                    if other_placed:
+                        updated["game_status"] = "playing"
+                        players = await room_repo.get_players_for_room(room_id)
+                        p1 = next(
+                            (p for p in players if p.player_slot == "player1"),
+                            None,
+                        )
+                        if p1:
+                            updated["current_turn"] = p1.id
+                        await room_repo.update_status(room_id, "active")
+                    else:
+                        updated["game_status"] = "setup"
+
+                    await game_repo.update_snapshot(room_id, **updated)
+
+                    return {
+                        "placement_complete": other_placed is True,
+                        "game_status": updated["game_status"],
+                        "player_slot": player.player_slot,
+                    }
+        except ValueError:
+            raise
+        except Exception as e:
+            raise RuntimeError(f"Failed to place ships: {e}") from e
+
+    async def fire(
+        self, room_id: str, client_token: str, coordinate: str
+    ) -> dict:
+        try:
+            db = DatabaseManager.get_instance()
+            async with db.get_session() as session:
+                async with session.begin():
+                    room_repo = RoomRepository(session)
+                    game_repo = GameRepository(session)
+                    history_repo = HistoryRepository(session)
+
+                    player = await room_repo.get_player_by_token(client_token)
+                    if player is None or player.room_id != room_id:
+                        raise ValueError("Unauthorized")
+
+                    snapshot = await game_repo.get_snapshot(room_id)
+                    if snapshot is None:
+                        raise ValueError("Game not found")
+
+                    if snapshot.game_status != "playing":
+                        raise ValueError(
+                            f"Cannot fire: game status is {snapshot.game_status}"
+                        )
+
+                    if snapshot.current_turn != player.id:
+                        raise ValueError("Not your turn")
+
+                    engine = GameEngineAdapter.engine_from_snapshot(snapshot)
+
+                    coord = parse_coordinate(coordinate)
+
+                    if player.player_slot == "player1":
+                        result = engine.ai_board.receive_shot(coord)
+                        shot_record = {
+                            "coordinate": format_coordinate(coord),
+                            "result": result["result"],
+                            "ship": result["ship"],
+                            "sunk_ship_coords": (
+                                [
+                                    format_coordinate(c)
+                                    for c in result["sunk_ship_coords"]
+                                ]
+                                if result["sunk_ship_coords"]
+                                else None
+                            ),
+                        }
+                        engine.player_shots.append(shot_record)
+                    else:
+                        result = engine.player_board.receive_shot(coord)
+                        shot_record = {
+                            "coordinate": format_coordinate(coord),
+                            "result": result["result"],
+                            "ship": result["ship"],
+                            "sunk_ship_coords": (
+                                [
+                                    format_coordinate(c)
+                                    for c in result["sunk_ship_coords"]
+                                ]
+                                if result["sunk_ship_coords"]
+                                else None
+                            ),
+                        }
+                        engine.ai_shots.append(shot_record)
+
+                    engine.check_win()
+
+                    turn = snapshot.turn_number + 1
+                    await history_repo.record_move(
+                        room_id=room_id,
+                        turn_number=turn,
+                        actor_player_id=player.id,
+                        coordinate=coordinate,
+                        result=result["result"],
+                        sunk_ship=result["ship"]
+                        if result["result"] == "sunk"
+                        else None,
+                    )
+
+                    players = await room_repo.get_players_for_room(room_id)
+                    opponent = next(
+                        (p for p in players if p.id != player.id), None
+                    )
+
+                    updated = GameEngineAdapter.snapshot_from_engine(engine)
+                    updated["turn_number"] = turn
+
+                    if engine.game_status in ("player_wins", "ai_wins"):
+                        await room_repo.set_winner(room_id, player.id)
+                        updated["current_turn"] = None
+                    else:
+                        updated["current_turn"] = (
+                            opponent.id if opponent else player.id
+                        )
+
+                    await game_repo.update_snapshot(room_id, **updated)
+
+                    return {
+                        "shot": shot_record,
+                        "game_status": engine.game_status,
+                        "turn_number": turn,
+                        "next_turn": updated["current_turn"],
+                        "actor_player_id": player.id,
+                        "actor_slot": player.player_slot,
+                    }
+        except ValueError:
+            raise
+        except Exception as e:
+            raise RuntimeError(f"Failed to fire: {e}") from e
+
+    async def get_state(
+        self, room_id: str, client_token: str
+    ) -> dict:
+        try:
+            db = DatabaseManager.get_instance()
+            async with db.get_session() as session:
+                room_repo = RoomRepository(session)
+                game_repo = GameRepository(session)
+
+                player = await room_repo.get_player_by_token(client_token)
+                if player is None or player.room_id != room_id:
+                    raise ValueError("Unauthorized")
+
+                room = await room_repo.get_by_id(room_id)
+                if room is None:
+                    raise ValueError("Room not found")
+
+                snapshot = await game_repo.get_snapshot(room_id)
+                if snapshot is None:
+                    return {
+                        "game_id": room_id,
+                        "game_status": "setup",
+                        "player_slot": player.player_slot,
+                        "your_turn": False,
+                    }
+
+                engine = GameEngineAdapter.engine_from_snapshot(snapshot)
+                view = GameEngineAdapter.serialize_multiplayer_view(
+                    engine, player.player_slot
+                )
+
+                return {
+                    "game_id": room_id,
+                    "game_status": snapshot.game_status,
+                    "player_slot": player.player_slot,
+                    "your_turn": snapshot.current_turn == player.id,
+                    "turn_number": snapshot.turn_number,
+                    **view,
+                }
+        except ValueError:
+            raise
+        except Exception as e:
+            raise RuntimeError(f"Failed to get state: {e}") from e

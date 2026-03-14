@@ -9,6 +9,8 @@ interface DefeatOverlayProps {
   onChangeDifficulty: (d: Difficulty) => void;
   loading: boolean;
   gameState: GameStateResponse | null;
+  isMultiplayer?: boolean;
+  onBackToMenu?: () => void;
 }
 
 const difficulties: Difficulty[] = ['easy', 'medium', 'hard'];
@@ -25,7 +27,7 @@ function computeStats(gameState: GameStateResponse | null) {
   return { shotsFired, hits, accuracy, enemyShipsSunk, playerShipsRemaining };
 }
 
-export default function DefeatOverlay({ visible, difficulty, onRestart, onChangeDifficulty, loading, gameState }: DefeatOverlayProps) {
+export default function DefeatOverlay({ visible, difficulty, onRestart, onChangeDifficulty, loading, gameState, isMultiplayer = false, onBackToMenu }: DefeatOverlayProps) {
   const stats = computeStats(gameState);
 
   return (
@@ -103,44 +105,65 @@ export default function DefeatOverlay({ visible, difficulty, onRestart, onChange
             </motion.div>
           )}
 
+          {!isMultiplayer && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 }}
+              className="flex gap-3 mb-6"
+            >
+              {difficulties.map((d) => (
+                <button
+                  key={d}
+                  onClick={() => onChangeDifficulty(d)}
+                  className="px-4 py-2 rounded text-xs font-bold tracking-widest uppercase cursor-pointer transition-all hover:scale-105"
+                  style={{
+                    background: d === difficulty ? `${DIFFICULTY_COLORS[d]}20` : 'rgba(255,255,255,0.03)',
+                    border: `1px solid ${d === difficulty ? DIFFICULTY_COLORS[d] : 'rgba(255,255,255,0.1)'}`,
+                    color: d === difficulty ? DIFFICULTY_COLORS[d] : '#64748b',
+                  }}
+                >
+                  {d}
+                </button>
+              ))}
+            </motion.div>
+          )}
+
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
-            className="flex gap-3 mb-6"
+            transition={{ delay: 0.7 }}
+            className="flex gap-3"
           >
-            {difficulties.map((d) => (
+            {isMultiplayer && onBackToMenu ? (
               <button
-                key={d}
-                onClick={() => onChangeDifficulty(d)}
-                className="px-4 py-2 rounded text-xs font-bold tracking-widest uppercase cursor-pointer transition-all hover:scale-105"
+                onClick={onBackToMenu}
+                className="px-8 py-3 rounded-lg text-sm font-bold tracking-widest uppercase cursor-pointer transition-all hover:scale-105"
                 style={{
-                  background: d === difficulty ? `${DIFFICULTY_COLORS[d]}20` : 'rgba(255,255,255,0.03)',
-                  border: `1px solid ${d === difficulty ? DIFFICULTY_COLORS[d] : 'rgba(255,255,255,0.1)'}`,
-                  color: d === difficulty ? DIFFICULTY_COLORS[d] : '#64748b',
+                  background: 'rgba(34, 211, 238, 0.15)',
+                  border: '1px solid rgba(34, 211, 238, 0.5)',
+                  color: '#22d3ee',
+                  textShadow: '0 0 10px rgba(34,211,238,0.3)',
                 }}
               >
-                {d}
+                BACK TO MENU
               </button>
-            ))}
+            ) : (
+              <button
+                onClick={() => onRestart(difficulty)}
+                disabled={loading}
+                className="px-8 py-3 rounded-lg text-sm font-bold tracking-widest uppercase cursor-pointer transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+                style={{
+                  background: 'rgba(34, 211, 238, 0.15)',
+                  border: '1px solid rgba(34, 211, 238, 0.5)',
+                  color: '#22d3ee',
+                  textShadow: '0 0 10px rgba(34,211,238,0.3)',
+                }}
+              >
+                {loading ? 'DEPLOYING...' : 'NEW BATTLE'}
+              </button>
+            )}
           </motion.div>
-
-          <motion.button
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.7 }}
-            onClick={() => onRestart(difficulty)}
-            disabled={loading}
-            className="px-8 py-3 rounded-lg text-sm font-bold tracking-widest uppercase cursor-pointer transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
-            style={{
-              background: 'rgba(34, 211, 238, 0.15)',
-              border: '1px solid rgba(34, 211, 238, 0.5)',
-              color: '#22d3ee',
-              textShadow: '0 0 10px rgba(34,211,238,0.3)',
-            }}
-          >
-            {loading ? 'DEPLOYING...' : 'NEW BATTLE'}
-          </motion.button>
         </motion.div>
       )}
     </AnimatePresence>

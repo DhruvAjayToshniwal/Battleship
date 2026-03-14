@@ -15,6 +15,7 @@ interface ShipPlacementProps {
   onConfirm: () => void;
   onUndo: () => void;
   loading: boolean;
+  hidesDifficulty?: boolean;
 }
 
 export default function ShipPlacement({
@@ -29,6 +30,7 @@ export default function ShipPlacement({
   onConfirm,
   onUndo,
   loading,
+  hidesDifficulty = false,
 }: ShipPlacementProps) {
   return (
     <motion.div
@@ -54,29 +56,31 @@ export default function ShipPlacement({
           Deploy Fleet
         </h2>
 
-        <div className="mb-4">
-          <div className="text-[10px] tracking-[0.2em] uppercase mb-2" style={{ color: '#64748b' }}>
-            Difficulty
+        {!hidesDifficulty && (
+          <div className="mb-4">
+            <div className="text-[10px] tracking-[0.2em] uppercase mb-2" style={{ color: '#64748b' }}>
+              Difficulty
+            </div>
+            <div className="flex gap-1.5">
+              {(['easy', 'medium', 'hard'] as Difficulty[]).map((d) => (
+                <button
+                  key={d}
+                  onClick={() => onChangeDifficulty(d)}
+                  className="flex-1 py-1.5 rounded text-[10px] tracking-widest uppercase cursor-pointer transition-all"
+                  style={{
+                    background: difficulty === d
+                      ? `${DIFFICULTY_COLORS[d]}20`
+                      : 'rgba(255,255,255,0.03)',
+                    border: `1px solid ${difficulty === d ? DIFFICULTY_COLORS[d] : 'rgba(255,255,255,0.08)'}`,
+                    color: difficulty === d ? DIFFICULTY_COLORS[d] : '#475569',
+                  }}
+                >
+                  {d}
+                </button>
+              ))}
+            </div>
           </div>
-          <div className="flex gap-1.5">
-            {(['easy', 'medium', 'hard'] as Difficulty[]).map((d) => (
-              <button
-                key={d}
-                onClick={() => onChangeDifficulty(d)}
-                className="flex-1 py-1.5 rounded text-[10px] tracking-widest uppercase cursor-pointer transition-all"
-                style={{
-                  background: difficulty === d
-                    ? `${DIFFICULTY_COLORS[d]}20`
-                    : 'rgba(255,255,255,0.03)',
-                  border: `1px solid ${difficulty === d ? DIFFICULTY_COLORS[d] : 'rgba(255,255,255,0.08)'}`,
-                  color: difficulty === d ? DIFFICULTY_COLORS[d] : '#475569',
-                }}
-              >
-                {d}
-              </button>
-            ))}
-          </div>
-        </div>
+        )}
 
         <div className="space-y-2 mb-6">
           {shipsToPlace.map((ship, i) => {

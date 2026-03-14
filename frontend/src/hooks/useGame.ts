@@ -6,56 +6,115 @@ import { useAudioDirector } from './useAudioDirector';
 import { coordToRowCol } from '../utils/coordinates';
 import { buildGridFromState } from '../utils/boardState';
 import type { Difficulty } from '../services/api';
+import { saveSession, clearSession } from '../services/session';
 
 export type { Phase } from './useBattleSequence';
 export type { Orientation, PlacedShip } from './useShipPlacement';
+export type { GameMode } from './useGameApiState';
 
-export function useGame() {
-  const apiState = useGameApiState();
+interface UseGameOptions {
+  mode?: 'ai' | 'human';
+  roomId?: string | null;
+  playerToken?: string | null;
+  playerId?: string | null;
+}
+
+export function useGame(options: UseGameOptions = {}) {
+  const mode = options.mode ?? 'ai';
+
+  const apiState = useGameApiState({
+    mode,
+    roomId: options.roomId,
+    playerToken: options.playerToken,
+  });
   const placement = useShipPlacement();
   const audio = useAudioDirector();
 
   const battle = useBattleSequence({
     audio,
-    onFireShot: apiState.fireShot,
-    onRefreshState: apiState.refreshState,
+    onFireShot: (gameId, coordinate) =>
+      apiState.fireShot(gameId, coordinate, options.playerToken ?? undefined),
+    onRefreshState: (gameId) =>
+      apiState.refreshState(gameId, options.playerToken ?? undefined),
     firedCoords: apiState.firedCoords,
+    mode,
   });
 
   const startGame = useCallback(async (diff?: Difficulty) => {
-    const gameId = await apiState.startGame(diff);
-    if (gameId) {
-      placement.reset();
-      battle.resetBattle();
-      audio.playGameStart();
+    try {
+      const result = await apiState.startGame(diff);
+      if (result) {
+        placement.reset();
+        battle.resetBattle();
+        audio.playGameStart();
+
+        saveSession({
+          roomId: result.room_id,
+          playerToken: result.client_token,
+          mode: 'ai',
+          playerSlot: 'player1',
+          playerId: result.player_id,
+        });
+
+        return result;
+      }
+      return null;
+    } catch (e) {
+      return null;
     }
   }, [apiState, placement, battle, audio]);
 
   const confirmPlacement = useCallback(async () => {
-    if (!apiState.gameId || !placement.allShipsPlaced) return;
-    const shipPlacements = placement.placedShips.map((s) => ({
-      name: s.name,
-      coordinates: s.coordinates,
-    }));
-    const state = await apiState.placeShips(apiState.gameId, shipPlacements);
-    if (state) {
-      battle.startBattle();
+    try {
+      const gId = options.roomId ?? apiState.gameId;
+      const tkn = options.playerToken ?? apiState.token;
+      if (!gId || !placement.allShipsPlaced || !tkn) return;
+
+      const shipPlacements = placement.placedShips.map((s) => ({
+        name: s.name,
+        coordinates: s.coordinates,
+      }));
+
+      const result = await apiState.placeShips(gId, shipPlacements, tkn);
+      if (result) {
+        if (mode === 'ai') {
+          battle.startBattle();
+        } else {
+          if ('placement_complete' in result && result.placement_complete) {
+            battle.startBattle();
+          } else {
+            battle.setPhase('setup');
+            battle.setMessage('Ships deployed. Waiting for opponent...');
+          }
+        }
+      }
+    } catch (e) {
+      console.error('Placement error:', e);
     }
-  }, [apiState, placement, battle]);
+  }, [apiState, placement, battle, mode, options.roomId, options.playerToken]);
 
   const fireShot = useCallback(
     async (coordinate: string) => {
-      if (!apiState.gameId) return;
-      await battle.fireShot(apiState.gameId, coordinate);
+      try {
+        const gId = options.roomId ?? apiState.gameId;
+        if (!gId) return;
+        await battle.fireShot(gId, coordinate);
+      } catch (e) {
+        console.error('Fire error:', e);
+      }
     },
-    [apiState.gameId, battle]
+    [apiState.gameId, battle, options.roomId]
   );
 
   const placeShipAt = useCallback(
     (row: number, col: number): boolean => {
-      const placed = placement.placeShipAt(row, col);
-      if (placed) audio.playShipPlace();
-      return placed;
+      try {
+        const placed = placement.placeShipAt(row, col);
+        if (placed) audio.playShipPlace();
+        return placed;
+      } catch (e) {
+        return false;
+      }
     },
     [placement, audio]
   );
@@ -81,8 +140,13 @@ export function useGame() {
     [apiState.gameState]
   );
 
+  const leaveGame = useCallback(() => {
+    clearSession();
+  }, []);
+
   return {
     gameState: apiState.gameState,
+    setGameState: apiState.setGameState,
     loading: apiState.loading,
     error: apiState.error,
     difficulty: apiState.difficulty,
@@ -100,18 +164,28 @@ export function useGame() {
     autoPlace: placement.autoPlace,
 
     phase: battle.phase,
+    setPhase: battle.setPhase,
     isPlayerTurn: battle.isPlayerTurn,
+    setIsPlayerTurn: battle.setIsPlayerTurn,
     isFiring: battle.isFiring,
     lastPlayerResult: battle.lastPlayerResult,
     lastAiResult: battle.lastAiResult,
     message: battle.message,
+    setMessage: battle.setMessage,
+    receiveOpponentShot: battle.receiveOpponentShot,
+    receiveGameUpdate: battle.receiveGameUpdate,
+    startBattle: battle.startBattle,
+    resetBattle: battle.resetBattle,
 
     localPlayerGrid,
     aiGrid,
+    mode,
 
     startGame,
     placeShipAt,
     confirmPlacement,
     fireShot,
+    leaveGame,
+    refreshState: apiState.refreshState,
   };
 }

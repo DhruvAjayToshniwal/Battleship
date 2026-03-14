@@ -1,11 +1,9 @@
 import axios from 'axios';
 
 const isTauri = !!(window as unknown as Record<string, unknown>).__TAURI_INTERNALS__;
-const baseURL = isTauri ? 'http://localhost:8000/game' : '/game';
+const baseURL = import.meta.env.VITE_API_URL || (isTauri ? 'http://localhost:8000' : '');
 
-const api = axios.create({
-  baseURL,
-});
+const api = axios.create({ baseURL });
 
 export interface ShipPlacement {
   name: string;
@@ -56,42 +54,192 @@ export interface TurnResult {
 
 export type Difficulty = 'easy' | 'medium' | 'hard';
 
-export interface StartGameResponse {
-  game_id: string;
-  difficulty: Difficulty;
-  message: string;
+export interface CreateRoomResponse {
+  room_id: string;
+  room_code: string;
+  player_id: string;
+  client_token: string;
+  mode: string;
+  difficulty: string | null;
 }
 
-export async function startGame(difficulty: Difficulty = 'hard'): Promise<StartGameResponse> {
-  const response = await api.post('/start', { difficulty });
+export interface JoinRoomResponse {
+  room_id: string;
+  room_code: string;
+  player_id: string;
+  client_token: string;
+  player_slot: string;
+}
+
+export interface PlayerInfo {
+  player_id: string;
+  player_slot: string;
+  display_name: string;
+  connected: boolean;
+}
+
+export interface RoomStateResponse {
+  room_id: string;
+  room_code: string;
+  mode: string;
+  status: string;
+  players: PlayerInfo[];
+}
+
+export interface ReconnectResponse {
+  room_id: string;
+  room_code: string;
+  player_id: string;
+  player_slot: string;
+  room_status: string;
+  mode: string;
+  players: PlayerInfo[];
+}
+
+export interface MultiplayerGameState {
+  game_id: string;
+  game_status: string;
+  player_slot: string;
+  your_turn: boolean;
+  turn_number: number;
+  player_board: PlayerBoardState;
+  opponent_board: AIBoardState;
+  my_shots: ShotResult[];
+  opponent_shots: ShotResult[];
+  my_ships_remaining: number;
+  opponent_ships_remaining: number;
+}
+
+export interface MultiplayerShotResult {
+  shot: ShotResult;
+  game_status: string;
+  turn_number: number;
+  next_turn: string | null;
+  actor_player_id: string;
+  actor_slot: string;
+}
+
+export interface PlacementResult {
+  placement_complete: boolean;
+  game_status: string;
+  player_slot: string;
+}
+
+export interface GameHistorySummary {
+  room_id: string;
+  room_code: string;
+  mode: string;
+  status: string;
+  winner_name: string | null;
+  winner_player_id: string | null;
+  move_count: number;
+  duration_seconds: number | null;
+  created_at: string | null;
+  players: Array<{ player_id: string; player_slot: string; display_name: string }>;
+}
+
+export interface GameHistoryDetail extends GameHistorySummary {
+  moves: Array<{
+    turn_number: number;
+    actor_player_id: string;
+    coordinate: string;
+    result: string;
+    sunk_ship: string | null;
+    created_at: string | null;
+  }>;
+}
+
+export async function createRoom(
+  mode: string = 'human',
+  displayName: string = 'Player',
+  difficulty: Difficulty = 'hard'
+): Promise<CreateRoomResponse> {
+  const response = await api.post('/rooms', {
+    mode,
+    display_name: displayName,
+    difficulty,
+  });
   return response.data;
 }
 
-export async function placeShips(
-  gameId: string,
+export async function joinRoom(
+  roomCode: string,
+  displayName: string = 'Player'
+): Promise<JoinRoomResponse> {
+  const response = await api.post('/rooms/join', {
+    room_code: roomCode,
+    display_name: displayName,
+  });
+  return response.data;
+}
+
+export async function getRoomInfo(
+  roomId: string,
+  token: string
+): Promise<RoomStateResponse> {
+  const response = await api.get(`/rooms/${roomId}`, {
+    headers: { 'X-Client-Token': token },
+  });
+  return response.data;
+}
+
+export async function reconnectRoom(
+  roomId: string,
+  token: string
+): Promise<ReconnectResponse> {
+  const response = await api.post(`/rooms/${roomId}/reconnect`, {
+    client_token: token,
+  });
+  return response.data;
+}
+
+export async function placeShipsAuth(
+  roomId: string,
+  token: string,
   ships: ShipPlacement[]
-): Promise<GameStateResponse> {
-  const response = await api.post('/place-ships', {
-    game_id: gameId,
+): Promise<PlacementResult | GameStateResponse> {
+  const response = await api.post(`/rooms/${roomId}/place-ships`, {
+    client_token: token,
     ships,
   });
   return response.data;
 }
 
-export async function fireShot(
-  gameId: string,
+export async function fireShotAuth(
+  roomId: string,
+  token: string,
   coordinate: string
-): Promise<TurnResult> {
-  const response = await api.post('/fire', {
-    game_id: gameId,
+): Promise<TurnResult | MultiplayerShotResult> {
+  const response = await api.post(`/rooms/${roomId}/fire`, {
+    client_token: token,
     coordinate,
   });
   return response.data;
 }
 
-export async function getGameState(gameId: string): Promise<GameStateResponse> {
-  const response = await api.get('/state', {
-    params: { game_id: gameId },
+export async function getGameStateAuth(
+  roomId: string,
+  token: string
+): Promise<GameStateResponse | MultiplayerGameState> {
+  const response = await api.get(`/rooms/${roomId}/state`, {
+    headers: { 'X-Client-Token': token },
   });
+  return response.data;
+}
+
+export async function getHistory(
+  limit: number = 20,
+  offset: number = 0
+): Promise<{ games: GameHistorySummary[] }> {
+  const response = await api.get('/games/history', {
+    params: { limit, offset },
+  });
+  return response.data;
+}
+
+export async function getGameDetail(
+  roomId: string
+): Promise<GameHistoryDetail> {
+  const response = await api.get(`/games/history/${roomId}`);
   return response.data;
 }

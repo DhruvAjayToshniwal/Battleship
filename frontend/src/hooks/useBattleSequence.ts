@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef } from 'react';
-import type { ShotResult, TurnResult } from '../services/api';
+import type { ShotResult, TurnResult, MultiplayerShotResult } from '../services/api';
 import { speak } from './useVoiceCommander';
 
 export type Phase = 'setup' | 'playing' | 'gameOver';
@@ -17,9 +17,10 @@ interface AudioCallbacks {
 
 interface BattleSequenceOptions {
   audio: AudioCallbacks;
-  onFireShot: (gameId: string, coordinate: string) => Promise<TurnResult | null>;
+  onFireShot: (gameId: string, coordinate: string) => Promise<TurnResult | MultiplayerShotResult | null>;
   onRefreshState: (gameId: string) => Promise<{ game_status: string } | null>;
   firedCoords: Set<string>;
+  mode?: 'ai' | 'human';
 }
 
 export function useBattleSequence({
@@ -27,6 +28,7 @@ export function useBattleSequence({
   onFireShot,
   onRefreshState,
   firedCoords,
+  mode = 'ai',
 }: BattleSequenceOptions) {
   const [phase, setPhase] = useState<Phase>('setup');
   const [isPlayerTurn, setIsPlayerTurn] = useState(true);
@@ -55,6 +57,91 @@ export function useBattleSequence({
     sequenceLock.current = false;
   }, []);
 
+  const processPlayerShot = useCallback((shot: ShotResult) => {
+    try {
+      setLastPlayerResult(shot);
+      if (shot.result === 'hit' || shot.result === 'sunk') {
+        const shipName = shot.ship;
+        if (shot.result === 'sunk') {
+          setMessage(`Direct hit! ${shipName} sunk!`);
+          audio.playShipSunk();
+          speak('playerSunk');
+        } else {
+          setMessage(`Hit! ${shipName ? shipName + ' damaged!' : ''}`);
+          audio.playExplosion();
+          speak('playerHit');
+        }
+      } else {
+        setMessage('Miss. Splash.');
+        audio.playSplash();
+        speak('playerMiss');
+      }
+    } catch (e) {
+      console.error('Error processing player shot:', e);
+    }
+  }, [audio]);
+
+  const processEnemyShot = useCallback((shot: ShotResult) => {
+    try {
+      setLastAiResult(shot);
+      if (shot.result === 'hit' || shot.result === 'sunk') {
+        if (shot.result === 'sunk') {
+          setMessage(`Enemy sunk our ${shot.ship}!`);
+          audio.playShipSunk();
+          speak('enemySunk');
+        } else {
+          setMessage(`Enemy hit our ${shot.ship || 'ship'}!`);
+          audio.playExplosion();
+          speak('enemyHit');
+        }
+      } else {
+        setMessage('Enemy missed!');
+        audio.playSplash();
+        speak('enemyMiss');
+      }
+    } catch (e) {
+      console.error('Error processing enemy shot:', e);
+    }
+  }, [audio]);
+
+  const receiveOpponentShot = useCallback((shot: ShotResult) => {
+    try {
+      audio.playEnemyFire();
+      setTimeout(() => {
+        processEnemyShot(shot);
+      }, 800);
+    } catch (e) {
+      console.error('Error receiving opponent shot:', e);
+    }
+  }, [audio, processEnemyShot]);
+
+  const receiveGameUpdate = useCallback((status: string, isMyTurn: boolean) => {
+    try {
+      if (status === 'player_wins') {
+        setPhase('gameOver');
+        setMessage('VICTORY! All enemy ships destroyed!');
+        audio.playVictory();
+        speak('victory');
+      } else if (status === 'ai_wins') {
+        setPhase('gameOver');
+        setMessage('DEFEAT. Our fleet has been destroyed.');
+        audio.playDefeat();
+        speak('defeat');
+      } else {
+        setIsPlayerTurn(isMyTurn);
+        if (isMyTurn) {
+          setMessage('Your turn, Commander.');
+          audio.playTurnStart();
+          speak('turnStart');
+        } else {
+          setMessage('Waiting for opponent...');
+        }
+      }
+    } catch (e) {
+      console.error('Error receiving game update:', e);
+    }
+  }, [audio]);
+
   const fireShot = useCallback(
     async (gameId: string, coordinate: string) => {
       if (phase !== 'playing' || !isPlayerTurn || isFiring) return;
@@ -75,79 +162,47 @@ export function useBattleSequence({
           return;
         }
 
-        const playerShot = response.player_shot;
-        setLastPlayerResult(playerShot);
+        if (mode === 'ai') {
+          const aiResponse = response as TurnResult;
+          processPlayerShot(aiResponse.player_shot);
 
-        if (playerShot.result === 'hit' || playerShot.result === 'sunk') {
-          const shipName = playerShot.ship;
-          if (playerShot.result === 'sunk') {
-            setMessage(`Direct hit! ${shipName} sunk!`);
-            audio.playShipSunk();
-            speak('playerSunk');
-          } else {
-            setMessage(`Hit! ${shipName ? shipName + ' damaged!' : ''}`);
-            audio.playExplosion();
-            speak('playerHit');
+          await new Promise((r) => setTimeout(r, 1200));
+
+          if (aiResponse.ai_shot) {
+            setMessage('Enemy is firing...');
+            audio.playEnemyFire();
+            await new Promise((r) => setTimeout(r, 800));
+            processEnemyShot(aiResponse.ai_shot);
           }
-        } else {
-          setMessage('Miss. Splash.');
-          audio.playSplash();
-          speak('playerMiss');
-        }
 
-        await new Promise((r) => setTimeout(r, 1200));
-
-        if (response.ai_shot) {
-          setMessage('Enemy is firing...');
-          audio.playEnemyFire();
-          await new Promise((r) => setTimeout(r, 800));
-
-          setLastAiResult(response.ai_shot);
+          const updatedState = await onRefreshState(gameId);
 
           if (
-            response.ai_shot.result === 'hit' ||
-            response.ai_shot.result === 'sunk'
+            updatedState?.game_status === 'player_wins' ||
+            aiResponse.game_status === 'player_wins'
           ) {
-            if (response.ai_shot.result === 'sunk') {
-              setMessage(`Enemy sunk our ${response.ai_shot.ship}!`);
-              audio.playShipSunk();
-              speak('enemySunk');
-            } else {
-              setMessage(`Enemy hit our ${response.ai_shot.ship || 'ship'}!`);
-              audio.playExplosion();
-              speak('enemyHit');
-            }
+            setPhase('gameOver');
+            setMessage('VICTORY! All enemy ships destroyed!');
+            audio.playVictory();
+            speak('victory');
+          } else if (
+            updatedState?.game_status === 'ai_wins' ||
+            aiResponse.game_status === 'ai_wins'
+          ) {
+            setPhase('gameOver');
+            setMessage('DEFEAT. Our fleet has been destroyed.');
+            audio.playDefeat();
+            speak('defeat');
           } else {
-            setMessage('Enemy missed!');
-            audio.playSplash();
-            speak('enemyMiss');
+            await new Promise((r) => setTimeout(r, 800));
+            setIsPlayerTurn(true);
+            setMessage('Your turn, Commander.');
+            audio.playTurnStart();
+            speak('turnStart');
           }
-        }
-
-        const updatedState = await onRefreshState(gameId);
-
-        if (
-          updatedState?.game_status === 'player_wins' ||
-          response.game_status === 'player_wins'
-        ) {
-          setPhase('gameOver');
-          setMessage('VICTORY! All enemy ships destroyed!');
-          audio.playVictory();
-          speak('victory');
-        } else if (
-          updatedState?.game_status === 'ai_wins' ||
-          response.game_status === 'ai_wins'
-        ) {
-          setPhase('gameOver');
-          setMessage('DEFEAT. Our fleet has been destroyed.');
-          audio.playDefeat();
-          speak('defeat');
         } else {
-          await new Promise((r) => setTimeout(r, 800));
-          setIsPlayerTurn(true);
-          setMessage('Your turn, Commander.');
-          audio.playTurnStart();
-          speak('turnStart');
+          const mpResponse = response as MultiplayerShotResult;
+          processPlayerShot(mpResponse.shot);
         }
       } catch {
         setIsPlayerTurn(true);
@@ -156,18 +211,23 @@ export function useBattleSequence({
         sequenceLock.current = false;
       }
     },
-    [phase, isPlayerTurn, isFiring, firedCoords, audio, onFireShot, onRefreshState]
+    [phase, isPlayerTurn, isFiring, firedCoords, audio, onFireShot, onRefreshState, mode, processPlayerShot, processEnemyShot]
   );
 
   return {
     phase,
+    setPhase,
     isPlayerTurn,
+    setIsPlayerTurn,
     isFiring,
     lastPlayerResult,
     lastAiResult,
     message,
+    setMessage,
     startBattle,
     resetBattle,
     fireShot,
+    receiveOpponentShot,
+    receiveGameUpdate,
   };
 }
