@@ -13,16 +13,16 @@ from app.core.db import DatabaseManager
 
 @asynccontextmanager
 async def lifespan(application: FastAPI):
-    try:
-        db = DatabaseManager.get_instance()
-        await db.init_db()
-    except Exception as e:
-        raise RuntimeError(f"Failed to initialize application: {e}") from e
-    yield
-    try:
-        await DatabaseManager.reset()
-    except Exception:
-        pass
+	try:
+		db = DatabaseManager.get_instance()
+		await db.init_db()
+	except Exception as e:
+		raise RuntimeError(f"Failed to initialize application: {e}") from e
+	yield
+	try:
+		await DatabaseManager.reset()
+	except Exception:
+		pass
 
 
 app = FastAPI(title="Battleship API", version="2.0.0", lifespan=lifespan)
@@ -31,11 +31,11 @@ settings = SettingsFactory.get()
 allowed_origins = settings.CORS_ORIGINS.split(",")
 
 app.add_middleware(
-    CORSMiddleware,
-    allow_origins=allowed_origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+	CORSMiddleware,
+	allow_origins=allowed_origins,
+	allow_credentials=True,
+	allow_methods=["*"],
+	allow_headers=["*"],
 )
 
 app.include_router(rooms_router)
@@ -46,4 +46,4 @@ app.include_router(ws_router)
 
 @app.get("/health")
 async def health_check():
-    return {"status": "ok"}
+	return {"status": "ok"}
