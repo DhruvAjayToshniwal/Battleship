@@ -26,13 +26,13 @@ void main() {
   float fresnel = 1.0 - abs(dot(vNormal, vViewDir));
   fresnel = pow(fresnel, 3.0);
 
-  vec3 hazeColor = vec3(0.12, 0.14, 0.22);
+  vec3 hazeColor = vec3(0.06, 0.07, 0.10);
 
-  float baseOpacity = 0.03;
-  float fresnelOpacity = fresnel * 0.05;
+  float baseOpacity = 0.05;
+  float fresnelOpacity = fresnel * 0.08;
   float totalOpacity = baseOpacity + fresnelOpacity;
 
-  totalOpacity = clamp(totalOpacity, 0.0, 0.08);
+  totalOpacity = clamp(totalOpacity, 0.0, 0.12);
 
   gl_FragColor = vec4(hazeColor, totalOpacity);
 }

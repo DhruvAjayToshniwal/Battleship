@@ -35,9 +35,6 @@ htmlcov/
 # Database
 *.db
 
-# Tauri sidecar binaries
-frontend/src-tauri/binaries/
-
 # Build artifacts
 *.spec
 

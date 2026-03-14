@@ -125,7 +125,7 @@ export default function CinematicCameraController({
       targetPosRef.current.set(...shot.position);
       targetLookRef.current.set(...shot.target);
       targetFovRef.current = shot.fov;
-      lerpSpeedRef.current = 3;
+      lerpSpeedRef.current = 1.5;
     } else if (mode === "playerFire") {
       fireTimeRef.current += clampedDelta;
       if (fireTimeRef.current < 2.5) {
@@ -144,7 +144,7 @@ export default function CinematicCameraController({
         );
         targetLookRef.current.copy(fireTargetVec);
         targetFovRef.current = missileShot.fov;
-        lerpSpeedRef.current = 5;
+        lerpSpeedRef.current = 3;
 
         if (fireTimeRef.current > 0.8 && fireTimeRef.current < 0.85) {
           try {
@@ -164,13 +164,13 @@ export default function CinematicCameraController({
         targetPosRef.current.set(...shot.position);
         targetLookRef.current.set(...shot.target);
         targetFovRef.current = shot.fov;
-        lerpSpeedRef.current = 4;
+        lerpSpeedRef.current = 2;
       } else {
         modeRef.current = "idle";
         fireActiveRef.current = false;
       }
     } else if (mode === "victoryOrbit") {
-      orbitAngleRef.current += clampedDelta * 0.3;
+      orbitAngleRef.current += clampedDelta * 0.15;
       const radius = 22;
       const height = 12 + Math.sin(orbitAngleRef.current * 0.5) * 3;
       targetPosRef.current.set(

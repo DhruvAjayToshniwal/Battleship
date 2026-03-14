@@ -1,6 +1,13 @@
 # Battleship
 
-A full-stack Battleship game with 3D graphics, AI opponents, real-time multiplayer, and desktop packaging.
+A full-stack Battleship game with 3D graphics, AI opponents, and real-time multiplayer.
+
+## Live Demo
+
+- **Play:** https://battleship-eight-sage.vercel.app
+- **API:** https://battleship-x7ep.onrender.com
+
+> First backend request may take a moment if the free Render instance is waking from a cold start.
 
 ## Features
 
@@ -10,7 +17,6 @@ A full-stack Battleship game with 3D graphics, AI opponents, real-time multiplay
 - **Refresh Persistence** — Browser refresh mid-game restores your session automatically
 - **Anti-Cheat** — Server-authoritative game logic; enemy ship positions hidden until sunk
 - **Game History** — Browse completed games with stats, accuracy, and move counts
-- **Desktop App** — Tauri v2 packaging with Python sidecar for native desktop builds
 
 ## Tech Stack
 
@@ -19,7 +25,6 @@ A full-stack Battleship game with 3D graphics, AI opponents, real-time multiplay
 | Frontend | React, TypeScript, Vite, Three.js (React Three Fiber), Framer Motion, Tailwind CSS |
 | Backend | Python, FastAPI, SQLAlchemy (async), SQLite |
 | Real-time | WebSockets (native FastAPI) |
-| Desktop | Tauri v2 with Python sidecar |
 
 ## Quick Start
 
@@ -77,7 +82,7 @@ Battleship/
     tests/          # 70 backend tests
   frontend/
     src/
-      components/   # HUD, overlays, radar, ship placement
+      components/   # HUD, overlays, ship placement
       hooks/        # Game state, battle sequence, real-time, session
       pages/        # Menu, Lobby, Game, History
       scene/        # Three.js 3D scene components

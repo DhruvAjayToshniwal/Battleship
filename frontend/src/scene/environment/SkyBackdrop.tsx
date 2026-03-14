@@ -48,17 +48,17 @@ void main() {
   vec3 dir = normalize(vPosition);
   float elevation = dir.y;
 
-  vec3 topColor = vec3(0.02, 0.03, 0.08);
-  vec3 midColor = vec3(0.04, 0.06, 0.18);
-  vec3 horizonColor = vec3(0.08, 0.06, 0.12);
-  vec3 bottomGlow = vec3(0.12, 0.08, 0.06);
+  vec3 topColor = vec3(0.01, 0.01, 0.03);
+  vec3 midColor = vec3(0.02, 0.03, 0.08);
+  vec3 horizonColor = vec3(0.04, 0.03, 0.06);
+  vec3 bottomGlow = vec3(0.06, 0.04, 0.03);
 
   vec3 skyColor = mix(bottomGlow, horizonColor, smoothstep(-0.1, 0.0, elevation));
   skyColor = mix(skyColor, midColor, smoothstep(0.0, 0.3, elevation));
   skyColor = mix(skyColor, topColor, smoothstep(0.3, 0.8, elevation));
 
   float horizonLine = exp(-pow((elevation - 0.0) * 20.0, 2.0));
-  skyColor += vec3(0.15, 0.1, 0.05) * horizonLine * 0.3;
+  skyColor += vec3(0.08, 0.05, 0.03) * horizonLine * 0.2;
 
   vec2 starUv = vec2(atan(dir.x, dir.z) * 15.0, elevation * 30.0);
   for (int layer = 0; layer < 3; layer++) {

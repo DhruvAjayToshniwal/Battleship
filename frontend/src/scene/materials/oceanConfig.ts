@@ -26,10 +26,10 @@ void main() {
   vUv = uv;
   vec3 pos = position;
 
-  vec3 w1 = gerstnerWave(pos.xz, 0.22, 0.7, 0.6, vec2(1.0, 0.4), 0.6, 0.0);
-  vec3 w2 = gerstnerWave(pos.xz, 0.14, 1.2, 0.5, vec2(-0.6, 1.0), 0.9, 1.3);
-  vec3 w3 = gerstnerWave(pos.xz, 0.08, 2.0, 0.4, vec2(0.8, -0.5), 1.4, 2.7);
-  vec3 w4 = gerstnerWave(pos.xz, 0.04, 3.5, 0.35, vec2(-0.3, -0.9), 2.0, 4.1);
+  vec3 w1 = gerstnerWave(pos.xz, 0.16, 0.7, 0.5, vec2(1.0, 0.4), 0.4, 0.0);
+  vec3 w2 = gerstnerWave(pos.xz, 0.10, 1.2, 0.4, vec2(-0.6, 1.0), 0.6, 1.3);
+  vec3 w3 = gerstnerWave(pos.xz, 0.05, 2.0, 0.3, vec2(0.8, -0.5), 1.0, 2.7);
+  vec3 w4 = gerstnerWave(pos.xz, 0.02, 3.5, 0.25, vec2(-0.3, -0.9), 1.4, 4.1);
 
   vec3 totalDisplacement = w1 + w2 + w3 + w4;
   pos.x += totalDisplacement.x;
@@ -40,14 +40,14 @@ void main() {
 
   float eps = 0.1;
 
-  vec3 dxW1 = gerstnerWave(vec2(position.x + eps, position.z), 0.22, 0.7, 0.6, vec2(1.0, 0.4), 0.6, 0.0);
-  vec3 dxW2 = gerstnerWave(vec2(position.x + eps, position.z), 0.14, 1.2, 0.5, vec2(-0.6, 1.0), 0.9, 1.3);
-  vec3 dxW3 = gerstnerWave(vec2(position.x + eps, position.z), 0.08, 2.0, 0.4, vec2(0.8, -0.5), 1.4, 2.7);
+  vec3 dxW1 = gerstnerWave(vec2(position.x + eps, position.z), 0.16, 0.7, 0.5, vec2(1.0, 0.4), 0.4, 0.0);
+  vec3 dxW2 = gerstnerWave(vec2(position.x + eps, position.z), 0.10, 1.2, 0.4, vec2(-0.6, 1.0), 0.6, 1.3);
+  vec3 dxW3 = gerstnerWave(vec2(position.x + eps, position.z), 0.05, 2.0, 0.3, vec2(0.8, -0.5), 1.0, 2.7);
   float dxHeight = (dxW1 + dxW2 + dxW3).y;
 
-  vec3 dzW1 = gerstnerWave(vec2(position.x, position.z + eps), 0.22, 0.7, 0.6, vec2(1.0, 0.4), 0.6, 0.0);
-  vec3 dzW2 = gerstnerWave(vec2(position.x, position.z + eps), 0.14, 1.2, 0.5, vec2(-0.6, 1.0), 0.9, 1.3);
-  vec3 dzW3 = gerstnerWave(vec2(position.x, position.z + eps), 0.08, 2.0, 0.4, vec2(0.8, -0.5), 1.4, 2.7);
+  vec3 dzW1 = gerstnerWave(vec2(position.x, position.z + eps), 0.16, 0.7, 0.5, vec2(1.0, 0.4), 0.4, 0.0);
+  vec3 dzW2 = gerstnerWave(vec2(position.x, position.z + eps), 0.10, 1.2, 0.4, vec2(-0.6, 1.0), 0.6, 1.3);
+  vec3 dzW3 = gerstnerWave(vec2(position.x, position.z + eps), 0.05, 2.0, 0.3, vec2(0.8, -0.5), 1.0, 2.7);
   float dzHeight = (dzW1 + dzW2 + dzW3).y;
 
   vec3 tangentX = normalize(vec3(eps, dxHeight - totalDisplacement.y, 0.0));
@@ -147,10 +147,10 @@ export function createOceanMaterial(): THREE.ShaderMaterial {
     uniforms: {
       uTime: { value: 0.0 },
       uSunDirection: { value: new THREE.Vector3(0.3, 1.0, 0.5) },
-      uWaterColor: { value: new THREE.Color(0.05, 0.2, 0.32) },
-      uDeepColor: { value: new THREE.Color(0.008, 0.03, 0.07) },
-      uFoamColor: { value: new THREE.Color(0.7, 0.85, 0.9) },
-      uOpacity: { value: 0.92 },
+      uWaterColor: { value: new THREE.Color(0.03, 0.12, 0.2) },
+      uDeepColor: { value: new THREE.Color(0.005, 0.02, 0.05) },
+      uFoamColor: { value: new THREE.Color(0.5, 0.6, 0.65) },
+      uOpacity: { value: 0.95 },
     },
     transparent: true,
     side: THREE.DoubleSide,
