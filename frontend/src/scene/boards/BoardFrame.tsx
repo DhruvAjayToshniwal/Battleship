@@ -1,3 +1,45 @@
+import { useRef, useMemo } from 'react';
+import { useFrame } from '@react-three/fiber';
+import * as THREE from 'three';
+import { createBoardGlowMaterial } from '../materials/boardGlowMaterial';
+
+interface GlowBarProps {
+  position: [number, number, number];
+  args: [number, number, number];
+  color: THREE.Color;
+}
+
+function GlowBar({ position, args, color }: GlowBarProps) {
+  const materialRef = useRef<THREE.ShaderMaterial>(null);
+
+  const material = useMemo(() => {
+    try {
+      return createBoardGlowMaterial(color, 0.5);
+    } catch {
+      return null;
+    }
+  }, [color]);
+
+  useFrame(({ clock }) => {
+    try {
+      if (materialRef.current && materialRef.current.uniforms) {
+        materialRef.current.uniforms.uTime.value = clock.getElapsedTime();
+      }
+    } catch {
+      // noop
+    }
+  });
+
+  if (!material) return null;
+
+  return (
+    <mesh position={[position[0], position[1] + 0.02, position[2]]}>
+      <boxGeometry args={[args[0] + 0.04, args[1] + 0.02, args[2] + 0.04]} />
+      <primitive object={material} ref={materialRef} attach="material" />
+    </mesh>
+  );
+}
+
 interface BoardFrameProps {
   size?: number;
   color?: string;
@@ -14,6 +56,8 @@ export default function BoardFrame({
   const barHeight = 0.12;
   const longLength = size + barDepth * 2;
   const cornerSize = barDepth + 0.06;
+
+  const glowColorObj = useMemo(() => new THREE.Color(glowColor), [glowColor]);
 
   const bars: { pos: [number, number, number]; args: [number, number, number] }[] = [
     { pos: [0, barHeight / 2, -half - barDepth / 2], args: [longLength, barHeight, barDepth] },
@@ -32,16 +76,19 @@ export default function BoardFrame({
   return (
     <group>
       {bars.map((bar, i) => (
-        <mesh key={`bar-${i}`} position={bar.pos}>
-          <boxGeometry args={bar.args} />
-          <meshStandardMaterial
-            color={color}
-            emissive={glowColor}
-            emissiveIntensity={0.4}
-            metalness={0.7}
-            roughness={0.3}
-          />
-        </mesh>
+        <group key={`bar-group-${i}`}>
+          <mesh position={bar.pos}>
+            <boxGeometry args={bar.args} />
+            <meshStandardMaterial
+              color={color}
+              emissive={glowColor}
+              emissiveIntensity={0.4}
+              metalness={0.7}
+              roughness={0.3}
+            />
+          </mesh>
+          <GlowBar position={bar.pos} args={bar.args} color={glowColorObj} />
+        </group>
       ))}
 
       {bars.map((bar, i) => (

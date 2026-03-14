@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import * as api from '../services/api';
 import { saveSession } from '../services/session';
 import { useRealtimeRoom } from '../hooks/useRealtimeRoom';
+import LobbyOverlay from '../components/overlays/LobbyOverlay';
 
 interface LobbyPageProps {
   onGameReady: (params: {
@@ -172,83 +173,12 @@ export default function LobbyPage({ onGameReady, onBack }: LobbyPageProps) {
         </motion.div>
       )}
 
-      {lobbyState === 'waiting' && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="flex flex-col items-center gap-6"
-        >
-          <h2
-            className="text-2xl font-bold tracking-[0.2em] uppercase"
-            style={{ color: '#38bdf8' }}
-          >
-            WAITING FOR OPPONENT
-          </h2>
-
-          <div
-            className="px-8 py-6 rounded text-center"
-            style={{
-              background: 'rgba(10, 14, 26, 0.9)',
-              border: '1px solid #38bdf840',
-            }}
-          >
-            <p className="text-xs tracking-widest uppercase mb-3" style={{ color: '#64748b' }}>
-              ROOM CODE
-            </p>
-            <p
-              className="text-5xl font-bold tracking-[0.5em] font-mono"
-              style={{
-                color: '#fbbf24',
-                textShadow: '0 0 20px rgba(251, 191, 36, 0.4)',
-              }}
-            >
-              {roomCode}
-            </p>
-            <p className="text-xs tracking-widest uppercase mt-4" style={{ color: '#64748b' }}>
-              Share this code with your opponent
-            </p>
-          </div>
-
-          <div className="flex items-center gap-3 mt-4">
-            <div
-              className="w-3 h-3 rounded-full"
-              style={{
-                background: '#22c55e',
-                boxShadow: '0 0 8px #22c55e',
-              }}
-            />
-            <span className="text-xs tracking-widest uppercase" style={{ color: '#94a3b8' }}>
-              Player 1 (You) — Ready
-            </span>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <motion.div
-              animate={{ opacity: [0.3, 1, 0.3] }}
-              transition={{ duration: 1.5, repeat: Infinity }}
-              className="w-3 h-3 rounded-full"
-              style={{ background: '#64748b' }}
-            />
-            <span className="text-xs tracking-widest uppercase" style={{ color: '#64748b' }}>
-              {opponentName ? `${opponentName} — Joined!` : 'Player 2 — Waiting...'}
-            </span>
-          </div>
-
-          <motion.button
-            whileHover={{ scale: 1.03 }}
-            whileTap={{ scale: 0.97 }}
-            onClick={onBack}
-            className="px-6 py-2 text-xs font-bold tracking-[0.3em] uppercase cursor-pointer rounded mt-6"
-            style={{
-              background: 'transparent',
-              border: '1px solid #64748b40',
-              color: '#64748b',
-            }}
-          >
-            CANCEL
-          </motion.button>
-        </motion.div>
-      )}
+      <LobbyOverlay
+        visible={lobbyState === 'waiting'}
+        roomCode={roomCode}
+        opponentConnected={!!opponentName}
+        onCancel={onBack}
+      />
 
       {lobbyState === 'joining' && (
         <motion.div

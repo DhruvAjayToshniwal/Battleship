@@ -1,6 +1,10 @@
 import * as THREE from 'three'
 
-export default function LightingRig() {
+interface LightingRigProps {
+  shadowMapSize?: number;
+}
+
+export default function LightingRig({ shadowMapSize = 2048 }: LightingRigProps) {
   return (
     <>
       <directionalLight
@@ -12,8 +16,8 @@ export default function LightingRig() {
         shadow-camera-right={20}
         shadow-camera-top={20}
         shadow-camera-bottom={-20}
-        shadow-mapSize-width={2048}
-        shadow-mapSize-height={2048}
+        shadow-mapSize-width={shadowMapSize}
+        shadow-mapSize-height={shadowMapSize}
       />
 
       <directionalLight
