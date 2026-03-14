@@ -27,6 +27,7 @@ function App() {
     playerId: null,
     playerSlot: null,
   });
+  const [playerName, setPlayerName] = useState('Player');
 
   const sessionRestore = useSessionRestore();
 
@@ -42,7 +43,8 @@ function App() {
     });
   }, []);
 
-  const handlePlayAI = useCallback(() => {
+  const handlePlayAI = useCallback((name: string) => {
+    setPlayerName(name);
     setGameParams({
       mode: 'ai',
       roomId: null,
@@ -53,7 +55,8 @@ function App() {
     setPage('game');
   }, []);
 
-  const handlePlayMultiplayer = useCallback(() => {
+  const handlePlayMultiplayer = useCallback((name: string) => {
+    setPlayerName(name);
     setPage('lobby');
   }, []);
 
@@ -101,6 +104,7 @@ function App() {
           playerToken={session.playerToken}
           playerId={session.playerId}
           playerSlot={session.playerSlot}
+          playerName={playerName}
           onBackToMenu={navigateToMenu}
         />
       );
@@ -120,6 +124,7 @@ function App() {
   if (page === 'lobby') {
     return (
       <LobbyPage
+        playerName={playerName}
         onGameReady={handleGameReady}
         onBack={navigateToMenu}
       />
@@ -134,6 +139,7 @@ function App() {
         playerToken={gameParams.playerToken}
         playerId={gameParams.playerId}
         playerSlot={gameParams.playerSlot}
+        playerName={playerName}
         onBackToMenu={navigateToMenu}
       />
     );

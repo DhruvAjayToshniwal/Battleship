@@ -6,6 +6,7 @@ import { useRealtimeRoom } from '../hooks/useRealtimeRoom';
 import LobbyOverlay from '../components/overlays/LobbyOverlay';
 
 interface LobbyPageProps {
+  playerName: string;
   onGameReady: (params: {
     roomId: string;
     playerToken: string;
@@ -18,7 +19,7 @@ interface LobbyPageProps {
 
 type LobbyState = 'choose' | 'creating' | 'waiting' | 'joining';
 
-export default function LobbyPage({ onGameReady, onBack }: LobbyPageProps) {
+export default function LobbyPage({ playerName, onGameReady, onBack }: LobbyPageProps) {
   const [lobbyState, setLobbyState] = useState<LobbyState>('choose');
   const [roomCode, setRoomCode] = useState('');
   const [joinCode, setJoinCode] = useState('');
@@ -53,7 +54,7 @@ export default function LobbyPage({ onGameReady, onBack }: LobbyPageProps) {
     try {
       setLoading(true);
       setError(null);
-      const result = await api.createRoom('human', 'Player');
+      const result = await api.createRoom('human', playerName);
       setRoomCode(result.room_code);
       setRoomId(result.room_id);
       setPlayerToken(result.client_token);
@@ -85,7 +86,7 @@ export default function LobbyPage({ onGameReady, onBack }: LobbyPageProps) {
       }
       setLoading(true);
       setError(null);
-      const result = await api.joinRoom(joinCode.toUpperCase());
+      const result = await api.joinRoom(joinCode.toUpperCase(), playerName);
 
       saveSession({
         roomId: result.room_id,

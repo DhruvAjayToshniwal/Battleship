@@ -14,6 +14,7 @@ interface CommandHUDProps {
   onChangeDifficulty: (d: Difficulty) => void;
   loading: boolean;
   mode?: 'ai' | 'human';
+  playerName?: string;
   onBackToMenu?: () => void;
 }
 
@@ -25,6 +26,7 @@ export default function CommandHUD({
   difficulty,
   onRestart,
   mode = 'ai',
+  playerName = 'Player',
   onBackToMenu,
 }: CommandHUDProps) {
   return (
@@ -36,14 +38,14 @@ export default function CommandHUD({
       {gameState && (
         <>
           <FleetPanel
-            title="Your Fleet"
+            title={`${playerName}'s Fleet`}
             shipsRemaining={gameState.player_ships_remaining}
             shotsCount={gameState.ai_shots.length}
             accentColor="#22d3ee"
             side="left"
           />
           <FleetPanel
-            title="Enemy Fleet"
+            title={mode === 'ai' ? 'Enemy Fleet' : 'Opponent Fleet'}
             shipsRemaining={gameState.ai_ships_remaining}
             shotsCount={gameState.player_shots.length}
             accentColor="#ef4444"
@@ -58,7 +60,7 @@ export default function CommandHUD({
             className="text-[10px] font-bold tracking-widest uppercase"
             style={{ color: 'rgba(34, 211, 238, 0.4)' }}
           >
-            YOUR WATERS
+            {playerName.toUpperCase()}'S WATERS
           </span>
           <span
             className="text-[10px] font-bold tracking-widest uppercase"

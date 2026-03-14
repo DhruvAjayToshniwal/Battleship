@@ -17,6 +17,7 @@ interface UseGameOptions {
   roomId?: string | null;
   playerToken?: string | null;
   playerId?: string | null;
+  playerName?: string;
 }
 
 export function useGame(options: UseGameOptions = {}) {
@@ -26,6 +27,7 @@ export function useGame(options: UseGameOptions = {}) {
     mode,
     roomId: options.roomId,
     playerToken: options.playerToken,
+    playerName: options.playerName,
   });
   const placement = useShipPlacement();
   const audio = useAudioDirector();

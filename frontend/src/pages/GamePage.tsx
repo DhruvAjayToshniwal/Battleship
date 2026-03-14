@@ -25,6 +25,7 @@ interface GamePageProps {
   playerToken?: string | null;
   playerId?: string | null;
   playerSlot?: string | null;
+  playerName?: string;
   onBackToMenu?: () => void;
 }
 
@@ -33,9 +34,10 @@ export default function GamePage({
   roomId = null,
   playerToken = null,
   playerId = null,
+  playerName = 'Player',
   onBackToMenu,
 }: GamePageProps) {
-  const game = useGame({ mode, roomId, playerToken, playerId });
+  const game = useGame({ mode, roomId, playerToken, playerId, playerName });
 
   const [hoverCoord, setHoverCoord] = useState<[number, number] | null>(null);
   const [enemyHoverCell, setEnemyHoverCell] = useState<[number, number] | null>(null);
@@ -296,6 +298,7 @@ export default function GamePage({
         onChangeDifficulty={game.changeDifficulty}
         loading={game.loading}
         mode={mode}
+        playerName={playerName}
         onBackToMenu={handleBackToMenu}
       />
 

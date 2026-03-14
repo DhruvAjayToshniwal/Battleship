@@ -8,6 +8,7 @@ interface UseGameApiStateOptions {
   mode?: GameMode;
   roomId?: string | null;
   playerToken?: string | null;
+  playerName?: string;
 }
 
 export function useGameApiState(options: UseGameApiStateOptions = {}) {
@@ -19,6 +20,7 @@ export function useGameApiState(options: UseGameApiStateOptions = {}) {
 
   const mode = options.mode ?? 'ai';
   const token = options.playerToken ?? null;
+  const playerName = options.playerName ?? 'Player';
 
   const clearError = useCallback(() => setError(null), []);
 
@@ -27,7 +29,7 @@ export function useGameApiState(options: UseGameApiStateOptions = {}) {
     setLoading(true);
     setError(null);
     try {
-      const result = await api.createRoom('ai', 'Player', selectedDifficulty);
+      const result = await api.createRoom('ai', playerName, selectedDifficulty);
       setDifficulty(selectedDifficulty);
       setGameId(result.room_id);
       setGameState(null);

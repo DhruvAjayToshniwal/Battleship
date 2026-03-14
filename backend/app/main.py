@@ -25,7 +25,14 @@ async def lifespan(application: FastAPI):
 		pass
 
 
-app = FastAPI(title="Battleship API", version="2.0.0", lifespan=lifespan)
+app = FastAPI(
+	title="Battleship API",
+	version="2.0.0",
+	lifespan=lifespan,
+	docs_url=None,
+	redoc_url=None,
+	openapi_url=None,
+)
 
 settings = SettingsFactory.get()
 allowed_origins = settings.CORS_ORIGINS.split(",")
