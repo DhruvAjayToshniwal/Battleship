@@ -6,6 +6,7 @@ from app.engine.game_engine import GameEngine
 from app.models.schemas import ShotResult
 from app.repositories.games import GameRepository
 from app.repositories.history import HistoryRepository
+from app.repositories.players import PlayerRepository
 from app.repositories.rooms import RoomRepository
 
 
@@ -156,6 +157,24 @@ class AIGameService:
 							player.id if engine.game_status == "player_wins" else "ai"
 						)
 						await room_repo.set_winner(room_id, winner_id)
+
+						try:
+							if player.client_id:
+								player_repo = PlayerRepository(session)
+								player_shots_count = len(engine.player_shots)
+								player_hits_count = sum(
+									1
+									for s in engine.player_shots
+									if s.get("result") in ("hit", "sunk")
+								)
+								await player_repo.record_game_result(
+									player.client_id,
+									won=engine.game_status == "player_wins",
+									shots=player_shots_count,
+									hits=player_hits_count,
+								)
+						except Exception:
+							pass
 
 					return {
 						"player_shot": player_shot,

@@ -78,6 +78,7 @@ class CreateRoomRequest(BaseModel):
 	mode: str = "human"
 	display_name: str = "Player"
 	difficulty: str = "hard"
+	client_id: Optional[str] = None
 
 
 class CreateRoomResponse(BaseModel):
@@ -92,6 +93,7 @@ class CreateRoomResponse(BaseModel):
 class JoinRoomRequest(BaseModel):
 	room_code: str
 	display_name: str = "Player"
+	client_id: Optional[str] = None
 
 
 class JoinRoomResponse(BaseModel):
@@ -193,6 +195,18 @@ class GameHistoryDetailResponse(BaseModel):
 	created_at: Optional[str] = None
 	players: list[dict]
 	moves: list[MoveDetail]
+
+
+class PlayerStatsResponse(BaseModel):
+	client_id: str
+	display_name: str
+	wins: int
+	losses: int
+	games_played: int
+	total_shots: int
+	total_hits: int
+	hit_rate: float
+	created_at: Optional[str] = None
 
 
 class WsEvent(BaseModel):

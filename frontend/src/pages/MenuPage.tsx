@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { colors } from '../design/theme';
 import { textStyle, fontFamily } from '../design/typography';
 import { duration, ease, stagger } from '../design/motion';
 import { buttonStyle, buttonHoverStyle, inputStyle } from '../design/components';
+import { getPlayerStats, type PlayerStats } from '../services/api';
 
 interface MenuPageProps {
   onPlayAI: (playerName: string) => void;
@@ -23,6 +24,11 @@ export default function MenuPage({
       return '';
     }
   });
+  const [stats, setStats] = useState<PlayerStats | null>(null);
+
+  useEffect(() => {
+    getPlayerStats().then(setStats).catch(() => {});
+  }, []);
 
   const handleNameChange = (value: string) => {
     const trimmed = value.slice(0, 16);
@@ -92,6 +98,23 @@ export default function MenuPage({
         />
       </motion.div>
 
+      {stats && stats.games_played > 0 && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: duration.slow, delay: 0.7, ease: ease.default }}
+          className="mb-12 flex gap-8"
+        >
+          <StatItem label="W" value={String(stats.wins)} />
+          <StatItem label="L" value={String(stats.losses)} />
+          <StatItem
+            label="WIN%"
+            value={`${Math.round((stats.wins / stats.games_played) * 100)}`}
+          />
+          <StatItem label="HIT%" value={`${stats.hit_rate}`} />
+        </motion.div>
+      )}
+
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -115,6 +138,32 @@ export default function MenuPage({
       >
         Strategic Naval Warfare Simulator
       </motion.p>
+    </div>
+  );
+}
+
+function StatItem({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="text-center">
+      <p
+        style={{
+          fontFamily: fontFamily.mono,
+          fontSize: '20px',
+          color: colors.text.primary,
+          letterSpacing: '0.05em',
+        }}
+      >
+        {value}
+      </p>
+      <p
+        style={{
+          ...textStyle.caption,
+          color: colors.text.tertiary,
+          marginTop: '4px',
+        }}
+      >
+        {label}
+      </p>
     </div>
   );
 }

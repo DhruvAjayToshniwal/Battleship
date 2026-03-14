@@ -1,8 +1,18 @@
 import axios from 'axios';
+import { getClientId } from './identity';
 
 const baseURL = import.meta.env.VITE_API_URL || '';
 
 const api = axios.create({ baseURL });
+
+api.interceptors.request.use((config) => {
+  try {
+    config.headers['X-Client-Id'] = getClientId();
+  } catch (e) {
+    console.error('Failed to attach client ID:', e);
+  }
+  return config;
+});
 
 export interface ShipPlacement {
   name: string;
@@ -139,6 +149,7 @@ export async function createRoom(
     mode,
     display_name: displayName,
     difficulty,
+    client_id: getClientId(),
   });
   return response.data;
 }
@@ -150,6 +161,7 @@ export async function joinRoom(
   const response = await api.post('/rooms/join', {
     room_code: roomCode,
     display_name: displayName,
+    client_id: getClientId(),
   });
   return response.data;
 }
@@ -206,5 +218,26 @@ export async function getHistory(
     params: { limit, offset },
   });
   return response.data;
+}
+
+export interface PlayerStats {
+  client_id: string;
+  display_name: string;
+  wins: number;
+  losses: number;
+  games_played: number;
+  total_shots: number;
+  total_hits: number;
+  hit_rate: number;
+  created_at: string;
+}
+
+export async function getPlayerStats(): Promise<PlayerStats | null> {
+  try {
+    const response = await api.get('/players/me/stats');
+    return response.data;
+  } catch {
+    return null;
+  }
 }
 

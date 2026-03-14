@@ -49,6 +49,7 @@ class PlayerSession(Base):
 	player_slot: Mapped[str] = mapped_column(String(10))
 	display_name: Mapped[str] = mapped_column(String(50), default="Player")
 	client_token: Mapped[str] = mapped_column(String(64), unique=True, index=True)
+	client_id: Mapped[str | None] = mapped_column(String(36), nullable=True, index=True)
 	connected: Mapped[bool] = mapped_column(Boolean, default=False)
 	created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
 	updated_at: Mapped[datetime] = mapped_column(
@@ -97,3 +98,20 @@ class MoveHistory(Base):
 	created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
 
 	room: Mapped["GameRoom"] = relationship("GameRoom", back_populates="moves")
+
+
+class PlayerProfile(Base):
+	__tablename__ = "player_profiles"
+
+	id: Mapped[str] = mapped_column(String, primary_key=True, default=generate_uuid)
+	client_id: Mapped[str] = mapped_column(String(36), unique=True, index=True)
+	display_name: Mapped[str] = mapped_column(String(50), default="Player")
+	wins: Mapped[int] = mapped_column(Integer, default=0)
+	losses: Mapped[int] = mapped_column(Integer, default=0)
+	games_played: Mapped[int] = mapped_column(Integer, default=0)
+	total_shots: Mapped[int] = mapped_column(Integer, default=0)
+	total_hits: Mapped[int] = mapped_column(Integer, default=0)
+	created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
+	updated_at: Mapped[datetime] = mapped_column(
+		DateTime, default=utc_now, onupdate=utc_now
+	)

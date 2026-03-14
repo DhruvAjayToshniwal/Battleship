@@ -2,6 +2,7 @@ from app.core.db import DatabaseManager
 from app.core.security import generate_room_code, generate_client_token
 from app.repositories.rooms import RoomRepository
 from app.repositories.games import GameRepository
+from app.repositories.players import PlayerRepository
 
 
 class RoomService:
@@ -18,7 +19,11 @@ class RoomService:
 		cls.instance = None
 
 	async def create_room(
-		self, mode: str, display_name: str = "Player", difficulty: str = "hard"
+		self,
+		mode: str,
+		display_name: str = "Player",
+		difficulty: str = "hard",
+		client_id: str | None = None,
 	) -> dict:
 		try:
 			db = DatabaseManager.get_instance()
@@ -36,6 +41,12 @@ class RoomService:
 					player = await room_repo.add_player(
 						room.id, "player1", display_name, client_token
 					)
+
+					if client_id:
+						player.client_id = client_id
+						player_repo = PlayerRepository(session)
+						await player_repo.get_or_create(client_id, display_name)
+						await session.flush()
 
 					if mode == "ai":
 						from app.services.ai_game_service import AIGameService
@@ -56,7 +67,12 @@ class RoomService:
 		except Exception as e:
 			raise RuntimeError(f"Failed to create room: {e}") from e
 
-	async def join_room(self, room_code: str, display_name: str = "Player") -> dict:
+	async def join_room(
+		self,
+		room_code: str,
+		display_name: str = "Player",
+		client_id: str | None = None,
+	) -> dict:
 		try:
 			db = DatabaseManager.get_instance()
 			async with db.get_session() as session:
@@ -81,6 +97,11 @@ class RoomService:
 					player = await room_repo.add_player(
 						room.id, "player2", display_name, client_token
 					)
+
+					if client_id:
+						player.client_id = client_id
+						player_repo = PlayerRepository(session)
+						await player_repo.get_or_create(client_id, display_name)
 
 					room.status = "placement"
 					await session.flush()

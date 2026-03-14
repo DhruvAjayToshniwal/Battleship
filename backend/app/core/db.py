@@ -1,3 +1,4 @@
+from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 from app.core.config import SettingsFactory
@@ -45,8 +46,20 @@ class DatabaseManager:
 
 			async with self.engine.begin() as conn:
 				await conn.run_sync(Base.metadata.create_all)
+				await self.run_migrations(conn)
 		except Exception as e:
 			raise RuntimeError(f"Failed to initialize database tables: {e}") from e
+
+	async def run_migrations(self, conn) -> None:
+		try:
+			result = await conn.execute(text("PRAGMA table_info(player_sessions)"))
+			columns = [row[1] for row in result.fetchall()]
+			if "client_id" not in columns:
+				await conn.execute(
+					text("ALTER TABLE player_sessions ADD COLUMN client_id VARCHAR(36)")
+				)
+		except Exception:
+			pass
 
 	@classmethod
 	async def reset(cls) -> None:

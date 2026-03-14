@@ -66,6 +66,25 @@ export function useGame(options: UseGameOptions = {}) {
     }
   }, [apiState, placement, battle, audio]);
 
+  const restoreGame = useCallback(async (restoredRoomId: string, restoredToken: string) => {
+    try {
+      apiState.setGameId(restoredRoomId);
+      const state = await apiState.refreshState(restoredRoomId, restoredToken);
+      if (state && 'game_status' in state) {
+        const status = (state as { game_status: string }).game_status;
+        if (status === 'playing') {
+          battle.startBattle();
+        } else if (status === 'player_wins' || status === 'ai_wins') {
+          battle.receiveGameUpdate(status, false);
+        }
+        return state;
+      }
+      return null;
+    } catch (e) {
+      return null;
+    }
+  }, [apiState, battle]);
+
   const confirmPlacement = useCallback(async () => {
     try {
       const gId = options.roomId ?? apiState.gameId;
@@ -184,6 +203,7 @@ export function useGame(options: UseGameOptions = {}) {
     mode,
 
     startGame,
+    restoreGame,
     placeShipAt,
     confirmPlacement,
     fireShot,

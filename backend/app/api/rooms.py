@@ -32,6 +32,7 @@ async def create_room(
 			mode=request.mode,
 			display_name=request.display_name,
 			difficulty=request.difficulty,
+			client_id=request.client_id,
 		)
 		return CreateRoomResponse(**result)
 	except ValueError as e:
@@ -57,6 +58,7 @@ async def join_room(request: JoinRoomRequest) -> JoinRoomResponse:
 		result = await service.join_room(
 			room_code=request.room_code,
 			display_name=request.display_name,
+			client_id=request.client_id,
 		)
 
 		manager = ConnectionManager.get_instance()
