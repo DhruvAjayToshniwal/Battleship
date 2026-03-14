@@ -2,8 +2,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.db import DatabaseManager
 from app.engine.adapter import GameEngineAdapter
-from app.engine.game_engine import GameEngine, parse_coordinate, format_coordinate
-from app.models.schemas import ShotResult, TurnResult
+from app.engine.game_engine import GameEngine
+from app.models.schemas import ShotResult
 from app.repositories.games import GameRepository
 from app.repositories.history import HistoryRepository
 from app.repositories.rooms import RoomRepository
