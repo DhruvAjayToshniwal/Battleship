@@ -20,7 +20,7 @@ export function useGameApiState(options: UseGameApiStateOptions = {}) {
   const [difficulty, setDifficulty] = useState<Difficulty>('hard');
 
   const mode = options.mode ?? 'ai';
-  const token = options.playerToken ?? null;
+  const [token, setToken] = useState<string | null>(options.playerToken ?? null);
   const playerName = options.playerName ?? 'Player';
 
   const clearError = useCallback(() => setError(null), []);
@@ -34,6 +34,7 @@ export function useGameApiState(options: UseGameApiStateOptions = {}) {
       const result = await api.createRoom('ai', playerName, selectedDifficulty, selectedBoardSize);
       setDifficulty(selectedDifficulty);
       setGameId(result.room_id);
+      setToken(result.client_token);
       setGameState(null);
       return result;
     } catch (err: unknown) {
@@ -128,5 +129,6 @@ export function useGameApiState(options: UseGameApiStateOptions = {}) {
     changeDifficulty,
     mode,
     token,
+    setToken,
   };
 }
