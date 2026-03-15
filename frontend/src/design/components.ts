@@ -1,11 +1,5 @@
 import { colors } from './theme'
 
-export const panelStyle: React.CSSProperties = {
-  background: colors.bg.deep,
-  border: `1px solid ${colors.border.hairline}`,
-  borderRadius: 0,
-}
-
 export const buttonStyle: React.CSSProperties = {
   background: 'transparent',
   border: `1px solid ${colors.border.subtle}`,
@@ -30,9 +24,3 @@ export const inputStyle: React.CSSProperties = {
   transition: 'border-color 0.6s ease',
 }
 
-export const ruleStyle: React.CSSProperties = {
-  border: 'none',
-  borderTop: `1px solid ${colors.border.hairline}`,
-  margin: 0,
-  width: '100%',
-}
