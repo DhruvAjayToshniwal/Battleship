@@ -11,8 +11,8 @@ interface OceanSurfaceProps {
 
 export default function OceanSurface({
   position = [0, 0, 0],
-  size = [80, 80],
-  segments = 192,
+  size = [100, 100],
+  segments = 64,
 }: OceanSurfaceProps) {
   const materialRef = useRef<THREE.ShaderMaterial>(null)
 

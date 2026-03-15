@@ -15,8 +15,8 @@ export default function BoardFrame({
   glowColor = '#38bdf8',
 }: BoardFrameProps) {
   const half = size / 2;
-  const barDepth = 0.2;
-  const barHeight = 0.12;
+  const barDepth = 0.22;
+  const barHeight = 0.15;
   const longLength = size + barDepth * 2;
   const cornerSize = barDepth + 0.06;
 
@@ -59,7 +59,7 @@ export default function BoardFrame({
     <group>
       {bars.map((bar, i) => (
         <group key={`bar-group-${i}`}>
-          <mesh position={bar.pos}>
+          <mesh position={bar.pos} castShadow receiveShadow>
             <boxGeometry args={bar.args} />
             <meshStandardMaterial
               color={color}
@@ -84,7 +84,7 @@ export default function BoardFrame({
 
       {bars.map((bar, i) => (
         <mesh key={`trim-${i}`} position={[bar.pos[0], barHeight + 0.005, bar.pos[2]]}>
-          <boxGeometry args={[bar.args[0], 0.01, bar.args[2]]} />
+          <boxGeometry args={[bar.args[0], 0.012, bar.args[2]]} />
           <meshStandardMaterial
             color={glowColor}
             emissive={glowColor}
@@ -96,7 +96,7 @@ export default function BoardFrame({
 
       {corners.map(([x, z], i) => (
         <group key={`corner-${i}`}>
-          <mesh position={[x, barHeight / 2, z]}>
+          <mesh position={[x, barHeight / 2, z]} castShadow>
             <boxGeometry args={[cornerSize, barHeight + 0.02, cornerSize]} />
             <meshStandardMaterial
               color={color}

@@ -24,6 +24,7 @@ interface EnemyBoard3DProps {
   shipCoordinates?: string[][];
   latestResult?: ShotResult | null;
   hoverCell?: [number, number] | null;
+  oceanSegments?: number;
 }
 
 interface EffectEntry {
@@ -42,6 +43,7 @@ export default function EnemyBoard3D({
   shipCoordinates = [],
   latestResult,
   hoverCell = null,
+  oceanSegments = 48,
 }: EnemyBoard3DProps) {
   const HALF_BOARD = boardSize / 2;
   const [effects, setEffects] = useState<EffectEntry[]>([]);
@@ -91,7 +93,7 @@ export default function EnemyBoard3D({
     grid.forEach((row, rowIdx) => {
       row.forEach((cellState, colIdx) => {
         if (cellState === 'hit') {
-          positions.push([colIdx - HALF_BOARD + 0.5, 0.1, rowIdx - HALF_BOARD + 0.5]);
+          positions.push([colIdx - HALF_BOARD + 0.5, 0.05, rowIdx - HALF_BOARD + 0.5]);
         }
       });
     });
@@ -101,20 +103,20 @@ export default function EnemyBoard3D({
   const targetLockPosition = useMemo((): [number, number, number] | null => {
     if (!hoverCell) return null;
     const [row, col] = hoverCell;
-    return [col - HALF_BOARD + 0.5, 0.02, row - HALF_BOARD + 0.5];
+    return [col - HALF_BOARD + 0.5, 0.01, row - HALF_BOARD + 0.5];
   }, [hoverCell]);
 
   return (
     <group position={position}>
-      <OceanSurface position={[0, -0.1, 0]} size={[boardSize + 2, boardSize + 2]} />
+      <OceanSurface position={[0, -0.35, 0]} size={[boardSize + 4, boardSize + 4]} segments={oceanSegments} />
 
-      <GridPlane position={[0, 0.02, 0]} size={boardSize} />
+      <GridPlane position={[0, 0.01, 0]} size={boardSize} />
 
       <BoardFrame color="#3f1e1e" glowColor="#ef4444" size={boardSize} />
 
       <BoardMarkers size={boardSize} />
 
-      <RadarSweep position={[0, 0.01, 0]} size={boardSize} active={isClickable} />
+      <RadarSweep position={[0, 0.005, 0]} size={boardSize} active={isClickable} />
 
       {grid.map((row, rowIdx) =>
         row.map((cellState, colIdx) => {
@@ -125,7 +127,7 @@ export default function EnemyBoard3D({
           return (
             <Cell
               key={coord}
-              position={[x, 0.02, z]}
+              position={[x, 0.01, z]}
               state={cellState}
               showShips={false}
               isClickable={isClickable && !cellState}

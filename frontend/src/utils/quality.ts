@@ -33,7 +33,7 @@ const QUALITY_PRESETS: Record<QualityLevel, QualitySettings> = {
     maxExplosionParticles: 20,
   },
   high: {
-    oceanSegments: 128,
+    oceanSegments: 80,
     shadowMapSize: 1024,
     particleMultiplier: 1.0,
     enableBloom: true,

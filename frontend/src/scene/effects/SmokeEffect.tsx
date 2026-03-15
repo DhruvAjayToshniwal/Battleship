@@ -6,7 +6,7 @@ interface SmokeEffectProps {
   position: [number, number, number];
 }
 
-const PARTICLE_COUNT = 8;
+const PARTICLE_COUNT = 4;
 
 export default function SmokeEffect({ position }: SmokeEffectProps) {
   const meshRef = useRef<THREE.InstancedMesh>(null);
@@ -50,23 +50,16 @@ export default function SmokeEffect({ position }: SmokeEffectProps) {
   return (
     <group position={position}>
       <instancedMesh ref={meshRef} args={[undefined, undefined, PARTICLE_COUNT]}>
-        <sphereGeometry args={[1, 6, 6]} />
+        <sphereGeometry args={[1, 4, 4]} />
         <meshStandardMaterial
           color="#888888"
-          emissive="#332200"
-          emissiveIntensity={0.2}
+          emissive="#442200"
+          emissiveIntensity={0.3}
           transparent
-          opacity={0.4}
+          opacity={0.35}
           depthWrite={false}
         />
       </instancedMesh>
-
-      <pointLight
-        color="#ff4400"
-        intensity={1.0}
-        distance={2.5}
-        position={[0, 0.4, 0]}
-      />
     </group>
   );
 }
