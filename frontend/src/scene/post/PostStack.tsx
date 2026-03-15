@@ -36,22 +36,42 @@ export default function PostStack({
   if (!enableBloom && !enableVignette) return null;
 
   try {
-    return (
-      <EffectComposer multisampling={0}>
-        {enableBloom && (
+    if (enableBloom && enableVignette) {
+      return (
+        <EffectComposer multisampling={0}>
           <Bloom
             intensity={0.4}
             luminanceThreshold={0.75}
             luminanceSmoothing={0.3}
             mipmapBlur
           />
-        )}
-        {enableVignette && (
           <Vignette
             offset={0.25}
             darkness={0.8}
           />
-        )}
+        </EffectComposer>
+      );
+    }
+
+    if (enableBloom) {
+      return (
+        <EffectComposer multisampling={0}>
+          <Bloom
+            intensity={0.4}
+            luminanceThreshold={0.75}
+            luminanceSmoothing={0.3}
+            mipmapBlur
+          />
+        </EffectComposer>
+      );
+    }
+
+    return (
+      <EffectComposer multisampling={0}>
+        <Vignette
+          offset={0.25}
+          darkness={0.8}
+        />
       </EffectComposer>
     );
   } catch {

@@ -17,7 +17,7 @@ export default memo(function Cell({
   onClick,
   isPreview = false,
   isClickable = false,
-  showShips = true,
+  showShips: _showShips = true,
   isEnemyBoard = false,
 }: CellProps) {
   const meshRef = useRef<THREE.Mesh>(null);
