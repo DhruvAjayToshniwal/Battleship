@@ -291,81 +291,6 @@ function getSuperstructure(size: number, isHorizontal: boolean, shipClass: ShipC
   return parts;
 }
 
-/* ──────── custom ship hull material (edge-lit for silhouette) ──────── */
-
-const HULL_VERT = `
-  varying vec3 vNormal;
-  varying vec3 vWorldPos;
-  void main() {
-    vNormal = normalize(normalMatrix * normal);
-    vec4 wp = modelMatrix * vec4(position, 1.0);
-    vWorldPos = wp.xyz;
-    gl_Position = projectionMatrix * viewMatrix * wp;
-  }
-`;
-
-const HULL_FRAG = `
-  uniform vec3 uColor;
-  uniform vec3 uEmissive;
-  uniform float uEmissiveIntensity;
-  uniform float uOpacity;
-  uniform float uDamage;
-
-  varying vec3 vNormal;
-  varying vec3 vWorldPos;
-
-  void main() {
-    vec3 viewDir = normalize(cameraPosition - vWorldPos);
-    vec3 n = normalize(vNormal);
-
-    // Base PBR-like diffuse
-    vec3 lightDir = normalize(vec3(0.4, 0.8, -0.5));
-    float NdotL = max(dot(n, lightDir), 0.0);
-    float ambient = 0.18;
-    vec3 diffuse = uColor * (ambient + NdotL * 0.7);
-
-    // Rim / silhouette edge light — makes ship shape readable against water
-    float rim = 1.0 - max(dot(viewDir, n), 0.0);
-    rim = pow(rim, 3.0);
-    vec3 rimColor = vec3(0.25, 0.45, 0.60);
-    diffuse += rimColor * rim * 0.35;
-
-    // Specular highlight
-    vec3 halfDir = normalize(lightDir + viewDir);
-    float spec = pow(max(dot(n, halfDir), 0.0), 64.0);
-    diffuse += vec3(0.5, 0.55, 0.6) * spec * 0.4;
-
-    // Damage tint: darken + warm shift
-    vec3 damageTint = mix(diffuse, vec3(0.15, 0.06, 0.02), uDamage * 0.6);
-
-    // Emissive
-    damageTint += uEmissive * uEmissiveIntensity;
-
-    // Waterline darkening — below world Y=0.08, darken hull
-    float waterline = smoothstep(0.04, 0.12, vWorldPos.y);
-    damageTint *= mix(0.55, 1.0, waterline);
-
-    gl_FragColor = vec4(damageTint, uOpacity);
-  }
-`;
-
-function createHullMaterial(color: string, damage: number, isPreview: boolean): THREE.ShaderMaterial {
-  return new THREE.ShaderMaterial({
-    vertexShader: HULL_VERT,
-    fragmentShader: HULL_FRAG,
-    uniforms: {
-      uColor: { value: new THREE.Color(isPreview ? '#22c55e' : color) },
-      uEmissive: { value: new THREE.Color(isPreview ? '#22c55e' : '#0a1520') },
-      uEmissiveIntensity: { value: isPreview ? 0.4 : 0.10 },
-      uOpacity: { value: isPreview ? 0.5 : 1.0 },
-      uDamage: { value: Math.min(damage, 1.0) },
-    },
-    transparent: isPreview,
-    side: THREE.FrontSide,
-    depthWrite: !isPreview,
-  });
-}
-
 /* ──────── main component ──────── */
 
 export default function ShipFactory({
@@ -375,7 +300,6 @@ export default function ShipFactory({
   showWake = false,
 }: ShipFactoryProps) {
   const groupRef = useRef<THREE.Group>(null);
-  const hullMatRef = useRef<THREE.ShaderMaterial>(null);
   const bobTimeRef = useRef(Math.random() * Math.PI * 2);
   const sinkRef = useRef(0);
 
@@ -395,15 +319,12 @@ export default function ShipFactory({
     [size, isHorizontal, shipClass],
   );
 
-  const hullMaterial = useMemo(
-    () => createHullMaterial('#3b4a5c', damage, isPreview),
-    [damage, isPreview],
-  );
-
   const superstructure = useMemo(
     () => isPreview ? [] : getSuperstructure(size, isHorizontal, shipClass),
     [size, isHorizontal, shipClass, isPreview],
   );
+
+  const hullColor = isPreview ? '#22c55e' : '#3b4a5c';
 
   useFrame((_, delta) => {
     if (!groupRef.current) return;
@@ -414,29 +335,28 @@ export default function ShipFactory({
     sinkRef.current += ((isSunk ? 1 : 0) - sinkRef.current) * dt * 0.8;
     const sink = sinkRef.current;
 
-    const bobAmp = 0.022 * (1 - sink);
-    const bobY = 0.05 + Math.sin(bobTimeRef.current * 0.8) * bobAmp - sink * 0.15;
+    const bobAmp = 0.025 * (1 - sink);
+    const bobY = 0.09 + Math.sin(bobTimeRef.current * 0.8) * bobAmp - sink * 0.12;
     groupRef.current.position.y = bobY;
 
-    const tilt = sink * 0.3 + damage * 0.06;
-    const roll = sink * 0.2;
+    const tilt = sink * 0.25 + damage * 0.05;
+    const roll = sink * 0.15;
     groupRef.current.rotation.x = tilt * (isHorizontal ? 0 : 1);
     groupRef.current.rotation.z = roll * (isHorizontal ? 1 : 0) + tilt * (isHorizontal ? 1 : 0);
-
-    // Update hull material damage uniform live
-    if (hullMatRef.current) {
-      hullMatRef.current.uniforms.uDamage.value = Math.min(damage, 1);
-    }
   });
 
   return (
-    <group ref={groupRef} position={[center[0], 0.05, center[1]]}>
+    <group ref={groupRef} position={[center[0], 0.09, center[1]]}>
       {/* Hull */}
       <mesh geometry={hullGeometry} castShadow receiveShadow>
-        <primitive
-          object={hullMaterial}
-          ref={hullMatRef}
-          attach="material"
+        <meshStandardMaterial
+          color={hullColor}
+          transparent={isPreview}
+          opacity={isPreview ? 0.5 : 1}
+          emissive={isPreview ? '#22c55e' : '#0f1923'}
+          emissiveIntensity={isPreview ? 0.4 : 0.15}
+          roughness={0.65}
+          metalness={0.45}
         />
       </mesh>
 
