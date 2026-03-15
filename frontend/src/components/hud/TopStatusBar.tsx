@@ -28,7 +28,7 @@ export default function TopStatusBar({ message, phase, isPlayerTurn }: TopStatus
           transition={{ duration: 0.6, ease: ease.default }}
           style={{
             ...textStyle.caption,
-            color: phase === 'playing' && isPlayerTurn ? colors.accent.silver : colors.text.secondary,
+            color: phase === 'playing' && isPlayerTurn ? '#e8e8e8' : '#c0c0c0',
           }}
         >
           {message}
