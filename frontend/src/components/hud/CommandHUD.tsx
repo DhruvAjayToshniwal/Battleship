@@ -79,9 +79,9 @@ export default function CommandHUD({
         </div>
       )}
 
-      {phase === 'playing' && (
+      {phase !== 'gameOver' && (
         <button
-          onClick={() => mode === 'human' && onBackToMenu ? onBackToMenu() : onRestart()}
+          onClick={() => onBackToMenu ? onBackToMenu() : onRestart()}
           className="fixed bottom-3 left-2 sm:left-4 z-20 cursor-pointer"
           style={{
             ...textStyle.caption,
