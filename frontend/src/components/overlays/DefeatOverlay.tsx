@@ -19,13 +19,14 @@ const difficulties: Difficulty[] = ['easy', 'medium', 'hard'];
 
 function computeStats(gameState: GameStateResponse | null) {
   if (!gameState) return null;
-  const shotsFired = gameState.player_shots.length;
-  const hits = gameState.player_shots.filter(
+  const shots = gameState.player_shots ?? [];
+  const shotsFired = shots.length;
+  const hits = shots.filter(
     (s) => s.result === 'hit' || s.result === 'sunk'
   ).length;
   const accuracy = shotsFired > 0 ? Math.round((hits / shotsFired) * 100) : 0;
-  const enemyShipsSunk = 5 - gameState.ai_ships_remaining;
-  const playerShipsRemaining = gameState.player_ships_remaining;
+  const enemyShipsSunk = 5 - (gameState.ai_ships_remaining ?? 5);
+  const playerShipsRemaining = gameState.player_ships_remaining ?? 0;
   return { shotsFired, hits, accuracy, enemyShipsSunk, playerShipsRemaining };
 }
 

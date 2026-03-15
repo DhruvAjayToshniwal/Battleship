@@ -13,36 +13,42 @@ export function buildGridFromState(
 
   if (board === 'player') {
     const pb = gameState.player_board;
-    for (const ship of pb.ships) {
-      for (const coord of ship.coordinates) {
+    if (!pb) return grid;
+    for (const ship of pb.ships ?? []) {
+      for (const coord of ship.coordinates ?? []) {
         const [r, c] = coordToRowCol(coord);
-        grid[r][c] = 'ship';
+        if (r >= 0 && r < boardSize && c >= 0 && c < boardSize) grid[r][c] = 'ship';
       }
-      for (const coord of ship.hits) {
+      for (const coord of ship.hits ?? []) {
         const [r, c] = coordToRowCol(coord);
-        grid[r][c] = 'hit';
+        if (r >= 0 && r < boardSize && c >= 0 && c < boardSize) grid[r][c] = 'hit';
       }
     }
-    for (const coord of pb.shots_received) {
+    for (const coord of pb.shots_received ?? []) {
       const [r, c] = coordToRowCol(coord);
-      if (grid[r][c] !== 'hit') {
-        grid[r][c] = grid[r][c] === 'ship' ? 'hit' : 'miss';
+      if (r >= 0 && r < boardSize && c >= 0 && c < boardSize) {
+        if (grid[r][c] !== 'hit') {
+          grid[r][c] = grid[r][c] === 'ship' ? 'hit' : 'miss';
+        }
       }
     }
   } else {
     const ab = gameState.ai_board;
-    for (const coord of ab.hits) {
+    if (!ab) return grid;
+    for (const coord of ab.hits ?? []) {
       const [r, c] = coordToRowCol(coord);
-      grid[r][c] = 'hit';
+      if (r >= 0 && r < boardSize && c >= 0 && c < boardSize) grid[r][c] = 'hit';
     }
-    for (const coord of ab.misses) {
+    for (const coord of ab.misses ?? []) {
       const [r, c] = coordToRowCol(coord);
-      grid[r][c] = 'miss';
+      if (r >= 0 && r < boardSize && c >= 0 && c < boardSize) grid[r][c] = 'miss';
     }
-    for (const ship of ab.ships) {
-      for (const coord of ship.coordinates) {
+    for (const ship of ab.ships ?? []) {
+      for (const coord of ship.coordinates ?? []) {
         const [r, c] = coordToRowCol(coord);
-        if (grid[r][c] !== 'hit') grid[r][c] = 'ship';
+        if (r >= 0 && r < boardSize && c >= 0 && c < boardSize) {
+          if (grid[r][c] !== 'hit') grid[r][c] = 'ship';
+        }
       }
     }
   }

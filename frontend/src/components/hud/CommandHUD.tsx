@@ -42,14 +42,14 @@ export default function CommandHUD({
           <FleetPanel
             title={`${playerName}'s Fleet`}
             shipsRemaining={gameState.player_ships_remaining}
-            shotsCount={gameState.ai_shots.length}
+            shotsCount={gameState.ai_shots?.length ?? 0}
             accentColor={colors.player}
             side="left"
           />
           <FleetPanel
             title={mode === 'ai' ? 'Enemy Fleet' : 'Opponent Fleet'}
             shipsRemaining={gameState.ai_ships_remaining}
-            shotsCount={gameState.player_shots.length}
+            shotsCount={gameState.player_shots?.length ?? 0}
             accentColor={colors.enemy}
             side="right"
           />
