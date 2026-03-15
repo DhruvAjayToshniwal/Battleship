@@ -106,6 +106,4 @@ Battleship/
 
 ## Documentation
 
-- [Approach & Design Decisions](docs/APPROACH.md)
-- [Architecture](docs/ARCHITECTURE.md)
-- [Deployment Guide](docs/DEPLOYMENT.md)
+- [Approach, Architecture & Writeup](WRITEUP.md)
