@@ -53,7 +53,7 @@ export default function Atmosphere() {
 
   return (
     <mesh>
-      <sphereGeometry args={[85, 48, 48]} />
+      <sphereGeometry args={[85, 24, 24]} />
       <shaderMaterial
         ref={materialRef}
         vertexShader={vertexShader}

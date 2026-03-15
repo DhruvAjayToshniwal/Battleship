@@ -81,6 +81,9 @@ export default function SceneRoot({
 function SceneContent(props: SceneRootProps) {
   const quality = useQuality();
 
+  // Board-local ocean uses fewer segments since it's much smaller than the global ocean
+  const boardOceanSegments = Math.min(quality.oceanSegments, 48);
+
   return (
     <>
       <LightingRig shadowMapSize={quality.shadowMapSize} />
@@ -105,6 +108,7 @@ function SceneContent(props: SceneRootProps) {
         shipCoordinates={props.playerShipCoordinates}
         previewCoords={props.previewCoords}
         latestResult={props.lastAiResult}
+        oceanSegments={boardOceanSegments}
       />
 
       <EnemyBoard3D
@@ -116,6 +120,7 @@ function SceneContent(props: SceneRootProps) {
         shipCoordinates={props.enemyShipCoordinates}
         latestResult={props.lastPlayerResult}
         hoverCell={props.enemyHoverCell}
+        oceanSegments={boardOceanSegments}
       />
 
       <Suspense fallback={null}>

@@ -23,6 +23,7 @@ interface PlayerBoard3DProps {
   shipCoordinates?: string[][];
   previewCoords?: string[] | null;
   latestResult?: ShotResult | null;
+  oceanSegments?: number;
 }
 
 interface EffectEntry {
@@ -42,6 +43,7 @@ export default function PlayerBoard3D({
   shipCoordinates = [],
   previewCoords = null,
   latestResult,
+  oceanSegments = 48,
 }: PlayerBoard3DProps) {
   const HALF_BOARD = boardSize / 2;
   const [effects, setEffects] = useState<EffectEntry[]>([]);
@@ -93,7 +95,7 @@ export default function PlayerBoard3D({
     grid.forEach((row, rowIdx) => {
       row.forEach((cellState, colIdx) => {
         if (cellState === 'hit') {
-          positions.push([colIdx - HALF_BOARD + 0.5, 0.1, rowIdx - HALF_BOARD + 0.5]);
+          positions.push([colIdx - HALF_BOARD + 0.5, 0.05, rowIdx - HALF_BOARD + 0.5]);
         }
       });
     });
@@ -102,9 +104,9 @@ export default function PlayerBoard3D({
 
   return (
     <group position={position}>
-      <OceanSurface position={[0, -0.1, 0]} size={[boardSize + 2, boardSize + 2]} />
+      <OceanSurface position={[0, -0.35, 0]} size={[boardSize + 4, boardSize + 4]} segments={oceanSegments} />
 
-      <GridPlane position={[0, 0.02, 0]} size={boardSize} />
+      <GridPlane position={[0, 0.01, 0]} size={boardSize} />
 
       <BoardFrame size={boardSize} />
 
@@ -121,7 +123,7 @@ export default function PlayerBoard3D({
             return (
               <Cell
                 key={coord}
-                position={[x, 0.02, z]}
+                position={[x, 0.01, z]}
                 state={null}
                 isPreview
               />
@@ -131,7 +133,7 @@ export default function PlayerBoard3D({
           return (
             <Cell
               key={coord}
-              position={[x, 0.02, z]}
+              position={[x, 0.01, z]}
               state={cellState}
               showShips={showShips}
               isClickable={isClickable && !cellState}

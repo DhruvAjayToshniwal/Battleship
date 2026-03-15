@@ -58,7 +58,7 @@ void main() {
   skyColor = mix(skyColor, topColor, smoothstep(0.3, 0.8, elevation));
 
   float horizonLine = exp(-pow((elevation - 0.0) * 20.0, 2.0));
-  skyColor += vec3(0.08, 0.05, 0.03) * horizonLine * 0.2;
+  skyColor += vec3(0.08, 0.05, 0.03) * horizonLine * 0.4;
 
   vec2 starUv = vec2(atan(dir.x, dir.z) * 15.0, elevation * 30.0);
   for (int layer = 0; layer < 3; layer++) {
@@ -91,8 +91,8 @@ void main() {
   float nebula1 = fbm(nebulaUv + vec2(uTime * 0.005, 0.0));
   float nebula2 = fbm(nebulaUv * 1.5 + vec2(0.0, uTime * 0.003));
   float nebulaMask = smoothstep(0.2, 0.7, elevation) * smoothstep(0.8, 0.5, elevation);
-  skyColor += vec3(0.1, 0.05, 0.2) * nebula1 * nebulaMask * 0.15;
-  skyColor += vec3(0.05, 0.15, 0.1) * nebula2 * nebulaMask * 0.08;
+  skyColor += vec3(0.1, 0.05, 0.2) * nebula1 * nebulaMask * 0.25;
+  skyColor += vec3(0.05, 0.15, 0.1) * nebula2 * nebulaMask * 0.15;
 
   gl_FragColor = vec4(skyColor, 1.0);
 }
@@ -113,7 +113,7 @@ export default function SkyBackdrop() {
 
   return (
     <mesh>
-      <sphereGeometry args={[90, 64, 64]} />
+      <sphereGeometry args={[90, 32, 32]} />
       <shaderMaterial
         ref={materialRef}
         vertexShader={vertexShader}

@@ -79,18 +79,7 @@ export default memo(function Cell({
     );
   }
 
-  if (state === 'ship' && showShips) {
-    return (
-      <mesh position={[position[0], position[1] + 0.08, position[2]]}>
-        <boxGeometry args={[0.85, 0.16, 0.85]} />
-        <meshStandardMaterial
-          color="#475569"
-          roughness={0.7}
-          metalness={0.3}
-        />
-      </mesh>
-    );
-  }
+  // Ship cells are rendered by the fleet system (ShipFactory), not here
 
   if (isClickable) {
     return (

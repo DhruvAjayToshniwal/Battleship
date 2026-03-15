@@ -13,24 +13,12 @@ interface TopStatusBarProps {
 export default function TopStatusBar({ message, phase, isPlayerTurn }: TopStatusBarProps) {
   return (
     <div
-      className="fixed top-0 left-1/2 -translate-x-1/2 z-20 flex items-center gap-4 px-6 py-3"
+      className="fixed top-0 left-1/2 -translate-x-1/2 z-20 flex items-center px-5 py-2"
       style={{
-        background: 'rgba(10,10,10,0.7)',
+        background: 'rgba(10,10,10,0.65)',
         borderBottom: `1px solid ${colors.border.hairline}`,
-        minWidth: '320px',
       }}
     >
-      {phase === 'playing' && (
-        <span
-          style={{
-            ...textStyle.caption,
-            color: isPlayerTurn ? colors.accent.silver : colors.text.secondary,
-            flexShrink: 0,
-          }}
-        >
-          {isPlayerTurn ? 'YOUR TURN' : 'ENEMY TURN'}
-        </span>
-      )}
       <AnimatePresence mode="wait">
         <motion.span
           key={message}
@@ -40,7 +28,7 @@ export default function TopStatusBar({ message, phase, isPlayerTurn }: TopStatus
           transition={{ duration: 0.6, ease: ease.default }}
           style={{
             ...textStyle.caption,
-            color: colors.text.secondary,
+            color: phase === 'playing' && isPlayerTurn ? colors.accent.silver : colors.text.secondary,
           }}
         >
           {message}
