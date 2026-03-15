@@ -101,10 +101,10 @@ export function useGameApiState(options: UseGameApiStateOptions = {}) {
   }, [token]);
 
   const firedCoords = useMemo(() => {
-    if (!gameState) return new Set<string>();
+    if (!gameState?.ai_board) return new Set<string>();
     return new Set([
-      ...gameState.ai_board.hits,
-      ...gameState.ai_board.misses,
+      ...(gameState.ai_board.hits ?? []),
+      ...(gameState.ai_board.misses ?? []),
     ]);
   }, [gameState]);
 
