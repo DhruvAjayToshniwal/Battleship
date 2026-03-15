@@ -26,10 +26,10 @@ export default function TurnBanner({ isPlayerTurn, visible }: TurnBannerProps) {
           style={{ paddingBottom: '35vh' }}
         >
           <span
+            className="text-xl sm:text-4xl"
             style={{
               fontFamily: fontFamily.serif,
               fontWeight: 300,
-              fontSize: '36px',
               letterSpacing: '0.2em',
               textTransform: 'uppercase',
               color: colors.text.primary,

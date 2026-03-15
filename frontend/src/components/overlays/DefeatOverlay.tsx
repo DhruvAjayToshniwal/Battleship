@@ -74,7 +74,7 @@ export default function DefeatOverlay({ visible, difficulty, onRestart, onChange
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: stagger.normal * 2, duration: 1.2, ease: ease.default }}
-              className="grid grid-cols-3 gap-4 mb-8 px-6 py-4"
+              className="grid grid-cols-3 gap-2 sm:gap-4 mb-8 px-4 sm:px-6 py-4"
               style={{
                 background: colors.bg.deep,
                 border: `1px solid ${colors.border.hairline}`,
@@ -138,7 +138,7 @@ export default function DefeatOverlay({ visible, difficulty, onRestart, onChange
             {isMultiplayer && onBackToMenu ? (
               <button
                 onClick={onBackToMenu}
-                className="px-8 py-3 text-sm tracking-widest uppercase cursor-pointer"
+                className="px-6 sm:px-8 py-3 text-xs sm:text-sm tracking-widest uppercase cursor-pointer"
                 style={{
                   background: 'transparent',
                   border: `1px solid ${colors.border.subtle}`,
@@ -153,7 +153,7 @@ export default function DefeatOverlay({ visible, difficulty, onRestart, onChange
               <button
                 onClick={() => onRestart(difficulty)}
                 disabled={loading}
-                className="px-8 py-3 text-sm tracking-widest uppercase cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-6 sm:px-8 py-3 text-xs sm:text-sm tracking-widest uppercase cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 style={{
                   background: 'transparent',
                   border: `1px solid ${colors.border.subtle}`,

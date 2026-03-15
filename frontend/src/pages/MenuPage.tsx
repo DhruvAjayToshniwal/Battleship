@@ -43,22 +43,22 @@ export default function MenuPage({
 
   return (
     <div
-      className="w-full h-full flex flex-col items-center justify-center relative"
+      className="w-full h-full flex flex-col items-center justify-center relative px-4"
       style={{ background: colors.bg.void }}
     >
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: duration.reveal, ease: ease.default }}
-        className="text-center mb-20"
+        className="text-center mb-12 sm:mb-20"
       >
         <h1
           style={{
             ...textStyle.display,
-            fontSize: '56px',
             color: colors.text.primary,
             letterSpacing: '0.3em',
           }}
+          className="text-3xl sm:text-5xl"
         >
           BATTLESHIP
         </h1>
@@ -77,7 +77,7 @@ export default function MenuPage({
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: duration.slow, delay: 0.6, ease: ease.default }}
-        className="mb-20"
+        className="mb-12 sm:mb-20 w-full max-w-xs"
       >
         <input
           type="text"
@@ -85,7 +85,7 @@ export default function MenuPage({
           onChange={(e) => handleNameChange(e.target.value)}
           placeholder="ENTER YOUR NAME"
           maxLength={16}
-          className="px-6 py-3 text-center w-72 outline-none"
+          className="px-6 py-3 text-center w-full outline-none"
           style={{
             ...inputStyle,
             fontFamily: fontFamily.serif,
@@ -103,7 +103,7 @@ export default function MenuPage({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: duration.slow, delay: 0.7, ease: ease.default }}
-          className="mb-12 flex gap-8"
+          className="mb-12 flex gap-6 sm:gap-8"
         >
           <StatItem label="W" value={String(stats.wins)} />
           <StatItem label="L" value={String(stats.losses)} />
@@ -119,7 +119,7 @@ export default function MenuPage({
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: duration.slow, delay: 0.8, ease: ease.default }}
-        className="flex flex-col gap-4 w-72"
+        className="flex flex-col gap-4 w-full max-w-xs"
       >
         <MenuButton label="ENGAGE AI" onClick={() => onPlayAI(resolvedName)} delay={1.0} />
         <MenuButton label="MULTIPLAYER" onClick={() => onPlayMultiplayer(resolvedName)} delay={1.0 + stagger.normal} />

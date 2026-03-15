@@ -19,33 +19,33 @@ export default function FleetPanel({ title, shipsRemaining, shotsCount, accentCo
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 1.2, ease: ease.default }}
-      className={`fixed top-24 z-20 ${isLeft ? 'left-4' : 'right-4'}`}
+      className={`fixed top-12 sm:top-24 z-20 ${isLeft ? 'left-2 sm:left-4' : 'right-2 sm:right-4'}`}
       style={{
         background: 'rgba(10,10,10,0.7)',
         border: `1px solid ${colors.border.hairline}`,
-        padding: '14px 18px',
-        minWidth: '160px',
+        padding: '10px 12px',
       }}
     >
       <div
+        className="text-[9px] sm:text-[11px]"
         style={{
           ...textStyle.caption,
           color: accentColor,
-          marginBottom: '12px',
+          marginBottom: '8px',
         }}
       >
         {title}
       </div>
 
       <div className="flex flex-col gap-2">
-        <div className="flex items-center justify-between gap-4">
-          <span style={{ ...textStyle.caption, color: colors.text.tertiary }}>
+        <div className="flex items-center justify-between gap-3 sm:gap-4">
+          <span className="text-[9px] sm:text-[11px]" style={{ ...textStyle.caption, color: colors.text.tertiary }}>
             SHIPS
           </span>
           <span
             style={{
               fontFamily: fontFamily.mono,
-              fontSize: '13px',
+              fontSize: '12px',
               color: colors.text.secondary,
             }}
           >
@@ -53,14 +53,14 @@ export default function FleetPanel({ title, shipsRemaining, shotsCount, accentCo
           </span>
         </div>
 
-        <div className="flex items-center justify-between gap-4">
-          <span style={{ ...textStyle.caption, color: colors.text.tertiary }}>
+        <div className="flex items-center justify-between gap-3 sm:gap-4">
+          <span className="text-[9px] sm:text-[11px]" style={{ ...textStyle.caption, color: colors.text.tertiary }}>
             SHOTS
           </span>
           <span
             style={{
               fontFamily: fontFamily.mono,
-              fontSize: '13px',
+              fontSize: '12px',
               color: colors.text.secondary,
             }}
           >

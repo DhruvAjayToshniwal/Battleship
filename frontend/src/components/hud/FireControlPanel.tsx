@@ -24,11 +24,11 @@ export default function FireControlPanel({
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.6, ease: ease.default }}
-          className="fixed bottom-8 right-6 z-20 flex flex-col items-end gap-2 pointer-events-none"
+          className="fixed bottom-6 sm:bottom-8 right-2 sm:right-6 z-20 flex flex-col items-end gap-2 pointer-events-none"
         >
           <div
             style={{
-              padding: '8px 16px',
+              padding: '8px 12px',
               border: `1px solid ${colors.border.hairline}`,
             }}
           >

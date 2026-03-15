@@ -104,7 +104,7 @@ export default function LobbyPage({ playerName, onGameReady, onBack }: LobbyPage
 
   return (
     <div
-      className="w-full h-full flex flex-col items-center justify-center relative"
+      className="w-full h-full flex flex-col items-center justify-center relative px-4"
       style={{ background: colors.bg.void }}
     >
       {lobbyState === 'choose' && (
@@ -112,13 +112,12 @@ export default function LobbyPage({ playerName, onGameReady, onBack }: LobbyPage
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: duration.slow, ease: ease.default }}
-          className="flex flex-col items-center gap-6"
+          className="flex flex-col items-center gap-6 w-full max-w-xs"
         >
           <h2
-            className="mb-8"
+            className="mb-8 text-xl sm:text-2xl"
             style={{
               ...textStyle.title,
-              fontSize: '28px',
               color: colors.text.secondary,
             }}
           >
@@ -130,7 +129,7 @@ export default function LobbyPage({ playerName, onGameReady, onBack }: LobbyPage
             onMouseLeave={() => setHoveredBtn(null)}
             onClick={handleCreateRoom}
             disabled={loading}
-            className="px-8 py-4 text-sm tracking-[0.3em] uppercase cursor-pointer w-64"
+            className="px-8 py-4 text-sm tracking-[0.3em] uppercase cursor-pointer w-full"
             style={{
               ...buttonStyle,
               ...(hoveredBtn === 'create' ? buttonHoverStyle : {}),
@@ -145,7 +144,7 @@ export default function LobbyPage({ playerName, onGameReady, onBack }: LobbyPage
             onMouseEnter={() => setHoveredBtn('join')}
             onMouseLeave={() => setHoveredBtn(null)}
             onClick={() => setLobbyState('joining')}
-            className="px-8 py-4 text-sm tracking-[0.3em] uppercase cursor-pointer w-64"
+            className="px-8 py-4 text-sm tracking-[0.3em] uppercase cursor-pointer w-full"
             style={{
               ...buttonStyle,
               ...(hoveredBtn === 'join' ? buttonHoverStyle : {}),
@@ -160,7 +159,7 @@ export default function LobbyPage({ playerName, onGameReady, onBack }: LobbyPage
             onMouseEnter={() => setHoveredBtn('back')}
             onMouseLeave={() => setHoveredBtn(null)}
             onClick={onBack}
-            className="px-8 py-3 text-xs tracking-[0.3em] uppercase cursor-pointer w-64 mt-4"
+            className="px-8 py-3 text-xs tracking-[0.3em] uppercase cursor-pointer w-full mt-4"
             style={{
               ...buttonStyle,
               ...(hoveredBtn === 'back' ? buttonHoverStyle : {}),
@@ -185,19 +184,19 @@ export default function LobbyPage({ playerName, onGameReady, onBack }: LobbyPage
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: duration.slow, ease: ease.default }}
-          className="flex flex-col items-center gap-6"
+          className="flex flex-col items-center gap-6 w-full max-w-xs"
         >
           <h2
+            className="text-xl sm:text-2xl"
             style={{
               ...textStyle.title,
-              fontSize: '24px',
               color: colors.text.secondary,
             }}
           >
             JOIN ROOM
           </h2>
 
-          <div className="flex flex-col items-center gap-4">
+          <div className="flex flex-col items-center gap-4 w-full">
             <input
               type="text"
               value={joinCode}
@@ -205,7 +204,7 @@ export default function LobbyPage({ playerName, onGameReady, onBack }: LobbyPage
               onKeyDown={(e) => e.key === 'Enter' && handleJoinRoom()}
               placeholder="ROOM CODE"
               maxLength={6}
-              className="px-6 py-4 text-3xl text-center w-72 outline-none"
+              className="px-6 py-4 text-2xl sm:text-3xl text-center w-full outline-none"
               style={{
                 ...inputStyle,
                 fontFamily: fontFamily.mono,
@@ -222,7 +221,7 @@ export default function LobbyPage({ playerName, onGameReady, onBack }: LobbyPage
               onMouseLeave={() => setHoveredBtn(null)}
               onClick={handleJoinRoom}
               disabled={loading || joinCode.length < 4}
-              className="px-8 py-3 text-sm tracking-[0.3em] uppercase cursor-pointer w-72"
+              className="px-8 py-3 text-sm tracking-[0.3em] uppercase cursor-pointer w-full"
               style={{
                 ...buttonStyle,
                 ...(hoveredBtn === 'joinSubmit' ? buttonHoverStyle : {}),

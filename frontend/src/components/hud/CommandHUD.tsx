@@ -57,8 +57,9 @@ export default function CommandHUD({
       )}
 
       {phase !== 'setup' && (
-        <div className="fixed bottom-3 left-0 right-0 z-20 flex justify-center pointer-events-none" style={{ gap: '14rem' }}>
+        <div className="fixed bottom-3 left-0 right-0 z-20 flex justify-center pointer-events-none gap-8 sm:gap-56 px-4">
           <span
+            className="text-[9px] sm:text-[11px]"
             style={{
               ...textStyle.caption,
               color: colors.text.tertiary,
@@ -67,6 +68,7 @@ export default function CommandHUD({
             {playerName.toUpperCase()}'S WATERS
           </span>
           <span
+            className="text-[9px] sm:text-[11px]"
             style={{
               ...textStyle.caption,
               color: colors.text.tertiary,
@@ -80,10 +82,10 @@ export default function CommandHUD({
       {phase === 'playing' && (
         <button
           onClick={() => mode === 'human' && onBackToMenu ? onBackToMenu() : onRestart()}
-          className="fixed bottom-3 left-4 z-20 cursor-pointer"
+          className="fixed bottom-3 left-2 sm:left-4 z-20 cursor-pointer"
           style={{
             ...textStyle.caption,
-            padding: '6px 12px',
+            padding: '8px 12px',
             background: 'transparent',
             border: `1px solid ${colors.border.subtle}`,
             color: colors.text.tertiary,

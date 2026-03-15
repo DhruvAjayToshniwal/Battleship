@@ -39,13 +39,13 @@ export default function HistoryPage({ onBack }: HistoryPageProps) {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: duration.slow, ease: ease.default }}
-        className="w-full max-w-2xl pt-12 px-6"
+        className="w-full max-w-2xl pt-8 sm:pt-12 px-3 sm:px-6"
       >
-        <div className="flex items-center justify-between mb-12">
+        <div className="flex items-center justify-between mb-8 sm:mb-12">
           <h2
+            className="text-lg sm:text-2xl"
             style={{
               ...textStyle.title,
-              fontSize: '24px',
               color: colors.text.secondary,
             }}
           >
@@ -100,14 +100,14 @@ export default function HistoryPage({ onBack }: HistoryPageProps) {
           </p>
         )}
 
-        <div className="flex flex-col gap-6 overflow-y-auto pb-12" style={{ maxHeight: 'calc(100vh - 180px)' }}>
+        <div className="flex flex-col gap-4 sm:gap-6 overflow-y-auto pb-12" style={{ maxHeight: 'calc(100vh - 140px)' }}>
           {games.map((game, index) => (
             <motion.div
               key={game.room_id}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: duration.slow, delay: index * stagger.fast, ease: ease.default }}
-              className="px-5 py-5"
+              className="px-3 sm:px-5 py-4 sm:py-5"
               style={{
                 background: colors.bg.deep,
                 border: `1px solid ${colors.border.hairline}`,
@@ -144,8 +144,8 @@ export default function HistoryPage({ onBack }: HistoryPageProps) {
                 </span>
               </div>
 
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
+              <div className="flex items-center justify-between flex-wrap gap-1">
+                <div className="flex items-center gap-2 sm:gap-4">
                   <span
                     style={{
                       ...textStyle.data,
