@@ -41,20 +41,39 @@ export default memo(function Cell({
   if (state === 'hit') {
     return (
       <group position={position}>
-        <mesh position={[0, 0.25, 0]}>
-          <sphereGeometry args={[0.25, 12, 12]} />
+        {/* Bright glowing sphere — unmissable */}
+        <mesh position={[0, 0.3, 0]}>
+          <sphereGeometry args={[0.22, 12, 12]} />
           <meshStandardMaterial
-            color="#ef4444"
-            emissive="#ef4444"
-            emissiveIntensity={1.0}
+            color="#ff2222"
+            emissive="#ff3333"
+            emissiveIntensity={2.0}
+            toneMapped={false}
           />
         </mesh>
+        {/* Outer glow ring */}
+        <mesh position={[0, 0.05, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+          <ringGeometry args={[0.25, 0.42, 16]} />
+          <meshStandardMaterial
+            color="#ff4444"
+            emissive="#ff2222"
+            emissiveIntensity={1.5}
+            side={THREE.DoubleSide}
+            transparent
+            opacity={0.9}
+            toneMapped={false}
+            depthWrite={false}
+          />
+        </mesh>
+        {/* Base plate */}
         <mesh position={[0, 0.02, 0]}>
-          <boxGeometry args={[0.9, 0.04, 0.9]} />
+          <boxGeometry args={[0.88, 0.04, 0.88]} />
           <meshStandardMaterial
             color="#991b1b"
+            emissive="#661111"
+            emissiveIntensity={0.5}
             transparent
-            opacity={0.6}
+            opacity={0.8}
           />
         </mesh>
       </group>
@@ -64,15 +83,28 @@ export default memo(function Cell({
   if (state === 'miss') {
     return (
       <group position={position}>
-        <mesh position={[0, 0.02, 0]}>
-          <ringGeometry args={[0.2, 0.35, 12]} />
+        {/* Bright splash marker — visible from above */}
+        <mesh position={[0, 0.15, 0]}>
+          <sphereGeometry args={[0.12, 10, 10]} />
+          <meshStandardMaterial
+            color="#44bbff"
+            emissive="#44aaff"
+            emissiveIntensity={1.5}
+            toneMapped={false}
+          />
+        </mesh>
+        {/* Ring on surface */}
+        <mesh position={[0, 0.04, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+          <ringGeometry args={[0.2, 0.35, 16]} />
           <meshStandardMaterial
             color="#38bdf8"
             emissive="#38bdf8"
-            emissiveIntensity={0.5}
+            emissiveIntensity={1.2}
             side={THREE.DoubleSide}
             transparent
-            opacity={0.7}
+            opacity={0.9}
+            toneMapped={false}
+            depthWrite={false}
           />
         </mesh>
       </group>
