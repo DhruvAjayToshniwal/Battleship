@@ -1,5 +1,4 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import { colors } from '../../design/theme';
 import { fontFamily } from '../../design/typography';
 import { ease } from '../../design/motion';
 
@@ -10,29 +9,35 @@ interface TurnBannerProps {
 
 export default function TurnBanner({ isPlayerTurn, visible }: TurnBannerProps) {
   const label = isPlayerTurn ? 'YOUR TURN' : 'ENEMY TURN';
+  const color = isPlayerTurn ? '#4ae8ff' : '#ff5555';
 
   return (
     <AnimatePresence>
       {visible && (
         <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -20 }}
           transition={{
-            duration: 1.6,
+            duration: 0.5,
             ease: ease.default,
           }}
-          className="fixed inset-0 z-30 flex items-end justify-center pointer-events-none"
-          style={{ paddingBottom: '35vh' }}
+          className="fixed top-12 left-1/2 -translate-x-1/2 z-40 pointer-events-none"
+          style={{
+            background: 'rgba(0, 0, 0, 0.85)',
+            padding: '14px 40px',
+            border: `1px solid ${color}`,
+            boxShadow: `0 0 30px ${color}40, 0 0 60px ${color}20`,
+          }}
         >
           <span
-            className="text-xl sm:text-4xl"
+            className="text-lg sm:text-2xl"
             style={{
               fontFamily: fontFamily.serif,
-              fontWeight: 300,
-              letterSpacing: '0.2em',
+              fontWeight: 600,
+              letterSpacing: '0.3em',
               textTransform: 'uppercase',
-              color: colors.text.primary,
+              color,
             }}
           >
             {label}
